@@ -100,7 +100,11 @@ class DesktopGameMaster(DialogueGameMaster):
             self.log_to_self(LogType.GAME_STATE.value, "Game terminated: player registration failed")
     
     def _does_game_proceed(self) -> bool:
-        """Returns False if game is completed or max steps reached."""
+        """Determine if the game should continue to the next turn.
+        
+        Returns:
+            bool: False if game is completed or max steps reached, True otherwise
+        """
         return not self.terminated and self.current_turn < self.game.max_steps    
 
     def _on_before_game(self) -> None:
@@ -117,9 +121,11 @@ class DesktopGameMaster(DialogueGameMaster):
             logger.info("Initial instruction prompt added for %s", player.descriptor)
 
     def prompt(self, player: Player, is_reprompt=False):
-        """
-        Core interaction loop: Gets current observation, prompts player model,
-        and processes response through validation and parsing pipeline.
+        """Execute the core interaction loop with a player.
+
+        Args:
+            player (Player): The player to interact with
+            is_reprompt (bool): Whether this is a repeated prompt (NOTE: not used)
         """
         curr_context = self.game.prompt_handler._get_curr_context(self.current_observation)
         message = curr_context["content"]
@@ -132,19 +138,19 @@ class DesktopGameMaster(DialogueGameMaster):
         full_context = self.game.prompt_handler._get_ovr_context(self.instruction, self.current_observation)
         _prompt, _response, response_message = player(full_context, self.current_turn)
 
-        print("-"*50)
-        print(_response, response_message)
-        print("-"*50)
-
         action = {'type': 'get message', 'content': response_message}
         self.log_event(from_=player.descriptor, to="GM", action=action, call=(_prompt, _response))
 
         self._DialogueGameMaster__validate_parse_and_add_player_response(player, response_message)
 
     def _validate_player_response(self, player: Player, utterance: str) -> bool:
-        """
-        Validates player response for basic format requirements.
-        TODO: Add additional pre-checks for response quality and common error patterns.
+        """Basic format validation for player responses.
+
+        Args:
+            utterance (str): Response to validate
+
+        Returns:
+            bool: Validation result
         """
         if not utterance or not isinstance(utterance, str):
             self.terminated = True
@@ -155,9 +161,15 @@ class DesktopGameMaster(DialogueGameMaster):
         return True
 
     def _on_parse_response(self, player: Player, utterance: str) -> Tuple[str, bool]:
-        """
-        Parses and validates the response, extracting actions if possible.
-        Returns the original utterance and whether to log the parse action.
+        """Extracts executable actions from player response.
+
+        Args:
+            utterance (str): Response text to parse
+
+        Returns:
+            Tuple[str, bool]: (original utterance, parsing success)
+
+        Note: Extracted actions stored in self._temp_extracted_actions
         """
         try:
             masks = self.current_observation.get('masks') if self.game.observation_type == 'som' else None
@@ -180,8 +192,12 @@ class DesktopGameMaster(DialogueGameMaster):
             return utterance, False
 
     def _after_add_player_response(self, player: Player, utterance: str):
-        """
-        Updates interaction history with the parsed response and extracted actions.
+        """Updates interaction history with response and extracted actions.
+
+        Args:
+            utterance (str): Validated response text
+
+        Note: Game terminates on history update failure
         """
         try:
             extracted_actions = getattr(self, '_temp_extracted_actions', [])
@@ -201,9 +217,12 @@ class DesktopGameMaster(DialogueGameMaster):
             self.log_to_self(LogType.GAME_STATE.value, "Game terminated: failed to update interaction history")
 
     def _on_after_turn(self, turn_idx: int):
-        """
-        Executes actions from the last interaction and updates the current observation.
-        Cleans up temporary storage after execution.
+        """Executes pending actions and updates game state.
+
+        Args:
+            turn_idx (int): Current turn index
+
+        Note: Handles action execution, state updates, and cleanup
         """
         try:
             extracted_actions = getattr(self, '_temp_extracted_actions', [])
