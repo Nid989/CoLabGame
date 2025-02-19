@@ -8,7 +8,7 @@ from clemcore.clemgame import Player, DialogueGameMaster, GameMaster, GameBenchm
 from clemcore.backends import Model
 from clemcore.utils import file_utils
 
-from game import DesktopGame
+from game import DesktopGame, InteractiveAssistant
 from utils import load_json, extract_actions
 
 logger = logging.getLogger(__name__)
@@ -58,8 +58,7 @@ class DesktopGameMaster(DialogueGameMaster):
         
         self.game = DesktopGame(
             **env_config,
-            game_instance=self.game_instance,
-            player_models=self.player_models
+            game_instance=self.game_instance
         )
         try:
             
@@ -71,8 +70,8 @@ class DesktopGameMaster(DialogueGameMaster):
             )
         except Exception as e:
             self.terminated = True
-            self.log_to_self(LogType.SETUP_ERROR, f"Environment initialization failed: {str(e)}")
-            self.log_to_self(LogType.GAME_STATE, "Game terminated: failed to initialize game environment")
+            self.log_to_self(LogType.SETUP_ERROR.value, f"Environment initialization failed: {str(e)}")
+            self.log_to_self(LogType.GAME_STATE.value, "Game terminated: failed to initialize game environment")
 
         self._initialize_recording()
         self._register_players()
@@ -82,22 +81,23 @@ class DesktopGameMaster(DialogueGameMaster):
             self.game.env.controller.start_recording()
         except AttributeError as e:
             self.terminated = True
-            self.log_to_self(LogType.SETUP_ERROR, f"Recording controller not properly initialized: {str(e)}")
-            self.log_to_self(LogType.GAME_STATE, "Game terminated: failed to start environment recording")
+            self.log_to_self(LogType.SETUP_ERROR.value, f"Recording controller not properly initialized: {str(e)}")
+            self.log_to_self(LogType.GAME_STATE.value, "Game terminated: failed to start environment recording")
 
     def _register_players(self) -> None:
         if not self.player_models:
             self.terminated = True
-            self.log_to_self(LogType.SETUP_ERROR, "No player models available for registration")
-            self.log_to_self(LogType.GAME_STATE, "Game terminated: no players to register")
+            self.log_to_self(LogType.SETUP_ERROR.value, "No player models available for registration")
+            self.log_to_self(LogType.GAME_STATE.value, "Game terminated: no players to register")
         
         try:
-            for player_model in self.player_models:
-                self.add_player(player_model)
+            # FIXME: make it more dynamic
+            self.assistant = InteractiveAssistant(self.player_models[0])
+            self.add_player(self.assistant)
         except Exception as e:
             self.terminated = True
-            self.log_to_self(LogType.SETUP_ERROR, f"Failed to register players: {str(e)}")
-            self.log_to_self(LogType.GAME_STATE, "Game terminated: player registration failed")
+            self.log_to_self(LogType.SETUP_ERROR.value, f"Failed to register players: {str(e)}")
+            self.log_to_self(LogType.GAME_STATE.value, "Game terminated: player registration failed")
     
     def _does_game_proceed(self) -> bool:
         """Returns False if game is completed or max steps reached."""
@@ -108,8 +108,8 @@ class DesktopGameMaster(DialogueGameMaster):
         self.instruction = self.game_instance.get('instruction')
         if not self.instruction:
             self.terminated = True
-            self.log_to_self(LogType.SETUP_ERROR, "Game instance missing required 'instruction' field")
-            self.log_to_self(LogType.GAME_STATE, "Game terminated: missing instruction")
+            self.log_to_self(LogType.SETUP_ERROR.value, "Game instance missing required 'instruction' field")
+            self.log_to_self(LogType.GAME_STATE.value, "Game terminated: missing instruction")
 
         for player in self.get_players(): 
             system_message = self.game.prompt_handler._get_system_message(self.instruction)
@@ -132,10 +132,14 @@ class DesktopGameMaster(DialogueGameMaster):
         full_context = self.game.prompt_handler._get_ovr_context(self.instruction, self.current_observation)
         _prompt, _response, response_message = player(full_context, self.current_turn)
 
+        print("-"*50)
+        print(_response, response_message)
+        print("-"*50)
+
         action = {'type': 'get message', 'content': response_message}
         self.log_event(from_=player.descriptor, to="GM", action=action, call=(_prompt, _response))
 
-        self.__validate_parse_and_add_player_response(player, response_message)
+        self._DialogueGameMaster__validate_parse_and_add_player_response(player, response_message)
 
     def _validate_player_response(self, player: Player, utterance: str) -> bool:
         """
@@ -144,8 +148,8 @@ class DesktopGameMaster(DialogueGameMaster):
         """
         if not utterance or not isinstance(utterance, str):
             self.terminated = True
-            self.log_to_self(LogType.VALIDATION, "Invalid response: empty or non-string message")
-            self.log_to_self(LogType.GAME_STATE, "Game terminated: received invalid/empty response")
+            self.log_to_self(LogType.VALIDATION.value, "Invalid response: empty or non-string message")
+            self.log_to_self(LogType.GAME_STATE.value, "Game terminated: received invalid/empty response")
             return False
 
         return True
@@ -165,14 +169,14 @@ class DesktopGameMaster(DialogueGameMaster):
             )
             
             self._temp_extracted_actions = extracted_actions
-            self.log_to_self(LogType.ACTION_INFO, f"Extracted actions: {', '.join(str(a) for a in extracted_actions)}")
+            self.log_to_self(LogType.ACTION_INFO.value, f"Extracted actions: {', '.join(str(a) for a in extracted_actions)}")
             return utterance, True
             
         except ValueError as e:
             self._temp_extracted_actions = []
             self.terminated = True
-            self.log_to_self(LogType.ACTION_FAIL, f"Error: {str(e)}, Response preview: {utterance[:100]}")
-            self.log_to_self(LogType.GAME_STATE, "Game terminated: failed to parse actions")
+            self.log_to_self(LogType.ACTION_FAIL.value, f"Error: {str(e)}, Response preview: {utterance[:100]}")
+            self.log_to_self(LogType.GAME_STATE.value, "Game terminated: failed to parse actions")
             return utterance, False
 
     def _after_add_player_response(self, player: Player, utterance: str):
@@ -188,15 +192,15 @@ class DesktopGameMaster(DialogueGameMaster):
                 obs=self.current_observation
             )
             
-            self.log_to_self(LogType.TURN_PLAN, 
+            self.log_to_self(LogType.TURN_PLAN.value, 
                 f"Turn {self.current_turn}: Thought preview: {utterance[:100]}, Actions: {', '.join(str(a) for a in extracted_actions)}")
             
         except Exception as e:
             self.terminated = True
-            self.log_to_self(LogType.ACTION_FAIL, f"Failed to update interaction history: {str(e)}")
-            self.log_to_self(LogType.GAME_STATE, "Game terminated: failed to update interaction history")
+            self.log_to_self(LogType.ACTION_FAIL.value, f"Failed to update interaction history: {str(e)}")
+            self.log_to_self(LogType.GAME_STATE.value, "Game terminated: failed to update interaction history")
 
-    def _on_after_turn(self):
+    def _on_after_turn(self, turn_idx: int):
         """
         Executes actions from the last interaction and updates the current observation.
         Cleans up temporary storage after execution.
@@ -206,8 +210,8 @@ class DesktopGameMaster(DialogueGameMaster):
             
             if not extracted_actions:
                 self.terminated = True
-                self.log_to_self(LogType.ACTION_FAIL, "No actions extracted from response")
-                self.log_to_self(LogType.GAME_STATE, "Game terminated: no actions to execute")
+                self.log_to_self(LogType.ACTION_FAIL.value, "No actions extracted from response")
+                self.log_to_self(LogType.GAME_STATE.value, "Game terminated: no actions to execute")
                 return
 
             for action in extracted_actions:
@@ -218,22 +222,22 @@ class DesktopGameMaster(DialogueGameMaster):
                     
                     if done: 
                         self.terminated = True 
-                        self.log_to_self(LogType.GAME_STATE, "Game termination signal received (done=True)")
+                        self.log_to_self(LogType.GAME_STATE.value, "Game termination signal received (done=True)")
 
                     action_result = f"Action: {str(action)}, Reward: {reward}, Done: {done}"
                     if info:
                         action_result += f", Additional info: {str(info)}"
-                    self.log_to_self(LogType.ACTION_EXEC, action_result)
+                    self.log_to_self(LogType.ACTION_EXEC.value, action_result)
                     
                 except Exception as e:
                     self.terminated = True
-                    self.log_to_self(LogType.ACTION_FAIL, f"Failed to execute action {str(action)}: {str(e)}")
-                    self.log_to_self(LogType.GAME_STATE, "Game terminated: action execution failed")
+                    self.log_to_self(LogType.ACTION_FAIL.value, f"Failed to execute action {str(action)}: {str(e)}")
+                    self.log_to_self(LogType.GAME_STATE.value, "Game terminated: action execution failed")
             
         except Exception as e:
             self.terminated = True
-            self.log_to_self(LogType.TURN_FAIL, f"Turn {self.current_turn} failed: {str(e)}")
-            self.log_to_self(LogType.GAME_STATE, "Game terminated: turn execution failed")
+            self.log_to_self(LogType.TURN_FAIL.value, f"Turn {self.current_turn} failed: {str(e)}")
+            self.log_to_self(LogType.GAME_STATE.value, "Game terminated: turn execution failed")
         finally:
             if hasattr(self, '_temp_extracted_actions'):
                 del self._temp_extracted_actions

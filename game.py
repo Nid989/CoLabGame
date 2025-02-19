@@ -7,6 +7,7 @@ import atexit
 
 # Clembench
 from clemcore.clemgame import Player
+from clemcore.backends import Model
 
 # OSWorld
 from desktop_env.desktop_env import DesktopEnv
@@ -362,15 +363,10 @@ class PromptHandler:
 
 class InteractiveAssistant(Player):
 
-    def __init__(self, model_name):
-        super().__init__(model_name)
-
-    def __call__(self, 
-                 messages,
-                 turn_idx: int):
-        return super().__call__(messages, turn_idx)
+    def __init__(self, model):
+        super().__init__(model)
     
-    def _custom_response(self, messages, turn_idx):
+    def _custom_response(self, messages, turn_idx) -> str:
         """TODO: Implement the 'oracle' function, which provides an automated solution for completing a game_instance/ task."""
         pass
 
@@ -415,7 +411,6 @@ class DesktopGame:
             max_steps: int=15,
             max_trajectory_length: int=3,
             game_instance: dict=None,
-            player_models: List[str]=None
     ):
         # =============================================
         # Environment Configuration Parameters
@@ -445,15 +440,11 @@ class DesktopGame:
 
         # Initialize prompt orchestrator
         self.prompt_handler = PromptHandler(
-            platform="Ubuntu",
+            platform="ubuntu",
             action_space=self.action_space,
             observation_type=self.observation_type,
             max_trajectory_length=self.max_trajectory_length
         )
-
-        # Initialize LLM-based agent for environment interaction/ action prediction
-        self.player_models = player_models
-        self.assistant = InteractiveAssistant(self.player_models[0]) # limited to single-agent task
 
 if __name__ == "__main__":
     
