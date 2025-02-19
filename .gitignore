@@ -1,3 +1,10 @@
+/in/legacy
+/cache/
 __pycache__
+.DS_Store
+vmware_vm_data
+.vmware_lck
+.vmware_vms
+design_proper_play_function.md
 game.log
-in/legacy 
+TODO 
