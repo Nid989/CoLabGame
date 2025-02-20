@@ -60,8 +60,8 @@ class DesktopGameMaster(DialogueGameMaster):
             **env_config,
             game_instance=self.game_instance
         )
+
         try:
-            
             self.current_observation = (
                 self.game.env.reset(task_config={
                     'id' if k == 'game_id' else k: v
@@ -101,7 +101,6 @@ class DesktopGameMaster(DialogueGameMaster):
     
     def _does_game_proceed(self) -> bool:
         """Determine if the game should continue to the next turn.
-        
         Returns:
             bool: False if game is completed or max steps reached, True otherwise
         """
@@ -122,7 +121,6 @@ class DesktopGameMaster(DialogueGameMaster):
 
     def prompt(self, player: Player, is_reprompt=False):
         """Execute the core interaction loop with a player.
-
         Args:
             player (Player): The player to interact with
             is_reprompt (bool): Whether this is a repeated prompt (NOTE: not used)
@@ -145,10 +143,8 @@ class DesktopGameMaster(DialogueGameMaster):
 
     def _validate_player_response(self, player: Player, utterance: str) -> bool:
         """Basic format validation for player responses.
-
         Args:
-            utterance (str): Response to validate
-
+            utterance (str): Response/utterance to validate
         Returns:
             bool: Validation result
         """
@@ -162,13 +158,10 @@ class DesktopGameMaster(DialogueGameMaster):
 
     def _on_parse_response(self, player: Player, utterance: str) -> Tuple[str, bool]:
         """Extracts executable actions from player response.
-
         Args:
             utterance (str): Response text to parse
-
         Returns:
             Tuple[str, bool]: (original utterance, parsing success)
-
         Note: Extracted actions stored in self._temp_extracted_actions
         """
         try:
@@ -193,10 +186,8 @@ class DesktopGameMaster(DialogueGameMaster):
 
     def _after_add_player_response(self, player: Player, utterance: str):
         """Updates interaction history with response and extracted actions.
-
         Args:
             utterance (str): Validated response text
-
         Note: Game terminates on history update failure
         """
         if not self.terminated:
@@ -221,10 +212,8 @@ class DesktopGameMaster(DialogueGameMaster):
 
     def _on_after_turn(self, turn_idx: int):
         """Executes pending actions and updates game state.
-
         Args:
             turn_idx (int): Current turn index
-
         Note: Handles action execution, state updates, and cleanup
         """
         if not self.terminated:
@@ -263,7 +252,7 @@ class DesktopGameMaster(DialogueGameMaster):
             self.terminated = True
             self.log_to_self(LogType.TURN_FAIL.value, f"Turn {self.current_turn} failed: {str(e)}")
             self.log_to_self(LogType.GAME_STATE.value, "Game terminated: turn execution failed")
-            
+
         finally:
             if hasattr(self, '_temp_extracted_actions'):
                 del self._temp_extracted_actions
