@@ -199,6 +199,9 @@ class DesktopGameMaster(DialogueGameMaster):
 
         Note: Game terminates on history update failure
         """
+        if not self.terminated:
+            return 
+        
         try:
             extracted_actions = getattr(self, '_temp_extracted_actions', [])
             
@@ -224,6 +227,9 @@ class DesktopGameMaster(DialogueGameMaster):
 
         Note: Handles action execution, state updates, and cleanup
         """
+        if not self.terminated:
+            return 
+        
         try:
             extracted_actions = getattr(self, '_temp_extracted_actions', [])
             
@@ -239,14 +245,14 @@ class DesktopGameMaster(DialogueGameMaster):
                         self.game.env.step(action, self.game.sleep_after_execution)
                     )
                     
-                    if done: 
-                        self.terminated = True 
-                        self.log_to_self(LogType.GAME_STATE.value, "Game termination signal received (done=True)")
-
                     action_result = f"Action: {str(action)}, Reward: {reward}, Done: {done}"
                     if info:
                         action_result += f", Additional info: {str(info)}"
                     self.log_to_self(LogType.ACTION_EXEC.value, action_result)
+
+                    if done: 
+                        self.terminated = True 
+                        self.log_to_self(LogType.GAME_STATE.value, "Game termination signal received (done=True)")
                     
                 except Exception as e:
                     self.terminated = True
