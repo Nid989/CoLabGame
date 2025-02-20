@@ -244,7 +244,7 @@ class DesktopGameMaster(DialogueGameMaster):
                     self.current_observation, reward, done, info = (
                         self.game.env.step(action, self.game.sleep_after_execution)
                     )
-                    
+
                     action_result = f"Action: {str(action)}, Reward: {reward}, Done: {done}"
                     if info:
                         action_result += f", Additional info: {str(info)}"
@@ -263,6 +263,7 @@ class DesktopGameMaster(DialogueGameMaster):
             self.terminated = True
             self.log_to_self(LogType.TURN_FAIL.value, f"Turn {self.current_turn} failed: {str(e)}")
             self.log_to_self(LogType.GAME_STATE.value, "Game terminated: turn execution failed")
+            
         finally:
             if hasattr(self, '_temp_extracted_actions'):
                 del self._temp_extracted_actions
