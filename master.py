@@ -190,7 +190,7 @@ class DesktopGameMaster(DialogueGameMaster):
             utterance (str): Validated response text
         Note: Game terminates on history update failure
         """
-        if not self.terminated:
+        if self.terminated:
             return 
         
         try:
@@ -216,7 +216,7 @@ class DesktopGameMaster(DialogueGameMaster):
             turn_idx (int): Current turn index
         Note: Handles action execution, state updates, and cleanup
         """
-        if not self.terminated:
+        if self.terminated:
             return 
         
         try:
