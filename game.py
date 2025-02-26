@@ -18,6 +18,7 @@ from mm_agents.prompts import SYS_PROMPT_IN_SCREENSHOT_OUT_CODE, SYS_PROMPT_IN_S
 
 # Local 
 from utils import linearize_accessibility_tree, trim_accessibility_tree, tag_screenshot
+from environment import EnvironmentFactory, Environment
 
 ACTION_SPACE = Literal["computer_13", "pyautogui"]
 OBSERVATION_TYPE = Literal["screenshot", "a11y_tree", "screenshot_a11y_tree", "som"]
@@ -97,7 +98,6 @@ class PromptHandler:
         self.thoughts = []
         self.actions = []
         self.observations = []
-        self._last_observation_hash = None  # To track the last observation
 
         # Initialize the temporary image manager 
         self.temp_manager = TemporaryImageManager()
@@ -337,14 +337,8 @@ class PromptHandler:
                     )
                 processed_obs["accessibility_tree"] = linearized_accessibility_tree
 
-            # Create hash of processed observation
-            obs_hash = hash(str(processed_obs))
-            
-            # Only append if observation is different from last one
-            if obs_hash != self._last_observation_hash:
-                self.observations.append(processed_obs)
-                self._last_observation_hash = obs_hash
-
+            self.observations.append(processed_obs)
+        
         # Always append thoughts and actions
         self.thoughts.append(thought)
         self.actions.append(action)
@@ -380,21 +374,26 @@ class DesktopGame:
         return cls._instance
         
     @classmethod
-    def _create_env(cls, env_config): 
+    def _create_env(cls, env_config) -> Environment:
+        """Create or return the singleton environment instance."""
         if cls._env is None:
-            cls._env = DesktopEnv(
-                path_to_vm=env_config.path_to_vm, 
+            # Use the EnvironmentFactory to create the appropriate environment
+            require_a11y_tree = env_config.observation_type in ["a11y_tree", "screenshot_a11y_tree", "som"]
+            
+            cls._env = EnvironmentFactory.create_environment(
+                "osworld",  # Environment type
+                path_to_vm=env_config.path_to_vm,
                 action_space=env_config.action_space,
                 screen_size=(env_config.screen_width, env_config.screen_height),
                 headless=env_config.headless,
                 os_type="Ubuntu",
-                require_a11y_tree=env_config.observation_type
-                in ["a11y_tree", "screenshot_a11y_tree", "som"]
+                require_a11y_tree=require_a11y_tree
             )   
         return cls._env
     
     @property
-    def env(self):
+    def env(self) -> Environment:
+        """Get the environment instance, creating it if necessary."""
         if self._env is None:
             self._env = self._create_env(self)
         return self._env

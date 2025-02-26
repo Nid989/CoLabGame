@@ -78,10 +78,14 @@ class DesktopGameMaster(DialogueGameMaster):
 
     def _initialize_recording(self) -> None:
         try:
-            self.game.env.controller.start_recording()
-        except AttributeError as e:
+            # Use the standardized interface method instead of directly accessing controller
+            if not self.game.env.start_recording():
+                self.terminated = True
+                self.log_to_self(LogType.SETUP_ERROR.value, "Failed to start environment recording")
+                self.log_to_self(LogType.GAME_STATE.value, "Game terminated: failed to start environment recording")
+        except Exception as e:
             self.terminated = True
-            self.log_to_self(LogType.SETUP_ERROR.value, f"Recording controller not properly initialized: {str(e)}")
+            self.log_to_self(LogType.SETUP_ERROR.value, f"Recording initialization error: {str(e)}")
             self.log_to_self(LogType.GAME_STATE.value, "Game terminated: failed to start environment recording")
 
     def _register_players(self) -> None:
@@ -172,7 +176,6 @@ class DesktopGameMaster(DialogueGameMaster):
                 self.game.action_space,
                 masks
             )
-            
             self._temp_extracted_actions = extracted_actions
             self.log_to_self(LogType.ACTION_INFO.value, f"Extracted actions: {', '.join(str(a) for a in extracted_actions)}")
             return utterance, True
@@ -195,7 +198,6 @@ class DesktopGameMaster(DialogueGameMaster):
         
         try:
             extracted_actions = getattr(self, '_temp_extracted_actions', [])
-            
             self.game.prompt_handler.update_interaction_history(
                 thought=utterance,
                 action=extracted_actions,
@@ -233,6 +235,12 @@ class DesktopGameMaster(DialogueGameMaster):
                     self.current_observation, reward, done, info = (
                         self.game.env.step(action, self.game.sleep_after_execution)
                     )
+
+                    if self.current_observation is None:
+                        self.terminated = True
+                        self.log_to_self(LogType.ACTION_FAIL.value, "Received None observation after action execution")
+                        self.log_to_self(LogType.GAME_STATE.value, "Game terminated: invalid observation state")
+                        return
 
                     action_result = f"Action: {str(action)}, Reward: {reward}, Done: {done}"
                     if info:
