@@ -119,7 +119,7 @@ class PromptHandler:
         
         self.system_message = prompt_mapping[key]
 
-    def _get_system_message(self, instruction: str) -> Dict:
+    def _get_system_message(self, instruction: str) -> str:
         """
         Returns the system message with the given instruction.
 
@@ -127,26 +127,27 @@ class PromptHandler:
             instruction (str): The task instruction or goal that the agent needs to accomplish.
 
         Returns:
-            Dict: System message in the format {"role": "system", "content": str}
+            str: System message content
         """
-        return {
-            "role": "system", 
-            "content": f"{self.system_message}\nYou are asked to complete the following task: {instruction}"
-        }
+        return f"{self.system_message}\nYou are asked to complete the following task: {instruction}"
 
-    def _get_curr_context(self, obs: Dict) -> Dict:
+    def _get_turn_context(self, obs: Dict, turn: int = None, instruction: str = None) -> Dict:
         """
-        Constructs the prompt for the current observation only.
+        Constructs the prompt context for a specific turn.
+        If turn is 0, prepends the system message to the current context.
 
         Args:
             obs (Dict): Current observation dictionary containing either:
                 - screenshot (str): Base64 encoded screenshot image
                 - accessibility_tree (str): Linearized accessibility tree text
                 - Both of the above for combined observation types
+            turn (int, optional): Current turn number. If 0, includes system message.
+            instruction (str, optional): Task instruction needed for system message.
 
         Returns:
-            Dict: Message containing the current observation context
+            Dict: Message containing the turn's observation context
         """
+        # Get the base observation context first
         if self.observation_type in ["screenshot", "screenshot_a11y_tree"]:
             # Process accessibility tree if needed
             linearized_accessibility_tree = None
@@ -164,11 +165,13 @@ class PromptHandler:
             # Save screenshot to temporary file
             tmp_path = self.temp_manager.save_image(obs["screenshot"])
             
+            base_content = ("Given the screenshot as below. What's the next step that you will do to help with the task?"
+                if self.observation_type == "screenshot"
+                else f"Given the screenshot and info from accessibility tree as below:\n{linearized_accessibility_tree}\nWhat's the next step that you will do to help with the task?")
+
             message = {
                 "role": "user",
-                "content": "Given the screenshot as below. What's the next step that you will do to help with the task?"
-                if self.observation_type == "screenshot"
-                else f"Given the screenshot and info from accessibility tree as below:\n{linearized_accessibility_tree}\nWhat's the next step that you will do to help with the task?",
+                "content": base_content,
                 "image": tmp_path
             }
 
@@ -212,89 +215,14 @@ class PromptHandler:
         else:
             raise ValueError(f"Invalid observation_type: {self.observation_type}")
 
+        # If it's turn 0, prepend the system message to the content
+        if turn == 0:
+            if instruction is None:
+                raise ValueError("Instruction is required for turn 0")
+            system_message = self._get_system_message(instruction)
+            message["content"] = f"{system_message}\n\n{message['content']}"
+
         return message
-
-    def _get_ovr_context(self, instruction: str, obs: Dict) -> List[Dict]:
-        """
-        Constructs the prompt context for predicting the next action(s) based on current and historical observations.
-
-        Args:
-            instructions (str): The task instruction or goal that the agent needs to accomplish.
-            obs (Dict): Current observation dictionary containing either:
-                - screenshot (str): Base64 encoded screenshot image
-                - accessibility_tree (str): Linearized accessibility tree text
-                - Both of the above for combined observation types
-        """
-        messages = [self._get_system_message(instruction)]
-
-        assert len(self.observations) == len(self.actions) == len(self.thoughts), \
-            f"Length mismatch: observations={len(self.observations)}, actions={len(self.actions)}, thoughts={len(self.thoughts)}"
-
-        # Use slice notation with max_trajectory_length or empty list if max_trajectory_length is 0
-        history_slice = slice(-self.max_trajectory_length if self.max_trajectory_length else 0, None)
-        _observations = self.observations[history_slice]
-        _thoughts = self.thoughts[history_slice]
-        
-        # Define observation type handlers
-        observation_handlers = {
-            "screenshot_a11y_tree": lambda obs, tmp_path: {
-                "content": f"Given the screenshot and info from accessibility tree as below:\n{obs['accessibility_tree']}\nWhat's the next step that you will do to help with the task?",
-                "image": tmp_path
-            },
-            "som": lambda obs, tmp_path: {
-                "content": "Given the tagged screenshot as below. What's the next step that you will do to help with the task?",
-                "image": tmp_path
-            },
-            "screenshot": lambda obs, tmp_path: {
-                "content": "Given the screenshot as below. What's the next step that you will do to help with the task?",
-                "image": tmp_path
-            },
-            "a11y_tree": lambda obs, _: {
-                "content": f"Given the info from accessibility tree as below:\n{obs['accessibility_tree']}\nWhat's the next step that you will do to help with the task?",
-                "image": None
-            }
-        }
-
-        if self.observation_type not in observation_handlers:
-            raise ValueError(f"Invalid observation_type: {self.observation_type}")
-
-        # Process each observation and thought pair
-        for prev_obs, prev_thought in zip(_observations, _thoughts):
-            # Handle screenshot if present
-            if "screenshot" in prev_obs and self.observation_type != "a11y_tree":
-                # Save the screenshot to a temporary file
-                tmp_path = self.temp_manager.save_image(prev_obs["screenshot"])
-                result = observation_handlers[self.observation_type](prev_obs, tmp_path)
-                
-                # Construct user message
-                user_message = {
-                    "role": "user",
-                    "content": result["content"]
-                }
-                
-                if result["image"]:
-                    user_message["image"] = result["image"]
-                    
-                messages.append(user_message)
-            else:
-                # Handle a11y_tree only case
-                result = observation_handlers[self.observation_type](prev_obs, None)
-                messages.append({
-                    "role": "user",
-                    "content": result["content"]
-                })
-            
-            # Add assistant's response
-            messages.append({
-                "role": "assistant",
-                "content": prev_thought.strip() if prev_thought else "No valid action"
-            })
-
-        # Process current observation
-        current_context = self._get_curr_context(obs)
-        messages.append(current_context)
-
-        return messages
 
     def update_interaction_history(self, thought: str, action: str, obs: Dict = None) -> None:
         """
@@ -367,6 +295,7 @@ class InteractiveAssistant(Player):
 class DesktopGame: 
     _instance = None
     _env = None
+    _current_turn = 0  # Add class-level turn counter
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -397,6 +326,16 @@ class DesktopGame:
         if self._env is None:
             self._env = self._create_env(self)
         return self._env
+
+    @property
+    def current_turn(self) -> int:
+        """Get the current turn number."""
+        return self._current_turn
+
+    @current_turn.setter
+    def current_turn(self, value: int):
+        """Set the current turn number."""
+        self._current_turn = value
 
     def __init__(
             self,

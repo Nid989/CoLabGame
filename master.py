@@ -50,7 +50,7 @@ class DesktopGameMaster(DialogueGameMaster):
             "action_space": "pyautogui",
             "screen_width": 1920,
             "screen_height": 1080,
-            "max_steps": 15,
+            "max_steps": 5,
             "max_trajectory_length": 3,
             "path_to_vm": "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx",
             "sleep_after_execution": 0.0,
@@ -117,33 +117,29 @@ class DesktopGameMaster(DialogueGameMaster):
             self.terminated = True
             self.log_to_self(LogType.SETUP_ERROR.value, "Game instance missing required 'instruction' field")
             self.log_to_self(LogType.GAME_STATE.value, "Game terminated: missing instruction")
+            return
 
         for player in self.get_players(): 
-            system_message = self.game.prompt_handler._get_system_message(self.instruction)
-            self.add_message(player, system_message["content"], role="user")
+            initial_context = self.game.prompt_handler._get_turn_context(
+                self.current_observation,
+                turn=self.current_turn,
+                instruction=self.instruction
+            )
+            self.add_user_message(player, initial_context["content"])
             logger.info("Initial instruction prompt added for %s", player.descriptor)
 
-    def prompt(self, player: Player, is_reprompt=False):
-        """Execute the core interaction loop with a player.
-        Args:
-            player (Player): The player to interact with
-            is_reprompt (bool): Whether this is a repeated prompt (NOTE: not used)
-        """
-        curr_context = self.game.prompt_handler._get_curr_context(self.current_observation)
-        message = curr_context["content"]
-        self.add_message(player, message, role="user")
+    def _on_before_turn(self, turn_idx: int):
+        """Updates the game's turn counter and player context before each turn.
         
-        action_type = 'send message' if not is_reprompt else 'send message (reprompt)'
-        action = {'type': action_type, 'content': message}
-        self.log_event(from_='GM', to=player.descriptor, action=action)
-
-        full_context = self.game.prompt_handler._get_ovr_context(self.instruction, self.current_observation)
-        _prompt, _response, response_message = player(full_context, self.current_turn)
-
-        action = {'type': 'get message', 'content': response_message}
-        self.log_event(from_=player.descriptor, to="GM", action=action, call=(_prompt, _response))
-
-        self._DialogueGameMaster__validate_parse_and_add_player_response(player, response_message)
+        Args:
+            turn_idx: The current turn index.
+        """
+        self.game._current_turn = turn_idx
+        
+        # Skip player context update for turn 0 as it's handled in _on_before_game
+        if turn_idx > 0:
+            for player in self.get_players():
+                self._update_player_context(player)
 
     def _validate_player_response(self, player: Player, utterance: str) -> bool:
         """Basic format validation for player responses.
@@ -187,17 +183,98 @@ class DesktopGameMaster(DialogueGameMaster):
             self.log_to_self(LogType.GAME_STATE.value, "Game terminated: failed to parse actions")
             return utterance, False
 
+    def _execute_action(self, action) -> bool:
+        """Execute a single action and process its results.
+        
+        Args:
+            action: The action to execute
+            
+        Returns:
+            bool: True if execution was successful, False if game should terminate
+        """
+        try:
+            self.current_observation, reward, done, info = (
+                self.game.env.step(action, self.game.sleep_after_execution)
+            )
+
+            if self.current_observation is None:
+                print("none current observation")
+                self.terminated = True
+                self.log_to_self(LogType.ACTION_FAIL.value, "Received None observation after action execution")
+                self.log_to_self(LogType.GAME_STATE.value, "Game terminated: invalid observation state")
+                return False
+
+            action_result = f"Action: {str(action)}, Reward: {reward}, Done: {done}"
+            print(action_result)
+            if info:
+                action_result += f", Additional info: {str(info)}"
+            self.log_to_self(LogType.ACTION_EXEC.value, action_result)
+
+            if done:
+                self.terminated = True
+                self.log_to_self(LogType.GAME_STATE.value, "Game termination signal received (done=True)")
+                return False
+
+            return True
+
+        except Exception as e:
+            print(e)
+            self.terminated = True
+            self.log_to_self(LogType.ACTION_FAIL.value, f"Failed to execute action {str(action)}: {str(e)}")
+            self.log_to_self(LogType.GAME_STATE.value, "Game terminated: action execution failed")
+            return False
+
+    def _execute_all_actions(self, extracted_actions):
+        """Execute all extracted actions in sequence.
+        
+        Args:
+            extracted_actions: List of actions to execute
+        """
+        if not extracted_actions:
+            self.terminated = True
+            self.log_to_self(LogType.ACTION_FAIL.value, "No actions extracted from response")
+            self.log_to_self(LogType.GAME_STATE.value, "Game terminated: no actions to execute")
+            return
+
+        for action in extracted_actions:
+            print(action)
+            if not self._execute_action(action):
+                break
+
+    def _update_player_context(self, player: Player) -> None:
+        """Updates player's context with the current observation.
+        
+        Args:
+            player (Player): The player to update context for
+        """
+        try:
+            turn_context = self.game.prompt_handler._get_turn_context(
+                self.current_observation,
+                turn=self.current_turn
+            )
+            message = turn_context["content"]
+            self.add_user_message(player, message)
+        except Exception as e:
+            self.terminated = True
+            self.log_to_self(LogType.TURN_FAIL.value, f"Failed to update player context: {str(e)}")
+            self.log_to_self(LogType.GAME_STATE.value, "Game terminated: failed to update player context")
+
     def _after_add_player_response(self, player: Player, utterance: str):
-        """Updates interaction history with response and extracted actions.
+        """Updates interaction history with response and extracted actions, then executes actions.
+        
         Args:
             utterance (str): Validated response text
-        Note: Game terminates on history update failure
+        Note: Game terminates on history update failure or action execution failure
         """
         if self.terminated:
             return 
         
+        extracted_actions = getattr(self, '_temp_extracted_actions', [])
+        
+        print(extracted_actions)
+
+        # First try block: Update interaction history
         try:
-            extracted_actions = getattr(self, '_temp_extracted_actions', [])
             self.game.prompt_handler.update_interaction_history(
                 thought=utterance,
                 action=extracted_actions,
@@ -211,56 +288,19 @@ class DesktopGameMaster(DialogueGameMaster):
             self.terminated = True
             self.log_to_self(LogType.ACTION_FAIL.value, f"Failed to update interaction history: {str(e)}")
             self.log_to_self(LogType.GAME_STATE.value, "Game terminated: failed to update interaction history")
-
-    def _on_after_turn(self, turn_idx: int):
-        """Executes pending actions and updates game state.
-        Args:
-            turn_idx (int): Current turn index
-        Note: Handles action execution, state updates, and cleanup
-        """
-        if self.terminated:
-            return 
+            return
         
+        # Check termination before executing actions
+        if self.terminated:
+            return
+        
+        # Second try block: Execute actions only if history update was successful
         try:
-            extracted_actions = getattr(self, '_temp_extracted_actions', [])
-            
-            if not extracted_actions:
-                self.terminated = True
-                self.log_to_self(LogType.ACTION_FAIL.value, "No actions extracted from response")
-                self.log_to_self(LogType.GAME_STATE.value, "Game terminated: no actions to execute")
-                return
-
-            for action in extracted_actions:
-                try:
-                    self.current_observation, reward, done, info = (
-                        self.game.env.step(action, self.game.sleep_after_execution)
-                    )
-
-                    if self.current_observation is None:
-                        self.terminated = True
-                        self.log_to_self(LogType.ACTION_FAIL.value, "Received None observation after action execution")
-                        self.log_to_self(LogType.GAME_STATE.value, "Game terminated: invalid observation state")
-                        return
-
-                    action_result = f"Action: {str(action)}, Reward: {reward}, Done: {done}"
-                    if info:
-                        action_result += f", Additional info: {str(info)}"
-                    self.log_to_self(LogType.ACTION_EXEC.value, action_result)
-
-                    if done: 
-                        self.terminated = True 
-                        self.log_to_self(LogType.GAME_STATE.value, "Game termination signal received (done=True)")
-                    
-                except Exception as e:
-                    self.terminated = True
-                    self.log_to_self(LogType.ACTION_FAIL.value, f"Failed to execute action {str(action)}: {str(e)}")
-                    self.log_to_self(LogType.GAME_STATE.value, "Game terminated: action execution failed")
-            
+            self._execute_all_actions(extracted_actions)
         except Exception as e:
             self.terminated = True
             self.log_to_self(LogType.TURN_FAIL.value, f"Turn {self.current_turn} failed: {str(e)}")
             self.log_to_self(LogType.GAME_STATE.value, "Game terminated: turn execution failed")
-
         finally:
             if hasattr(self, '_temp_extracted_actions'):
                 del self._temp_extracted_actions
