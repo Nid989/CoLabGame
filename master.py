@@ -46,7 +46,7 @@ class DesktopGameMaster(DialogueGameMaster):
         # FIXME: need to change the way `path_to_vm` value is provided
         env_config = {
             "headless": False,
-            "observation_type": "a11y_tree",
+            "observation_type": "screenshot",
             "action_space": "pyautogui",
             "screen_width": 1920,
             "screen_height": 1080,
@@ -125,7 +125,8 @@ class DesktopGameMaster(DialogueGameMaster):
                 turn=self.current_turn,
                 instruction=self.instruction
             )
-            self.add_user_message(player, initial_context["content"])
+            image = initial_context.get("image", [])
+            self.add_user_message(player, initial_context["content"], image=image)
             logger.info("Initial instruction prompt added for %s", player.descriptor)
 
     def _on_before_turn(self, turn_idx: int):
@@ -253,7 +254,8 @@ class DesktopGameMaster(DialogueGameMaster):
                 turn=self.current_turn
             )
             message = turn_context["content"]
-            self.add_user_message(player, message)
+            image = turn_context.get("image", [])
+            self.add_user_message(player, message, image=image)
         except Exception as e:
             self.terminated = True
             self.log_to_self(LogType.TURN_FAIL.value, f"Failed to update player context: {str(e)}")
@@ -304,6 +306,29 @@ class DesktopGameMaster(DialogueGameMaster):
         finally:
             if hasattr(self, '_temp_extracted_actions'):
                 del self._temp_extracted_actions
+
+    def add_message(self, player: Player, utterance: str, role: str, image: List[str] = None):
+        """Adds a message to the conversation history.
+        Args:
+            player: The Player instance that produced the message.
+            utterance: The text content of the message to be added.
+            role: The chat/instruct conversation role ('user', 'assistant', or 'system')
+            image: Optional list of image data or paths to include with the message.
+        """
+        message = {"role": role, "content": utterance}
+        if image and len(image) > 0:
+            message["image"] = image
+        history = self.messages_by_names[player.descriptor]
+        history.append(message)
+
+    def add_user_message(self, player: Player, utterance: str, image: List[str] = None):
+        """Adds a message with the 'user' role to the conversation history.
+        Args:
+            player: The Player instance that produced the message.
+            utterance: The text content of the message to be added.
+            image: Optional list of image data or paths to include with the message.
+        """
+        self.add_message(player, utterance, role="user", image=image)
 
 class DesktopGameBenchmakr(GameBenchmark):
     def create_game_master(self, experiment: Dict, player_models: List[Model]) -> GameMaster:

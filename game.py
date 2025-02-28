@@ -172,7 +172,7 @@ class PromptHandler:
             message = {
                 "role": "user",
                 "content": base_content,
-                "image": tmp_path
+                "image": [tmp_path]
             }
 
         elif self.observation_type == "a11y_tree":
@@ -209,7 +209,7 @@ class PromptHandler:
             message = {
                 "role": "user",
                 "content": f"Given the tagged screenshot and info from accessibility tree as below:\n{linearized_accessibility_tree}\nWhat's the next step that you will do to help with the task?",
-                "image": tmp_path
+                "image": [tmp_path]
             }
 
         else:
