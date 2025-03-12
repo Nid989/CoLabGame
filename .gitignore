@@ -1,14 +1,29 @@
+# Python related
+__pycache__
+.python-version
+*.log
+
+# Project directories
+/results/
 /in/legacy
 /cache/
-__pycache__
+
+# Temporary and system files
 .DS_Store
+TODO
+game.log
+
+# Jupyter notebooks
+test.ipynb
+testing.ipynb
+
+# VMware related
 vmware_vm_data
 .vmware_lck
 .vmware_vms
+
+# Project specific files
 design_proper_play_function.md
-game.log
-TODO 
-test.ipynb
-demo_run.py
 deprecated.md
-testing.ipynb
+demo_run.py
+key.json
