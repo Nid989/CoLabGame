@@ -1,17 +1,14 @@
 import os
 import shutil
 import time
-from typing import List, Dict, Literal, Type, Any
+from typing import Dict, Literal, Any
 import tempfile
 import atexit
-from functools import partial
 
 # Clembench
 from clemcore.clemgame import Player
-from clemcore.backends import Model
 
 # OSWorld
-from desktop_env.desktop_env import DesktopEnv
 from mm_agents.prompts import (
     SYS_PROMPT_IN_SCREENSHOT_OUT_CODE,
     SYS_PROMPT_IN_SCREENSHOT_OUT_ACTION,

@@ -179,7 +179,7 @@ class ExperimentOrchestrator:
 
 def main():
     orchestrator = ExperimentOrchestrator(max_workers=4)
-    all_data = orchestrator.get_all_experiments()
+    _ = orchestrator.get_all_experiments()
 
 
 if __name__ == "__main__":

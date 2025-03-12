@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Tuple, Union, Optional, Literal
+from typing import Any, Dict, Tuple, Optional, Literal
 
 
 class Environment(ABC):

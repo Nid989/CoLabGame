@@ -2,14 +2,13 @@ import os
 import logging
 from enum import Enum
 from typing import Dict, List, Tuple
-import json
 
 from clemcore.clemgame import Player, DialogueGameMaster, GameMaster, GameBenchmark
 from clemcore.backends import Model
 from clemcore.utils import file_utils
 
 from game import DesktopGame, InteractiveAssistant
-from utils import load_json, extract_actions
+from utils import extract_actions
 
 logger = logging.getLogger(__name__)
 
