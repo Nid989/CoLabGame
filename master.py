@@ -14,19 +14,29 @@ logger = logging.getLogger(__name__)
 
 
 class LogType(Enum):
-    """Log types for internal game master logging"""
+    """
+    Log types for internal game master logging:
 
-    ACTION_INFO = "action_info"  # For successful action extractions and general action information
-    ACTION_FAIL = "action_fail"  # For failed actions or errors during action execution
-    ACTION_EXEC = "action_exec"  # For successful action execution results
-    TURN_PLAN = "turn_plan"  # For logging turn planning and thought processes
-    # TURN_SKIP = "turn_skip"       # For when no actions are available to execute
-    TURN_FAIL = "turn_fail"  # For failures at the turn level
-    VALIDATION = "validation"  # For validation related messages
-    GAME_STATE = (
-        "game_state"  # For tracking game state transitions and termination conditions
-    )
-    SETUP_ERROR = "setup_error"  # For initialization and setup related errors
+    - ACTION_INFO: Successful action extractions and general action info.
+    - ACTION_FAIL: Failed actions or errors during action execution.
+    - ACTION_EXEC: Successful action execution results.
+    - TURN_PLAN: Logging turn planning and thought processes.
+    - TURN_SKIP: When no actions are available to execute.
+    - TURN_FAIL: Failures at the turn level.
+    - VALIDATION: Validation-related messages.
+    - GAME_STATE: Tracking game state transitions and termination conditions.
+    - SETUP_ERROR: Initialization and setup-related errors.
+    """
+
+    ACTION_INFO = "action_info"
+    ACTION_FAIL = "action_fail"
+    ACTION_EXEC = "action_exec"
+    TURN_PLAN = "turn_plan"
+    TURN_SKIP = "turn_skip"
+    TURN_FAIL = "turn_fail"
+    VALIDATION = "validation"
+    GAME_STATE = "game_state"
+    SETUP_ERROR = "setup_error"
 
 
 class DesktopGameMaster(DialogueGameMaster):
