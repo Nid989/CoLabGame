@@ -1,0 +1,14 @@
+[
+    {
+        "game_name": "desktopgame",
+        "game_path": "./clemgames/desktopgame",
+        "description": "A game where an agent interacts with a desktop environment",
+        "main_game": "desktopgame",
+        "players": "one",
+        "image": "none",
+        "languages": [
+            "en"
+        ],
+        "benchmark": []
+    }
+]
