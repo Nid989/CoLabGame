@@ -3,9 +3,9 @@ name = "desktopgame"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11.11"
 dependencies = [
-    "accelerate==1.5.0",
+    "accelerate==1.5.1",
     "aiodns==3.2.0",
     "aiohappyeyeballs==2.6.1",
     "aiohttp==3.11.13",
@@ -15,7 +15,7 @@ dependencies = [
     "annotated-types==0.7.0",
     "anthropic==0.47.1",
     "anyio==4.8.0",
-    "attrs==25.2.0",
+    "attrs==25.3.0",
     "audioread==3.0.1",
     "azure-common==1.1.28",
     "azure-core==1.32.0",
@@ -70,7 +70,7 @@ dependencies = [
     "gitpython==3.1.44",
     "google-ai-generativelanguage==0.6.15",
     "google-api-core==2.24.2",
-    "google-api-python-client==2.163.0",
+    "google-api-python-client==2.164.0",
     "google-auth==2.38.0",
     "google-auth-httplib2==0.2.0",
     "google-generativeai==0.8.4",
@@ -106,11 +106,11 @@ dependencies = [
     "loguru==0.7.3",
     "lxml==5.3.1",
     "markupsafe==3.0.2",
-    "matplotlib==3.7.5",
+    "matplotlib==3.7.1",
     "mistralai==0.0.12",
     "mouseinfo==0.1.3",
     "mpmath==1.3.0",
-    "msal==1.31.1",
+    "msal==1.32.0",
     "msal-extensions==1.2.0",
     "msgpack==1.1.0",
     "multidict==6.1.0",
@@ -130,7 +130,7 @@ dependencies = [
     "openpyxl==3.1.5",
     "orjson==3.10.15",
     "packaging==24.2",
-    "pandas==2.2.3",
+    "pandas==2.0.1",
     "paramiko==3.5.1",
     "pdfminer-six==20231228",
     "pdfplumber==0.11.5",
@@ -202,7 +202,6 @@ dependencies = [
     "seaborn==0.12.2",
     "sentry-sdk==2.22.0",
     "setproctitle==1.3.5",
-    "setuptools==76.0.0",
     "shapely==2.0.7",
     "six==1.17.0",
     "smmap==5.0.2",
@@ -211,7 +210,7 @@ dependencies = [
     "soupsieve==2.6",
     "soxr==0.5.0.post1",
     "sympy==1.13.1",
-    "threadpoolctl==3.5.0",
+    "threadpoolctl==3.6.0",
     "tifffile==2025.2.18",
     "tiktoken==0.9.0",
     "tokenizers==0.15.2",
@@ -235,4 +234,4 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-clemcore = { path = "../clemcore" }
+clemcore = { git = "https://github.com/clp-research/clemcore.git", rev = "deabcde1f7e815093ead517b87929e9261b60f18" }

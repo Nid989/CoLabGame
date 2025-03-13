@@ -1,4 +1,4 @@
-accelerate==1.5.0
+accelerate==1.5.1
 aiodns==3.2.0
 aiohappyeyeballs==2.6.1
 aiohttp==3.11.13
@@ -8,7 +8,7 @@ aleph-alpha-client==7.0.1
 annotated-types==0.7.0
 anthropic==0.47.1
 anyio==4.8.0
-attrs==25.2.0
+attrs==25.3.0
 audioread==3.0.1
 azure-common==1.1.28
 azure-core==1.32.0
@@ -28,7 +28,7 @@ certifi==2025.1.31
 cffi==1.17.1
 chardet==5.2.0
 charset-normalizer==3.4.1
--e git+https://github.com/clp-research/clemcore.git@10e4e1c92d8bcc33564afb6560e46f1eff61169a#egg=clemcore
+-e git+https://github.com/clp-research/clemcore.git@deabcde1f7e815093ead517b87929e9261b60f18#egg=clemcore
 cli_exit_tools==1.2.7
 click==8.1.8
 cloudpickle==3.1.1
@@ -63,7 +63,7 @@ gitdb==4.0.12
 GitPython==3.1.44
 google-ai-generativelanguage==0.6.15
 google-api-core==2.24.2
-google-api-python-client==2.163.0
+google-api-python-client==2.164.0
 google-auth==2.38.0
 google-auth-httplib2==0.2.0
 google-generativeai==0.8.4
@@ -99,11 +99,11 @@ llvmlite==0.44.0
 loguru==0.7.3
 lxml==5.3.1
 MarkupSafe==3.0.2
-matplotlib==3.7.5
+matplotlib==3.7.1
 mistralai==0.0.12
 MouseInfo==0.1.3
 mpmath==1.3.0
-msal==1.31.1
+msal==1.32.0
 msal-extensions==1.2.0
 msgpack==1.1.0
 multidict==6.1.0
@@ -113,7 +113,7 @@ networkx==3.4.2
 ninja==1.11.1.3
 nltk==3.9.1
 numba==0.61.0
-numpy==1.26.4
+numpy==1.24.4
 numpy-financial==1.0.0
 oauth2client==4.1.3
 odfpy==1.4.1
@@ -123,7 +123,7 @@ opencv-python-headless==4.11.0.86
 openpyxl==3.1.5
 orjson==3.10.15
 packaging==24.2
-pandas==2.2.3
+pandas==2.0.1
 paramiko==3.5.1
 pdfminer.six==20231228
 pdfplumber==0.11.5
@@ -195,7 +195,6 @@ scipy==1.15.2
 seaborn==0.12.2
 sentry-sdk==2.22.0
 setproctitle==1.3.5
-setuptools==76.0.0
 shapely==2.0.7
 six==1.17.0
 smmap==5.0.2
@@ -204,7 +203,7 @@ soundfile==0.13.1
 soupsieve==2.6
 soxr==0.5.0.post1
 sympy==1.13.1
-threadpoolctl==3.5.0
+threadpoolctl==3.6.0
 tifffile==2025.2.18
 tiktoken==0.9.0
 tokenizers==0.15.2
