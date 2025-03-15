@@ -424,7 +424,7 @@ class DesktopGameMaster(DialogueGameMaster):
         self.add_message(player, utterance, role="user", image=image)
 
 
-class DesktopGameBenchmakr(GameBenchmark):
+class DesktopGameBenchmark(GameBenchmark):
     def create_game_master(
         self, experiment: Dict, player_models: List[Model]
     ) -> GameMaster:
