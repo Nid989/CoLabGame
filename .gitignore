@@ -2,6 +2,10 @@
 __pycache__
 .python-version
 *.log
+.ruff_cache/
+.venv/
+remove/
+
 
 # Project directories
 /results/
