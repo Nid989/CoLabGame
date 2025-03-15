@@ -28,7 +28,7 @@ certifi==2025.1.31
 cffi==1.17.1
 chardet==5.2.0
 charset-normalizer==3.4.1
-git+https://github.com/clp-research/clemcore.git@deabcde1f7e815093ead517b87929e9261b60f18#egg=clemcore
+/Users/nidhirbhavsar/Desktop/WORK/thesis/clemcore
 cli_exit_tools==1.2.7
 click==8.1.8
 cloudpickle==3.1.1
