@@ -97,10 +97,10 @@ class Environment(ABC):
         return None
 
 
-class OSWorldDesktopEnvironment(Environment):
-    """OSWorld Desktop Environment implementation of the Environment interface.
+class OSWorldComputerEnvironment(Environment):
+    """OSWorld Computer Environment implementation of the Environment interface.
 
-    Wraps the OSWorld DesktopEnv to provide a standardized interface.
+    Wraps the OSWorld ComputerEnv to provide a standardized interface.
     """
 
     def __init__(
@@ -113,7 +113,7 @@ class OSWorldDesktopEnvironment(Environment):
         require_a11y_tree: bool = True,
         **kwargs,
     ):
-        """Initialize the OSWorld Desktop Environment.
+        """Initialize the OSWorld Computer Environment.
 
         Args:
             path_to_vm (str): Path to the virtual machine file.
@@ -244,7 +244,7 @@ class EnvironmentFactory:
             ValueError: If the specified environment type is not supported.
         """
         if env_type.lower() == "osworld":
-            return OSWorldDesktopEnvironment(**config)
+            return OSWorldComputerEnvironment(**config)
         # Add more environment types as needed
         else:
             raise ValueError(f"Unsupported environment type: {env_type}")

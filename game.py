@@ -366,7 +366,7 @@ class InteractiveAssistant(Player):
         pass
 
 
-class DesktopGame:
+class ComputerGame:
     _instance = None
     _env = None
     _current_turn = 0  # Add class-level turn counter
@@ -460,7 +460,7 @@ class DesktopGame:
 
 
 if __name__ == "__main__":
-    game = DesktopGame(
+    game = ComputerGame(
         headless=False,
         observation_type="a11y_tree",
         action_space="pyautogui",

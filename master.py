@@ -7,7 +7,7 @@ from clemcore.clemgame import Player, DialogueGameMaster, GameMaster, GameBenchm
 from clemcore.backends import Model
 from clemcore.utils import file_utils
 
-from game import DesktopGame, InteractiveAssistant
+from game import ComputerGame, InteractiveAssistant
 from utils import extract_actions
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ class LogType(Enum):
     SETUP_ERROR = "setup_error"
 
 
-class DesktopGameMaster(DialogueGameMaster):
+class ComputerGameMaster(DialogueGameMaster):
     def __init__(
         self, name: str, path: str, experiment: Dict, player_models: List[Model]
     ):
@@ -47,7 +47,7 @@ class DesktopGameMaster(DialogueGameMaster):
 
         self.experiment: str = experiment["name"]
 
-        self.game: DesktopGame = None
+        self.game: ComputerGame = None
         self.game_instance: Dict = None
 
         self.terminated: bool = False  # indicates when the game ends due to completion, failure, or wait state
@@ -72,7 +72,7 @@ class DesktopGameMaster(DialogueGameMaster):
             "sleep_after_execution": 0.0,
         }
 
-        self.game = DesktopGame(**env_config, game_instance=self.game_instance)
+        self.game = ComputerGame(**env_config, game_instance=self.game_instance)
 
         try:
             self.current_observation = self.game.env.reset(
@@ -424,11 +424,11 @@ class DesktopGameMaster(DialogueGameMaster):
         self.add_message(player, utterance, role="user", image=image)
 
 
-class DesktopGameBenchmark(GameBenchmark):
+class ComputerGameBenchmark(GameBenchmark):
     def create_game_master(
         self, experiment: Dict, player_models: List[Model]
     ) -> GameMaster:
-        return DesktopGameMaster(
+        return ComputerGameMaster(
             self.game_name, self.game_path, experiment, player_models
         )
 

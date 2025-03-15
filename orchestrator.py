@@ -22,7 +22,7 @@ class GameInstance:
 
 class ExperimentOrchestrator:
     """
-    Manages experiment configuration processing for desktop automation tasks.
+    Manages experiment configuration processing for computer automation tasks.
     Maintains a persistent cache of experiments that can be loaded, updated and analyzed.
     """
 
