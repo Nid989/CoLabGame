@@ -1,18 +1,16 @@
-import os
 import logging
 from enum import Enum
 from typing import Dict, List, Tuple
 
+from clemcore import backends
 from clemcore.clemgame import Player, DialogueGameMaster, GameMaster, GameBenchmark
-from clemcore.backends import Model
-from clemcore.utils import file_utils
-
 from game import ComputerGame, InteractiveAssistant
 from utils import extract_actions
 
 logger = logging.getLogger(__name__)
 
 
+# FIXME: need to reduce the number of listed enums below.
 class LogType(Enum):
     """
     Log types for internal game master logging:
@@ -41,7 +39,11 @@ class LogType(Enum):
 
 class ComputerGameMaster(DialogueGameMaster):
     def __init__(
-        self, name: str, path: str, experiment: Dict, player_models: List[Model]
+        self,
+        name: str,
+        path: str,
+        experiment: Dict,
+        player_models: List[backends.Model],
     ):
         super().__init__(name, path, experiment, player_models)
 
@@ -426,13 +428,8 @@ class ComputerGameMaster(DialogueGameMaster):
 
 class ComputerGameBenchmark(GameBenchmark):
     def create_game_master(
-        self, experiment: Dict, player_models: List[Model]
+        self, experiment: Dict, player_models: List[backends.Model]
     ) -> GameMaster:
         return ComputerGameMaster(
             self.game_name, self.game_path, experiment, player_models
         )
-
-
-if __name__ == "__main__":
-    game_path = os.path.dirname(os.path.abspath(__file__))
-    experiments = file_utils.load_json("in/instances.json", game_path)
