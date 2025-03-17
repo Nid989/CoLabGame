@@ -235,3 +235,6 @@ dependencies = [
 
 [tool.uv.sources]
 clemcore = { path = "../clemcore" }
+
+[tool.uv]
+reinstall-package = ["clemcore"]
