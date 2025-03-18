@@ -1,6 +1,5 @@
 import json
 import logging
-from enum import Enum
 from typing import Dict, List, Tuple
 
 from clemcore import backends
@@ -14,23 +13,9 @@ from clemcore.clemgame.master import EdgeCondition
 from game import ComputerGame, RoleBasedPlayer
 from utils import extract_actions
 from parsing import parse_function_registry
+from constants import LogType, DEFAULT_ENV_CONFIG, DEFAULT_ROLE, ACTION_RESULT_TEMPLATE
 
 logger = logging.getLogger(__name__)
-
-
-# FIXME: need to reduce the number of listed enums below.
-class LogType(Enum):
-    """Log types for internal game master logging."""
-
-    ACTION_INFO = "action_info"  # Successful action extractions
-    ACTION_FAIL = "action_fail"  # Failed actions or errors
-    ACTION_EXEC = "action_exec"  # Successful execution results
-    TURN_PLAN = "turn_plan"  # Planning and thought processes
-    TURN_SKIP = "turn_skip"  # No actions available
-    TURN_FAIL = "turn_fail"  # Failures at the turn level
-    VALIDATION = "validation"  # Validation-related messages
-    GAME_STATE = "game_state"  # Tracking game state transitions
-    SETUP_ERROR = "setup_error"  # Initialization errors
 
 
 class ComputerGameMaster(DialogicNetworkGameMaster):
@@ -44,42 +29,33 @@ class ComputerGameMaster(DialogicNetworkGameMaster):
         super().__init__(name, path, experiment, player_models)
 
         self.experiment: str = experiment["name"]
-
         self.game: ComputerGame = None
         self.game_instance: Dict = None
+        self.terminated: bool = False
 
-        self.terminated: bool = False  # indicates when the game ends due to completion, failure, or wait state
-
-    # NOTE: log_to_self + self.terminated = True; does not seem ideal for setup related issues, good idea will be to replace it with logger.error (if encountered)
+    # NOTE: (Confused) log_to_self + self.terminated = True; does not seem ideal for setup related issues, good idea will be to replace it with logger.error (if encountered)
     # however, we need to set self.terminated = True since game must not proceed further.
     def _on_setup(self, **game_instance) -> None:
-        """Initializes game environment with provided configuration and registers player agents."""
+        """Method executed at the start of the default setup method.
+        - Sets up environment and loads initial observation.
+        - Starts gameplay recording.
+        - Constructs player interaction network.
+        """
         self.game_instance = game_instance
 
-        # Environment configuration (hardcoded)
-        # FIXME: need to change the way `path_to_vm` value is provided
-        env_config = {
-            "headless": False,
-            "observation_type": "a11y_tree",
-            "action_space": "pyautogui",
-            "screen_width": 1920,
-            "screen_height": 1080,
-            "max_steps": 5,
-            "max_trajectory_length": 3,
-            "path_to_vm": "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx",
-            "sleep_after_execution": 0.0,
-        }
+        self._initialize_environment()
+        self._initialize_recording()
+        self._build_graph()
 
-        self.game = ComputerGame(
-            **env_config, game_instance=self.game_instance["task_config"]
-        )
-
+    def _initialize_environment(self) -> None:
+        """Initializes the game environment and retrieves initial observation."""
         try:
+            env_config = DEFAULT_ENV_CONFIG.copy()
+            self.game = ComputerGame(
+                **env_config, game_instance=self.game_instance["task_config"]
+            )
             self.current_observation = self.game.env.reset(
-                task_config={
-                    "id" if k == "game_id" else k: v
-                    for k, v in self.game_instance.items()
-                }
+                task_config=self.game_instance["task_config"]
             )
         except Exception as e:
             self.terminated = True
@@ -92,35 +68,26 @@ class ComputerGameMaster(DialogicNetworkGameMaster):
                 "Game terminated: failed to initialize game environment",
             )
 
-        self._initialize_recording()
-        self._build_graph()
-
     def _initialize_recording(self) -> None:
+        """Initializes gameplay i.e., player-environment interaction recording."""
         try:
-            # Use the standardized interface method instead of directly accessing controller
             if not self.game.env.start_recording():
-                self.terminated = True
-                self.log_to_self(
-                    LogType.SETUP_ERROR.value, "Failed to start environment recording"
-                )
-                self.log_to_self(
-                    LogType.GAME_STATE.value,
-                    "Game terminated: failed to start environment recording",
-                )
+                raise RuntimeError("Failed to start environment recording")
         except Exception as e:
             self.terminated = True
-            self.log_to_self(
-                LogType.SETUP_ERROR.value, f"Recording initialization error: {str(e)}"
+            msg = (
+                f"Recording initialization error: {e}"
+                if isinstance(e, Exception)
+                else str(e)
             )
+            self.log_to_self(LogType.SETUP_ERROR.value, msg)
             self.log_to_self(
                 LogType.GAME_STATE.value,
                 "Game terminated: failed to start environment recording",
             )
 
     def _build_graph(self) -> None:
-        """Builds a dialogic-player network graph from the game instance configuration.
-        Uses role information to create appropriate player nodes.
-        """
+        """Builds a dialogic-player network graph from the game instance configuration."""
         try:
             graph_config = self.game_instance.get("graph")
             if not graph_config:
@@ -135,14 +102,11 @@ class ComputerGameMaster(DialogicNetworkGameMaster):
                 )
                 return
 
-            # Register nodes
             for node in graph_config.get("nodes", []):
                 node_id = node.get("id")
                 node_type = node.get("type")
-
                 if not node_id or not node_type:
                     continue
-
                 if node_type == "PLAYER":
                     role_index = node.get("role_index", 0)
                     if role_index >= len(self.player_models):
@@ -151,32 +115,25 @@ class ComputerGameMaster(DialogicNetworkGameMaster):
                             f"Player model not available for role index {role_index}",
                         )
                         continue
-
                     roles = self.game_instance.get("roles", [])
-                    role = roles[role_index] if role_index < len(roles) else "executor"
-
+                    role = (
+                        roles[role_index] if role_index < len(roles) else DEFAULT_ROLE
+                    )
                     player = RoleBasedPlayer(self.player_models[role_index], role=role)
-
                     self.add_player(player, node_id)
 
-            # Register edges
             for index, edge in enumerate(graph_config.get("edges", [])):
-                print(index)
                 from_node = edge.get("from")
                 to_node = edge.get("to")
                 edge_type = edge.get("type")
                 description = edge.get("description", "")
-                print(description)
-
                 if not from_node or not to_node or not edge_type:
                     continue
-
                 if edge_type == "STANDARD":
                     self.add_standard_edge(from_node, to_node, description)
                 elif edge_type == "DECISION":
                     condition_config = edge.get("condition", {})
                     parse_function_id = condition_config.get("parse_function_id")
-
                     if (
                         not parse_function_id
                         or parse_function_id not in parse_function_registry
@@ -186,55 +143,26 @@ class ComputerGameMaster(DialogicNetworkGameMaster):
                             f"Invalid parse function ID: {parse_function_id}",
                         )
                         continue
-
                     parse_func = parse_function_registry[parse_function_id]
                     condition = EdgeCondition(
                         parse_func=parse_func, description=description
                     )
-
                     self.add_decision_edge(from_node, to_node, condition, description)
 
-            # Set Anchor node if specified
             anchor_node = graph_config.get("anchor_node")
             if anchor_node:
                 self.set_anchor_node(anchor_node)
-
             logger.info("Graph building complete")
 
         except Exception as e:
-            print("here")
             self.terminated = True
             self.log_to_self(
-                LogType.SETUP_ERROR.value,
-                f"Error building graph: {str(e)}",
+                LogType.SETUP_ERROR.value, f"Error building graph: {str(e)}"
             )
             self.log_to_self(
                 LogType.GAME_STATE.value,
                 "Game terminated: failed to build interaction graph",
             )
-
-    # def _register_players(self) -> None:
-    #     if not self.player_models:
-    #         self.terminated = True
-    #         self.log_to_self(
-    #             LogType.SETUP_ERROR.value, "No player models available for registration"
-    #         )
-    #         self.log_to_self(
-    #             LogType.GAME_STATE.value, "Game terminated: no players to register"
-    #         )
-
-    #     try:
-    #         # FIXME: make it more dynamic
-    #         self.assistant = InteractiveAssistant(self.player_models[0])
-    #         self.add_player(self.assistant)
-    #     except Exception as e:
-    #         self.terminated = True
-    #         self.log_to_self(
-    #             LogType.SETUP_ERROR.value, f"Failed to register players: {str(e)}"
-    #         )
-    #         self.log_to_self(
-    #             LogType.GAME_STATE.value, "Game terminated: player registration failed"
-    #         )
 
     def _does_game_proceed(self) -> bool:
         """Determine if the game should continue to the next turn.
@@ -364,7 +292,9 @@ class ComputerGameMaster(DialogicNetworkGameMaster):
                 )
                 return False
 
-            action_result = f"Action: {str(action)}, Reward: {reward}, Done: {done}"
+            action_result = ACTION_RESULT_TEMPLATE.format(
+                action=str(action), reward=reward, done=done
+            )
             print(action_result)
             if info:
                 action_result += f", Additional info: {str(info)}"
