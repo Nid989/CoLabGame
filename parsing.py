@@ -100,15 +100,12 @@ def parse_pyautogui_actions(
         - Boolean indicating if parsing was successful (code blocks or commands found)
         - Extracted content as a string, or None if no valid content was found
     """
-    # Check for EXECUTE token
     execute_pattern = r"EXECUTE\s*(.*?)(?=EXECUTE|\Z)"
     execute_matches = re.findall(execute_pattern, utterance, re.DOTALL)
 
     if execute_matches:
-        # Use only the content after the EXECUTE token
         utterance = execute_matches[0]
     else:
-        # No EXECUTE token found
         return False, None
 
     normalized_utterance = "\n".join(
@@ -121,7 +118,6 @@ def parse_pyautogui_actions(
     if not code_matches:
         return False, None
 
-    # Join all extracted code blocks with newlines
     parsed_content = "\n".join(code_block.strip() for code_block in code_matches)
 
     return bool(parsed_content), parsed_content if parsed_content else None
@@ -144,15 +140,12 @@ def parse_computer13_actions(
         - Boolean indicating if parsing was successful
         - Extracted JSON content as a string, or None if no valid content was found
     """
-    # Check for EXECUTE token
     execute_pattern = r"EXECUTE\s*(.*?)(?=EXECUTE|\Z)"
     execute_matches = re.findall(execute_pattern, utterance, re.DOTALL)
 
     if execute_matches:
-        # Use only the content after the EXECUTE token
         utterance = execute_matches[0]
     else:
-        # No EXECUTE token found
         return False, None
 
     json_blocks = re.findall(r"```(?:json\s+)?(.*?)```", utterance, re.DOTALL)
@@ -256,7 +249,6 @@ def parse_query(
     if not query_matches:
         return False, None
 
-    # Return the content of the first QUERY block found
     query_content = query_matches[0].strip()
     return bool(query_content), query_content if query_content else None
 
@@ -284,6 +276,5 @@ def parse_response(
     if not response_matches:
         return False, None
 
-    # Return the content of the first RESPONSE block found
     response_content = response_matches[0].strip()
     return bool(response_content), response_content if response_content else None

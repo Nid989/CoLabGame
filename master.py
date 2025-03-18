@@ -1,43 +1,39 @@
+import json
 import logging
 from enum import Enum
 from typing import Dict, List, Tuple
 
 from clemcore import backends
-from clemcore.clemgame import Player, DialogueGameMaster, GameMaster, GameBenchmark
-from game import ComputerGame, InteractiveAssistant
+from clemcore.clemgame import (
+    Player,
+    DialogicNetworkGameMaster,
+    GameMaster,
+    GameBenchmark,
+)
+from clemcore.clemgame.master import EdgeCondition
+from game import ComputerGame, RoleBasedPlayer
 from utils import extract_actions
+from parsing import parse_function_registry
 
 logger = logging.getLogger(__name__)
 
 
 # FIXME: need to reduce the number of listed enums below.
 class LogType(Enum):
-    """
-    Log types for internal game master logging:
+    """Log types for internal game master logging."""
 
-    - ACTION_INFO: Successful action extractions and general action info.
-    - ACTION_FAIL: Failed actions or errors during action execution.
-    - ACTION_EXEC: Successful action execution results.
-    - TURN_PLAN: Logging turn planning and thought processes.
-    - TURN_SKIP: When no actions are available to execute.
-    - TURN_FAIL: Failures at the turn level.
-    - VALIDATION: Validation-related messages.
-    - GAME_STATE: Tracking game state transitions and termination conditions.
-    - SETUP_ERROR: Initialization and setup-related errors.
-    """
-
-    ACTION_INFO = "action_info"
-    ACTION_FAIL = "action_fail"
-    ACTION_EXEC = "action_exec"
-    TURN_PLAN = "turn_plan"
-    TURN_SKIP = "turn_skip"
-    TURN_FAIL = "turn_fail"
-    VALIDATION = "validation"
-    GAME_STATE = "game_state"
-    SETUP_ERROR = "setup_error"
+    ACTION_INFO = "action_info"  # Successful action extractions
+    ACTION_FAIL = "action_fail"  # Failed actions or errors
+    ACTION_EXEC = "action_exec"  # Successful execution results
+    TURN_PLAN = "turn_plan"  # Planning and thought processes
+    TURN_SKIP = "turn_skip"  # No actions available
+    TURN_FAIL = "turn_fail"  # Failures at the turn level
+    VALIDATION = "validation"  # Validation-related messages
+    GAME_STATE = "game_state"  # Tracking game state transitions
+    SETUP_ERROR = "setup_error"  # Initialization errors
 
 
-class ComputerGameMaster(DialogueGameMaster):
+class ComputerGameMaster(DialogicNetworkGameMaster):
     def __init__(
         self,
         name: str,
@@ -74,7 +70,9 @@ class ComputerGameMaster(DialogueGameMaster):
             "sleep_after_execution": 0.0,
         }
 
-        self.game = ComputerGame(**env_config, game_instance=self.game_instance)
+        self.game = ComputerGame(
+            **env_config, game_instance=self.game_instance["task_config"]
+        )
 
         try:
             self.current_observation = self.game.env.reset(
@@ -95,7 +93,7 @@ class ComputerGameMaster(DialogueGameMaster):
             )
 
         self._initialize_recording()
-        self._register_players()
+        self._build_graph()
 
     def _initialize_recording(self) -> None:
         try:
@@ -119,28 +117,124 @@ class ComputerGameMaster(DialogueGameMaster):
                 "Game terminated: failed to start environment recording",
             )
 
-    def _register_players(self) -> None:
-        if not self.player_models:
+    def _build_graph(self) -> None:
+        """Builds a dialogic-player network graph from the game instance configuration.
+        Uses role information to create appropriate player nodes.
+        """
+        try:
+            graph_config = self.game_instance.get("graph")
+            if not graph_config:
+                self.terminated = True
+                self.log_to_self(
+                    LogType.SETUP_ERROR.value,
+                    "Game instance missing required 'graph' field",
+                )
+                self.log_to_self(
+                    LogType.GAME_STATE.value,
+                    "Game terminated: missing graph configuration",
+                )
+                return
+
+            # Register nodes
+            for node in graph_config.get("nodes", []):
+                node_id = node.get("id")
+                node_type = node.get("type")
+
+                if not node_id or not node_type:
+                    continue
+
+                if node_type == "PLAYER":
+                    role_index = node.get("role_index", 0)
+                    if role_index >= len(self.player_models):
+                        self.log_to_self(
+                            LogType.SETUP_ERROR.value,
+                            f"Player model not available for role index {role_index}",
+                        )
+                        continue
+
+                    roles = self.game_instance.get("roles", [])
+                    role = roles[role_index] if role_index < len(roles) else "executor"
+
+                    player = RoleBasedPlayer(self.player_models[role_index], role=role)
+
+                    self.add_player(player, node_id)
+
+            # Register edges
+            for index, edge in enumerate(graph_config.get("edges", [])):
+                print(index)
+                from_node = edge.get("from")
+                to_node = edge.get("to")
+                edge_type = edge.get("type")
+                description = edge.get("description", "")
+                print(description)
+
+                if not from_node or not to_node or not edge_type:
+                    continue
+
+                if edge_type == "STANDARD":
+                    self.add_standard_edge(from_node, to_node, description)
+                elif edge_type == "DECISION":
+                    condition_config = edge.get("condition", {})
+                    parse_function_id = condition_config.get("parse_function_id")
+
+                    if (
+                        not parse_function_id
+                        or parse_function_id not in parse_function_registry
+                    ):
+                        self.log_to_self(
+                            LogType.SETUP_ERROR.value,
+                            f"Invalid parse function ID: {parse_function_id}",
+                        )
+                        continue
+
+                    parse_func = parse_function_registry[parse_function_id]
+                    condition = EdgeCondition(
+                        parse_func=parse_func, description=description
+                    )
+
+                    self.add_decision_edge(from_node, to_node, condition, description)
+
+            # Set Anchor node if specified
+            anchor_node = graph_config.get("anchor_node")
+            if anchor_node:
+                self.set_anchor_node(anchor_node)
+
+            logger.info("Graph building complete")
+
+        except Exception as e:
+            print("here")
             self.terminated = True
             self.log_to_self(
-                LogType.SETUP_ERROR.value, "No player models available for registration"
+                LogType.SETUP_ERROR.value,
+                f"Error building graph: {str(e)}",
             )
             self.log_to_self(
-                LogType.GAME_STATE.value, "Game terminated: no players to register"
+                LogType.GAME_STATE.value,
+                "Game terminated: failed to build interaction graph",
             )
 
-        try:
-            # FIXME: make it more dynamic
-            self.assistant = InteractiveAssistant(self.player_models[0])
-            self.add_player(self.assistant)
-        except Exception as e:
-            self.terminated = True
-            self.log_to_self(
-                LogType.SETUP_ERROR.value, f"Failed to register players: {str(e)}"
-            )
-            self.log_to_self(
-                LogType.GAME_STATE.value, "Game terminated: player registration failed"
-            )
+    # def _register_players(self) -> None:
+    #     if not self.player_models:
+    #         self.terminated = True
+    #         self.log_to_self(
+    #             LogType.SETUP_ERROR.value, "No player models available for registration"
+    #         )
+    #         self.log_to_self(
+    #             LogType.GAME_STATE.value, "Game terminated: no players to register"
+    #         )
+
+    #     try:
+    #         # FIXME: make it more dynamic
+    #         self.assistant = InteractiveAssistant(self.player_models[0])
+    #         self.add_player(self.assistant)
+    #     except Exception as e:
+    #         self.terminated = True
+    #         self.log_to_self(
+    #             LogType.SETUP_ERROR.value, f"Failed to register players: {str(e)}"
+    #         )
+    #         self.log_to_self(
+    #             LogType.GAME_STATE.value, "Game terminated: player registration failed"
+    #         )
 
     def _does_game_proceed(self) -> bool:
         """Determine if the game should continue to the next turn.
@@ -356,7 +450,6 @@ class ComputerGameMaster(DialogueGameMaster):
 
         print(extracted_actions)
 
-        # First try block: Update interaction history
         try:
             self.game.prompt_handler.update_interaction_history(
                 thought=utterance,
@@ -381,11 +474,9 @@ class ComputerGameMaster(DialogueGameMaster):
             )
             return
 
-        # Check termination before executing actions
         if self.terminated:
             return
 
-        # Second try block: Execute actions only if history update was successful
         try:
             self._execute_all_actions(extracted_actions)
         except Exception as e:
@@ -433,3 +524,16 @@ class ComputerGameBenchmark(GameBenchmark):
         return ComputerGameMaster(
             self.game_name, self.game_path, experiment, player_models
         )
+
+
+if __name__ == "__main__":
+
+    def load_json(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    experiments = load_json("./in/instances.json")
+    experiment_1 = experiments["experiments"][0]
+    game_1 = experiment_1["game_instances"][0]
+    master = ComputerGameMaster("computergame", None, experiment_1, ["mock", "mock"])
+    master.setup(**game_1)

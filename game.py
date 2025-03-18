@@ -5,10 +5,10 @@ from typing import Dict, Literal, Any
 import tempfile
 import atexit
 
-# Clembench
+
 from clemcore.clemgame import Player
 
-# OSWorld
+# FIXME: (OSWorld) Soon these prompts will be replaced by player specific prompts accessible through instances.json file.
 from mm_agents.prompts import (
     SYS_PROMPT_IN_SCREENSHOT_OUT_CODE,
     SYS_PROMPT_IN_SCREENSHOT_OUT_ACTION,
@@ -18,8 +18,6 @@ from mm_agents.prompts import (
     SYS_PROMPT_IN_BOTH_OUT_ACTION,
     SYS_PROMPT_IN_SOM_OUT_TAG,
 )
-
-# Local
 from utils import linearize_accessibility_tree, trim_accessibility_tree, tag_screenshot
 from environment import EnvironmentFactory, Environment
 
@@ -289,17 +287,17 @@ class PromptHandler:
         }
 
 
-class RoleBasedMeta(type):
+class RoleBasedMeta(type(Player)):
     """Metaclass for creating role-specific class implementations"""
 
     _role_implementations: Dict[str, Dict[str, Any]] = {
-        "actor": {
+        "executor": {
             "_custom_response": lambda self, messages, turn_idx: (
                 # Actor-specific implementation
                 None  # Placeholder
             )
         },
-        "guide": {
+        "advisor": {
             "_custom_response": lambda self, messages, turn_idx: (
                 # Guide-specific implementation
                 None  # Placeholder
@@ -335,35 +333,36 @@ class RoleBasedMeta(type):
         mcs._role_implementations[role] = implementations
 
 
-# class InteractiveAssistant(Player, metaclass=RoleBasedMeta):
-#     """
-#     A role-based interactive assistant that dynamically changes its implementation
-#     based on the provided role.
-#     """
-#     def __init__(self, model):
-#         super().__init__(model)
-#         self._role = None  # Will be set by metaclass
+class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
+    """
+    A role-based interactive assistant that dynamically changes its implementation
+    based on the provided role.
+    """
 
-#     @property
-#     def role(self) -> str:
-#         """Get the current role of the assistant"""
-#         return self._role
-
-#     def _custom_response(self, messages, turn_idx) -> str:
-#         """
-#         Base implementation - will be overridden by role-specific implementation
-#         This should never be called directly.
-#         """
-#         raise NotImplementedError("No role-specific implementation found")
-
-
-class InteractiveAssistant(Player):
     def __init__(self, model):
         super().__init__(model)
+        self._role = None  # Will be set by metaclass
+
+    @property
+    def role(self) -> str:
+        """Get the current role of the assistant"""
+        return self._role
 
     def _custom_response(self, messages, turn_idx) -> str:
-        """TODO: Implement the 'oracle' function, which provides an automated solution for completing a game_instance/ task."""
-        pass
+        """
+        Base implementation - will be overridden by role-specific implementation
+        This should never be called directly.
+        """
+        raise NotImplementedError("No role-specific implementation found")
+
+
+# class InteractiveAssistant(Player):
+#     def __init__(self, model):
+#         super().__init__(model)
+
+#     def _custom_response(self, messages, turn_idx) -> str:
+#         """TODO: Implement the 'oracle' function, which provides an automated solution for completing a game_instance/ task."""
+#         pass
 
 
 class ComputerGame:
