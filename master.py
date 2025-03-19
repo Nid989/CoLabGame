@@ -44,11 +44,10 @@ class ComputerGameMaster(DialogicNetworkGameMaster):
         self.game_instance = game_instance
 
         self._initialize_environment()
-        self._initialize_recording()
         self._build_graph()
 
     def _initialize_environment(self) -> None:
-        """Initializes the game environment and retrieves initial observation."""
+        """Initializes game environment with recording capabilities"""
         try:
             env_config = DEFAULT_ENV_CONFIG.copy()
             self.game = ComputerGame(
@@ -57,33 +56,20 @@ class ComputerGameMaster(DialogicNetworkGameMaster):
             self.current_observation = self.game.env.reset(
                 task_config=self.game_instance["task_config"]
             )
+            if not self.game.env.start_recording():
+                raise RuntimeError("Failed to start environment recording")
+
         except Exception as e:
             self.terminated = True
-            self.log_to_self(
-                LogType.SETUP_ERROR.value,
-                f"Environment initialization failed: {str(e)}",
+            error_message = (
+                f"Environment initialization failed: {str(e)}"
+                if "recording" not in str(e).lower()
+                else f"Recording initialization failed: {str(e)}"
             )
+            self.log_to_self(LogType.SETUP_ERROR.value, error_message)
             self.log_to_self(
                 LogType.GAME_STATE.value,
                 "Game terminated: failed to initialize game environment",
-            )
-
-    def _initialize_recording(self) -> None:
-        """Initializes gameplay i.e., player-environment interaction recording."""
-        try:
-            if not self.game.env.start_recording():
-                raise RuntimeError("Failed to start environment recording")
-        except Exception as e:
-            self.terminated = True
-            msg = (
-                f"Recording initialization error: {e}"
-                if isinstance(e, Exception)
-                else str(e)
-            )
-            self.log_to_self(LogType.SETUP_ERROR.value, msg)
-            self.log_to_self(
-                LogType.GAME_STATE.value,
-                "Game terminated: failed to start environment recording",
             )
 
     def _build_graph(self) -> None:
