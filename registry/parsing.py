@@ -3,7 +3,7 @@ import re
 from typing import Callable, Optional, Tuple
 
 from clemcore.clemgame import Player, DialogicNetworkGameMaster
-from registry import FunctionRegistry
+from registry.base import FunctionRegistry
 
 
 ParseFuncType = Callable[
