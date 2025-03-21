@@ -1,24 +1,14 @@
 import os
 import shutil
 import time
-from typing import Dict, Literal, Any
+from typing import Dict, Literal, Any, List
 import tempfile
 import atexit
 
-
 from clemcore.clemgame import Player
+from prompt_handler import ComputerGamePromptHandler, HandlerType
 
 # FIXME: (OSWorld) Soon these prompts will be replaced by player specific prompts accessible through instances.json file.
-from mm_agents.prompts import (
-    SYS_PROMPT_IN_SCREENSHOT_OUT_CODE,
-    SYS_PROMPT_IN_SCREENSHOT_OUT_ACTION,
-    SYS_PROMPT_IN_A11Y_OUT_CODE,
-    SYS_PROMPT_IN_A11Y_OUT_ACTION,
-    SYS_PROMPT_IN_BOTH_OUT_CODE,
-    SYS_PROMPT_IN_BOTH_OUT_ACTION,
-    SYS_PROMPT_IN_SOM_OUT_TAG,
-)
-from utils import linearize_accessibility_tree, trim_accessibility_tree, tag_screenshot
 from environment import EnvironmentFactory, Environment
 
 
@@ -77,216 +67,6 @@ class TemporaryImageManager:
         self.image_cache.clear()
 
 
-class PromptHandler:
-    """
-    Handles the construction and management of prompts for the agent's interaction with the environment.
-    Processes different types of observations (screenshots, accessibility trees, or both) and constructs
-    appropriate prompts based on the configured observation type and action space.
-    """
-
-    def __init__(
-        self,
-        platform: str = "ubuntu",
-        action_space: ACTION_SPACE = "computer_13",
-        observation_type: OBSERVATION_TYPE = "screenshot_a11y_tree",
-        max_trajectory_length: int = 3,
-        a11y_tree_max_tokens: int = 10000,
-    ):
-        self.platform = platform
-        self.action_space = action_space
-        self.observation_type = observation_type
-        self.max_trajectory_length = max_trajectory_length
-        self.a11y_tree_max_tokens = a11y_tree_max_tokens
-
-        self.thoughts = []
-        self.actions = []
-        self.observations = []
-
-        # Initialize the temporary image manager
-        self.temp_manager = TemporaryImageManager()
-
-        # Define valid combinations and their corresponding system messages
-        prompt_mapping = {
-            ("screenshot", "computer_13"): SYS_PROMPT_IN_SCREENSHOT_OUT_ACTION,
-            ("screenshot", "pyautogui"): SYS_PROMPT_IN_SCREENSHOT_OUT_CODE,
-            ("a11y_tree", "computer_13"): SYS_PROMPT_IN_A11Y_OUT_ACTION,
-            ("a11y_tree", "pyautogui"): SYS_PROMPT_IN_A11Y_OUT_CODE,
-            ("screenshot_a11y_tree", "computer_13"): SYS_PROMPT_IN_BOTH_OUT_ACTION,
-            ("screenshot_a11y_tree", "pyautogui"): SYS_PROMPT_IN_BOTH_OUT_CODE,
-            ("som", "pyautogui"): SYS_PROMPT_IN_SOM_OUT_TAG,
-        }
-
-        key = (self.observation_type, self.action_space)
-        if key not in prompt_mapping:
-            raise ValueError(
-                f"Invalid combination of observation_type '{self.observation_type}' and action_space '{self.action_space}'"
-            )
-
-        self.system_message = prompt_mapping[key]
-
-    def _get_system_message(self, instruction: str) -> str:
-        """
-        Returns the system message with the given instruction.
-
-        Args:
-            instruction (str): The task instruction or goal that the agent needs to accomplish.
-
-        Returns:
-            str: System message content
-        """
-        return f"{self.system_message}\nYou are asked to complete the following task: {instruction}"
-
-    def _get_turn_context(
-        self, obs: Dict, turn: int = None, instruction: str = None
-    ) -> Dict:
-        """
-        Constructs the prompt context for a specific turn.
-        If turn is 0, prepends the system message to the current context.
-
-        Args:
-            obs (Dict): Current observation dictionary containing either:
-                - screenshot (str): Base64 encoded screenshot image
-                - accessibility_tree (str): Linearized accessibility tree text
-                - Both of the above for combined observation types
-            turn (int, optional): Current turn number. If 0, includes system message.
-            instruction (str, optional): Task instruction needed for system message.
-
-        Returns:
-            Dict: Message containing the turn's observation context
-        """
-        # Get the base observation context first
-        if self.observation_type in ["screenshot", "screenshot_a11y_tree"]:
-            # Process accessibility tree if needed
-            linearized_accessibility_tree = None
-            if self.observation_type == "screenshot_a11y_tree":
-                linearized_accessibility_tree = linearize_accessibility_tree(
-                    accessibility_tree=obs["accessibility_tree"], platform=self.platform
-                )
-                if linearized_accessibility_tree:
-                    linearized_accessibility_tree = trim_accessibility_tree(
-                        linearized_accessibility_tree, self.a11y_tree_max_tokens
-                    )
-
-            # Save screenshot to temporary file
-            tmp_path = self.temp_manager.save_image(obs["screenshot"])
-
-            base_content = (
-                "Given the screenshot as below. What's the next step that you will do to help with the task?"
-                if self.observation_type == "screenshot"
-                else f"Given the screenshot and info from accessibility tree as below:\n{linearized_accessibility_tree}\nWhat's the next step that you will do to help with the task?"
-            )
-
-            message = {"role": "user", "content": base_content, "image": [tmp_path]}
-
-        elif self.observation_type == "a11y_tree":
-            linearized_accessibility_tree = linearize_accessibility_tree(
-                accessibility_tree=obs["accessibility_tree"], platform=self.platform
-            )
-            if linearized_accessibility_tree:
-                linearized_accessibility_tree = trim_accessibility_tree(
-                    linearized_accessibility_tree, self.a11y_tree_max_tokens
-                )
-
-            message = {
-                "role": "user",
-                "content": f"Given the info from accessibility tree as below:\n{linearized_accessibility_tree}\nWhat's the next step that you will do to help with the task?",
-            }
-
-        elif self.observation_type == "som":
-            masks, drew_nodes, tagged_screenshot, linearized_accessibility_tree = (
-                tag_screenshot(
-                    obs["screenshot"], obs["accessibility_tree"], self.platform
-                )
-            )
-
-            if linearized_accessibility_tree:
-                linearized_accessibility_tree = trim_accessibility_tree(
-                    linearized_accessibility_tree, self.a11y_tree_max_tokens
-                )
-
-            tmp_path = self.temp_manager.save_image(tagged_screenshot)
-
-            message = {
-                "role": "user",
-                "content": f"Given the tagged screenshot and info from accessibility tree as below:\n{linearized_accessibility_tree}\nWhat's the next step that you will do to help with the task?",
-                "image": [tmp_path],
-            }
-
-        else:
-            raise ValueError(f"Invalid observation_type: {self.observation_type}")
-
-        # If it's turn 0, prepend the system message to the content
-        if turn == 0:
-            if instruction is None:
-                raise ValueError("Instruction is required for turn 0")
-            system_message = self._get_system_message(instruction)
-            message["content"] = f"{system_message}\n\n{message['content']}"
-
-        return message
-
-    def update_interaction_history(
-        self, thought: str, action: str, obs: Dict = None
-    ) -> None:
-        """
-        Updates the interaction history with new thought, action, and optionally a new observation.
-        Ensures no duplicate observations are added and processes observations based on type.
-
-        Args:
-            thought (str): The thought from the LLM
-            action (str): The action from the LLM
-            obs (Dict, optional): The observation dictionary. Defaults to None.
-        """
-        if obs is not None:
-            # Process observation based on type
-            processed_obs = {}
-
-            if self.observation_type in ["screenshot", "screenshot_a11y_tree", "som"]:
-                if self.observation_type == "som":
-                    # Process screenshot with SOM tagging
-                    (
-                        masks,
-                        drew_nodes,
-                        tagged_screenshot,
-                        linearized_accessibility_tree,
-                    ) = tag_screenshot(
-                        obs["screenshot"], obs["accessibility_tree"], self.platform
-                    )
-                    screenshot = tagged_screenshot
-                else:
-                    screenshot = obs["screenshot"]
-
-                processed_obs["screenshot"] = screenshot
-
-            if self.observation_type in ["a11y_tree", "screenshot_a11y_tree", "som"]:
-                # Process accessibility tree
-                linearized_accessibility_tree = linearize_accessibility_tree(
-                    accessibility_tree=obs["accessibility_tree"], platform=self.platform
-                )
-                if linearized_accessibility_tree:
-                    linearized_accessibility_tree = trim_accessibility_tree(
-                        linearized_accessibility_tree, self.a11y_tree_max_tokens
-                    )
-                processed_obs["accessibility_tree"] = linearized_accessibility_tree
-
-            self.observations.append(processed_obs)
-
-        # Always append thoughts and actions
-        self.thoughts.append(thought)
-        self.actions.append(action)
-
-    def get_last_interaction(self) -> Dict[str, str]:
-        """
-        Returns the most recent thought and action.
-
-        Returns:
-            Dict[str, str]: Dictionary containing the last thought and action
-        """
-        return {
-            "thought": self.thoughts[-1] if self.thoughts else None,
-            "action": self.actions[-1] if self.actions else None,
-        }
-
-
 class RoleBasedMeta(type(Player)):
     """Metaclass for creating role-specific class implementations"""
 
@@ -339,14 +119,55 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
     based on the provided role.
     """
 
-    def __init__(self, model):
+    def __init__(
+        self,
+        model,
+        role: str = "executor",
+        prompt_header: str = None,
+        handler_type: HandlerType = "standard",
+        **kwargs,
+    ):
         super().__init__(model)
-        self._role = None  # Will be set by metaclass
+        self._role = role
+
+        handler_kwargs = kwargs.copy()
+        if handler_type == "environment":
+            handler_kwargs.update(
+                {
+                    "observation_type": kwargs.get("observation_type", "screenshot"),
+                    "action_space": kwargs.get("action_space", "computer_13"),
+                    "platform": kwargs.get("platform", "ubuntu"),
+                    "a11y_tree_max_tokens": kwargs.get("a11y_tree_max_tokens", 10000),
+                }
+            )
+
+            use_images = (
+                "screenshot" in handler_kwargs.get("observation_type", "")
+                or handler_kwargs.get("observation_type", "") == "som"
+            )
+            if use_images:
+                handler_kwargs["temp_manager"] = TemporaryImageManager()
+
+        self.prompt_handler = ComputerGamePromptHandler(
+            handler_type=handler_type, prompt_header=prompt_header, **handler_kwargs
+        )
 
     @property
     def role(self) -> str:
         """Get the current role of the assistant"""
         return self._role
+
+    def add_user_message(self, utterance: str, image: List[str] = None) -> None:
+        """Delegate to prompt handler to add a user message"""
+        self.prompt_handler.add_user_message(utterance, image)
+
+    def add_assistant_message(self, utterance: str) -> None:
+        """Delegate to prompt handler to add an assistant message"""
+        self.prompt_handler.add_assistant_message(utterance)
+
+    def update_with_observation(self, obs: Dict) -> None:
+        """Process observation using prompt handler"""
+        self.prompt_handler.update(observation=obs)
 
     def _custom_response(self, messages, turn_idx) -> str:
         """
@@ -354,15 +175,6 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         This should never be called directly.
         """
         raise NotImplementedError("No role-specific implementation found")
-
-
-# class InteractiveAssistant(Player):
-#     def __init__(self, model):
-#         super().__init__(model)
-
-#     def _custom_response(self, messages, turn_idx) -> str:
-#         """TODO: Implement the 'oracle' function, which provides an automated solution for completing a game_instance/ task."""
-#         pass
 
 
 class ComputerGame:
@@ -448,14 +260,6 @@ class ComputerGame:
         # Component Initialization
         # Initialize virtual environment with configured parameters
         _ = self.env
-
-        # Initialize prompt orchestrator
-        self.prompt_handler = PromptHandler(
-            platform="ubuntu",
-            action_space=self.action_space,
-            observation_type=self.observation_type,
-            max_trajectory_length=self.max_trajectory_length,
-        )
 
 
 if __name__ == "__main__":
