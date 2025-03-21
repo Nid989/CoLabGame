@@ -134,6 +134,7 @@ def parse_som_pyautogui_actions(
     return True, result
 
 
+# DONE or FAIL
 @parse_function_registry.register("parse_done_or_fail")
 def parse_done_or_fail(
     player: Player, utterance: str, gm: "DialogicNetworkGameMaster"
