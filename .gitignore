@@ -11,6 +11,7 @@ remove/
 /results/
 /in/legacy
 /cache/
+/legacy/
 
 # Temporary and system files
 .DS_Store
