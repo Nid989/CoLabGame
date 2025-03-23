@@ -425,22 +425,22 @@ def tag_screenshot(screenshot, accessibility_tree, platform="ubuntu"):
     return marks, drew_nodes, tagged_screenshot, element_list
 
 
-def simplify_observation(
+def preprocess_observation(
     observation: Dict[str, Union[str, Image.Image, Dict]],
     observation_type: OBSERVATION_TYPE = "a11y_tree",
     platform: str = "ubuntu",
     a11y_tree_max_tokens: int = None,
 ) -> Dict[str, Union[str, Image.Image, Dict, List, np.ndarray]]:
-    """Process raw observation data based on observation type.
+    """Preprocess raw observation data based on observation type.
     Args:
         observation: Raw observation dictionary containing screenshot and/or accessibility tree
         observation_type: Type of observation ('screenshot', 'a11y_tree', 'screenshot_a11y_tree', 'som')
         platform: Platform type ('ubuntu' or 'windows')
         a11y_tree_max_tokens: Maximum tokens for the accessibility tree
     Returns:
-        dict: Processed observation data containing processed screenshot and/or accessibility tree
+        dict: Preprocessed observation data containing processed screenshot and/or accessibility tree
     """
-    processed_obs = {}
+    preprocessed_obs = {}
 
     # Process screenshot if needed
     if observation_type in ["screenshot", "screenshot_a11y_tree", "som"]:
@@ -456,10 +456,10 @@ def simplify_observation(
             )
             screenshot = tagged_screenshot
             # Add masks for later use in action parsing
-            processed_obs["masks"] = masks
+            preprocessed_obs["masks"] = masks
         else:
             screenshot = observation["screenshot"]
-        processed_obs["screenshot"] = screenshot
+        preprocessed_obs["screenshot"] = screenshot
 
     # Process accessibility tree if needed
     if observation_type in ["a11y_tree", "screenshot_a11y_tree", "som"]:
@@ -471,6 +471,6 @@ def simplify_observation(
             linearized_accessibility_tree = trim_accessibility_tree(
                 linearized_accessibility_tree, a11y_tree_max_tokens
             )
-        processed_obs["accessibility_tree"] = linearized_accessibility_tree
+        preprocessed_obs["accessibility_tree"] = linearized_accessibility_tree
 
-    return processed_obs
+    return preprocessed_obs
