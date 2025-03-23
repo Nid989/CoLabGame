@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw, ImageFont
 import tiktoken
 import numpy as np
 
-from constants import OBSERVATION_SPACE
+from constants import OBSERVATION_TYPE
 
 
 def find_leaf_nodes(xlm_file_str):
@@ -425,9 +425,9 @@ def tag_screenshot(screenshot, accessibility_tree, platform="ubuntu"):
     return marks, drew_nodes, tagged_screenshot, element_list
 
 
-def process_observation(
+def simplify_observation(
     observation: Dict[str, Union[str, Image.Image, Dict]],
-    observation_type: OBSERVATION_SPACE = "a11y_tree",
+    observation_type: OBSERVATION_TYPE = "a11y_tree",
     platform: str = "ubuntu",
     a11y_tree_max_tokens: int = None,
 ) -> Dict[str, Union[str, Image.Image, Dict, List, np.ndarray]]:
