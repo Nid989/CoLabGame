@@ -1,19 +1,17 @@
 import os
 import shutil
 import time
-from typing import Dict, Literal, Any, List
+from typing import Dict, Any
 import tempfile
 import atexit
 
 from clemcore.clemgame import Player
-from prompt_handler import ComputerGamePromptHandler, HandlerType
+from prompt_handler import PromptHandler, HANDLER_TYPE
 
 # FIXME: (OSWorld) Soon these prompts will be replaced by player specific prompts accessible through instances.json file.
 from environment import EnvironmentFactory, Environment
 
-
-ACTION_SPACE = Literal["computer_13", "pyautogui"]
-OBSERVATION_TYPE = Literal["screenshot", "a11y_tree", "screenshot_a11y_tree", "som"]
+from constants import OBSERVATION_TYPE, ACTION_SPACE
 
 
 class TemporaryImageManager:
@@ -124,7 +122,7 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         model,
         role: str = "executor",
         prompt_header: str = None,
-        handler_type: HandlerType = "standard",
+        handler_type: HANDLER_TYPE = "standard",
         **kwargs,
     ):
         super().__init__(model)
@@ -148,7 +146,7 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
             if use_images:
                 handler_kwargs["temp_manager"] = TemporaryImageManager()
 
-        self.prompt_handler = ComputerGamePromptHandler(
+        self.prompt_handler = PromptHandler(
             handler_type=handler_type, prompt_header=prompt_header, **handler_kwargs
         )
 
@@ -157,17 +155,19 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         """Get the current role of the assistant"""
         return self._role
 
-    def add_user_message(self, utterance: str, image: List[str] = None) -> None:
-        """Delegate to prompt handler to add a user message"""
-        self.prompt_handler.add_user_message(utterance, image)
+    def add_user_message(self, **kwargs) -> None:
+        """Add a user message using the prompt handler
+        Args:
+            **kwargs: Message components (observation, query, response, etc.)
+        """
+        self.prompt_handler.add_user_message(**kwargs)
 
-    def add_assistant_message(self, utterance: str) -> None:
-        """Delegate to prompt handler to add an assistant message"""
-        self.prompt_handler.add_assistant_message(utterance)
-
-    def update_with_observation(self, obs: Dict) -> None:
-        """Process observation using prompt handler"""
-        self.prompt_handler.update(observation=obs)
+    def add_assistant_message(self, content: str) -> None:
+        """Add an assistant message to the prompt handler
+        Args:
+            content: The text content of the message
+        """
+        self.prompt_handler.add_assistant_message(content)
 
     def _custom_response(self, messages, turn_idx) -> str:
         """

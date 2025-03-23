@@ -5,13 +5,11 @@ processors = Registry[Callable]()
 
 
 @processors.register("observation")
-def process_observation(observation: Dict[str, Any], role: str) -> Dict[str, Any]:
+def process_observation(observation: Dict[str, Any], handler) -> Dict[str, Any]:
     """Process raw observation data into a standardized format
-
     Args:
         observation: Raw observation data
-        role: Role of the agent
-
+        handler: Reference to the prompt handler instance
     Returns:
         Processed observation data
     """
@@ -20,19 +18,17 @@ def process_observation(observation: Dict[str, Any], role: str) -> Dict[str, Any
     # - Process screenshots
     # - Convert formats
     # - Summarize large data
-
+    # observation_type = getattr(handler, 'observation_type', None)
     # For now, just return the original data
     return observation
 
 
 @processors.register("query")
-def process_query(query: str, role: str) -> str:
+def process_query(query: str, handler) -> str:
     """Process a query string
-
     Args:
         query: Raw query string
-        role: Role of the agent
-
+        handler: Reference to the prompt handler instance
     Returns:
         Processed query string
     """
@@ -40,13 +36,11 @@ def process_query(query: str, role: str) -> str:
 
 
 @processors.register("response")
-def process_response(response: str, role: str) -> str:
+def process_response(response: str, handler) -> str:
     """Process a response string
-
     Args:
         response: Raw response string
-        role: Role of the agent
-
+        handler: Reference to the prompt handler instance
     Returns:
         Processed response string
     """
@@ -54,13 +48,11 @@ def process_response(response: str, role: str) -> str:
 
 
 @processors.register("plan")
-def process_plan(plan: str, role: str) -> str:
+def process_plan(plan: str, handler) -> str:
     """Process a plan string
-
     Args:
         plan: Raw plan string
-        role: Role of the agent
-
+        handler: Reference to the prompt handler instance
     Returns:
         Processed plan string
     """
@@ -68,13 +60,11 @@ def process_plan(plan: str, role: str) -> str:
 
 
 @processors.register("task")
-def process_task(task: str, role: str) -> str:
+def process_task(task: str, handler) -> str:
     """Process a task string
-
     Args:
         task: Raw task string
-        role: Role of the agent
-
+        handler: Reference to the prompt handler instance
     Returns:
         Processed task string
     """

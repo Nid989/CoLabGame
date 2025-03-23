@@ -2,11 +2,8 @@ from dataclasses import dataclass
 from typing import Dict, List, Callable, Optional, Any, Union, Protocol, Literal
 from PIL import Image
 
-from registry import FunctionRegistry
+from registry import processors
 from constants import HANDLER_TYPE
-
-
-processor_registry = FunctionRegistry[Callable]()
 
 
 @dataclass
@@ -44,7 +41,6 @@ class MessageFormatter:
         for field_name, field_value in entry.__dict__.items():
             if field_value is None:
                 continue
-
             if field_name in self.handlers:
                 handler = self.handlers[field_name]
                 formatted_component = handler(field_value, role)
@@ -102,8 +98,6 @@ class PromptHandler:
 
             return add_user_message
 
-        raise ValueError(f"Invalid handler type: {handler_type}")
-
     # Registry mapping handler types to factor method calls
     REGISTRY = {
         "standard": {"add_user_message": create_add_user_message.__func__("standard")},
@@ -116,17 +110,15 @@ class PromptHandler:
         self,
         handler_type: HANDLER_TYPE = "standard",
         prompt_header: str = None,
-        role: str = None,
         **kwargs,
     ):
         """Initialize the prompt handler
         Args:
             handler_type: Type of handler to use, either `standard` or `environment`
-            role: Role of the player using this handler
+            prompt_header: Initial prompt to add to history (Usually indicates player-related instructions)
             **kwargs: Additional configuration parameters
         """
         self.handler_type = handler_type
-        self.role = role or handler_type
         self.history: List[Dict[str, str]] = []
         self.raw_entries: List[MessageEntry] = []
         if self.handler_type == "environment":
@@ -199,7 +191,7 @@ class PromptHandler:
         # Other handlers can be registered upon requirement
 
     def _process_entry(self, entry: MessageEntry) -> MessageEntry:
-        """Process each component in the entry using registered processors
+        """Process each component using registered processors with cls reference
         Args:
             entry: Original message entry
         Returns:
@@ -209,11 +201,10 @@ class PromptHandler:
         for field_name, field_value in entry.__dict__.items():
             if field_value is None:
                 continue
-            processor_id = f"process_{field_name}"
-            if processor_id in processor_registry:
+            if field_name in processors:
                 try:
-                    processor = processor_registry[processor_id]
-                    processed_value = processor(field_value, self.role)
+                    processor = processors[field_name]
+                    processed_value = processor(field_value, self)
                     setattr(processed_entry, field_name, processed_value)
                 except Exception:
                     # NOTE: not sure about this.
@@ -237,7 +228,6 @@ class PromptHandler:
                 dom_summary = dom_str[:50] + "..." if len(dom_str) > 50 else dom_str
                 parts.append(f"DOM: {dom_summary}")
             return f"Observation: {' | '.join(parts)}"
-        return f"Observation: {str(observation)}"
 
     def _format_query(self, query: str, role: str) -> str:
         """Format a query component"""
