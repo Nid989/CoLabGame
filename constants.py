@@ -4,7 +4,7 @@ from typing import Literal
 
 # Declared Literals
 ACTION_SPACE = Literal["computer_13", "pyautogui"]
-OBSERVATION_SPACE = Literal["screenshot", "a11y_tree", "screenshot_a11y_tree", "som"]
+OBSERVATION_TYPE = Literal["screenshot", "a11y_tree", "screenshot_a11y_tree", "som"]
 HANDLER_TYPE = Literal["standard", "environment"]
 
 
