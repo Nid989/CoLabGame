@@ -4,7 +4,7 @@ from typing import Callable, Dict, Generic, TypeVar
 T = TypeVar("T")
 
 
-class FunctionRegistry(Generic[T]):
+class Registry(Generic[T]):
     """Registry for storing and retrieving functions by ID.
     Allows registering functions with unique IDs and retrieving them later.
     Can be used as a decorator or called directly.

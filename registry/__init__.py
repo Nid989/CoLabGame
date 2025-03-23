@@ -1,4 +1,5 @@
-from base import FunctionRegistry
-from parsing import parse_function_registry
+from base import Registry
+from registry.parsers import parsers
+from registry.processors import processors
 
-__all__ = [FunctionRegistry, parse_function_registry]
+__all__ = [Registry, parsers, processors]

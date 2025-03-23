@@ -3,17 +3,15 @@ import re
 from typing import Callable, Optional, Tuple
 
 from clemcore.clemgame import Player, DialogicNetworkGameMaster
-from registry.base import FunctionRegistry
+from registry.base import Registry
 
-
-ParseFuncType = Callable[
-    [Player, str, "DialogicNetworkGameMaster"], Tuple[bool, Optional[str]]
-]
-parse_function_registry = FunctionRegistry[ParseFuncType]()
+parsers = Registry[
+    Callable[[Player, str, "DialogicNetworkGameMaster"], Tuple[bool, Optional[str]]]
+]()
 
 
 # EXECUTE```python\n<content>```
-@parse_function_registry.register("parse_pyautogui_actions")
+@parsers.register("pyautogui_actions")
 def parse_pyautogui_actions(
     player: Player, utterance: str, gm: "DialogicNetworkGameMaster"
 ) -> Tuple[bool, Optional[str]]:
@@ -53,7 +51,7 @@ def parse_pyautogui_actions(
 
 
 # EXECUTE```json\n<content>```
-@parse_function_registry.register("parse_computer13_actions")
+@parsers.register("computer13_actions")
 def parse_computer13_actions(
     player: Player, utterance: str, gm: "DialogicNetworkGameMaster"
 ) -> Tuple[bool, Optional[str]]:
@@ -99,7 +97,7 @@ def parse_computer13_actions(
 
 
 # TODO: revisit this later; it doesn't align with the current parsing approach.
-@parse_function_registry.register("parse_som_pyautogui_actions")
+@parsers.register("som_pyautogui_actions")
 def parse_som_pyautogui_actions(
     player: Player, utterance: str, gm: "DialogicNetworkGameMaster"
 ) -> Tuple[bool, Optional[str]]:
@@ -135,7 +133,7 @@ def parse_som_pyautogui_actions(
 
 
 # DONE or FAIL
-@parse_function_registry.register("parse_done_or_fail")
+@parsers.register("done_or_fail")
 def parse_done_or_fail(
     player: Player, utterance: str, gm: "DialogicNetworkGameMaster"
 ) -> Tuple[bool, Optional[str]]:
@@ -157,7 +155,7 @@ def parse_done_or_fail(
 
 
 # QUERY```<content>```
-@parse_function_registry.register("parse_query")
+@parsers.register("query")
 def parse_query(
     player: Player, utterance: str, gm: "DialogicNetworkGameMaster"
 ) -> Tuple[bool, Optional[str]]:
@@ -184,7 +182,7 @@ def parse_query(
 
 
 # RESPONSE```<content>```
-@parse_function_registry.register("parse_response")
+@parsers.register("response")
 def parse_response(
     player: Player, utterance: str, gm: "DialogicNetworkGameMaster"
 ) -> Tuple[bool, Optional[str]]:
