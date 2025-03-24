@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, List, Callable, Optional, Any, Union, Protocol, Literal
 from PIL import Image
+import copy
 
 from registry import processors
 from constants import HANDLER_TYPE, OBSERVATION_TYPE_values
@@ -217,7 +218,7 @@ class PromptHandler:
         self.formatter.register_handler("response", self._format_response)
         self.formatter.register_handler("plan", self._format_plan)
         self.formatter.register_handler("task", self._format_task)
-        # Other handlers can be registered upon requirement
+        # Additional handlers can be registered upon requirement
 
     def _process_entry(self, entry: MessageEntry) -> MessageEntry:
         """Process each component using registered processors with cls reference
@@ -235,12 +236,10 @@ class PromptHandler:
                     processor = processors[field_name]
                     processed_value = processor(field_value, self)
                     setattr(processed_entry, field_name, processed_value)
-                except Exception:
-                    # NOTE: not sure about this.
-                    setattr(processed_entry, field_name, field_value)
+                except Exception as e:
+                    raise Exception(f"Failed to process field '{field_name}': {str(e)}")
             else:
-                # NOTE: not sure about this.
-                setattr(processed_entry, field_name, field_value)
+                raise ValueError(f"No processor registered for field '{field_name}'")
 
         return processed_entry
 
@@ -318,3 +317,29 @@ class PromptHandler:
             implementations: Dictionary mapping method names to implementation functions
         """
         cls.REGISTRY[handler_type] = implementations
+
+    def get_pruned_messages(self, k: int = 3) -> List[Dict]:
+        """Get a pruned version of the message history, keeping the last k user messages
+        and all assistant messages that occur between them.
+        - The prompt header message (position 0) is always preserved.
+        - Note: Call this method after self.add_user_message.
+        Args:
+            k: Number of most recent user messages to keep
+        Returns:
+            A new pruned copy of the message history
+        """
+        if not self.history:
+            return []
+        messages = copy.deepcopy(self.history)
+        if len(messages) <= 1:
+            return messages
+        prompt_header = messages[0]
+        user_indices = [
+            i for i, msg in enumerate(messages[1:], 1) if msg.get("role") == "user"
+        ]
+        if len(user_indices) <= k:
+            return messages
+        last_k_user_indices = user_indices[-k:]
+        earliest_index = min(last_k_user_indices)
+
+        return [prompt_header] + messages[earliest_index:]
