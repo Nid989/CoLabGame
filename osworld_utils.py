@@ -442,7 +442,6 @@ def preprocess_observation(
     """
     preprocessed_obs = {}
 
-    # Process screenshot if needed
     if observation_type in ["screenshot", "screenshot_a11y_tree", "som"]:
         if observation_type == "som":
             # Process screenshot with SOM tagging
@@ -461,9 +460,7 @@ def preprocess_observation(
             screenshot = observation["screenshot"]
         preprocessed_obs["screenshot"] = screenshot
 
-    # Process accessibility tree if needed
     if observation_type in ["a11y_tree", "screenshot_a11y_tree", "som"]:
-        # Process accessibility tree
         linearized_accessibility_tree = linearize_accessibility_tree(
             accessibility_tree=observation["accessibility_tree"], platform=platform
         )

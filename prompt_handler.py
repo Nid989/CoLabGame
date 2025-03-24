@@ -3,7 +3,7 @@ from typing import Dict, List, Callable, Optional, Any, Union, Protocol, Literal
 from PIL import Image
 
 from registry import processors
-from constants import HANDLER_TYPE
+from constants import HANDLER_TYPE, OBSERVATION_TYPE_values
 
 
 @dataclass
@@ -35,8 +35,11 @@ class MessageFormatter:
         self.handlers[component_name] = handler
 
     def format(self, entry: MessageEntry, role: str) -> str:
-        """Format a message entry using registered handlers"""
+        """Format a message entry using registered handlers
+        Returns:
+            Dict with 'content' key containing formatted text and optional 'image' key with image paths"""
         parts = []
+        image_paths = []
 
         for field_name, field_value in entry.__dict__.items():
             if field_value is None:
@@ -44,12 +47,22 @@ class MessageFormatter:
             if field_name in self.handlers:
                 handler = self.handlers[field_name]
                 formatted_component = handler(field_value, role)
-                parts.append(formatted_component)
+                if isinstance(formatted_component, dict):
+                    parts.append(formatted_component.get("content", ""))
+                    if "image" in formatted_component and formatted_component["image"]:
+                        if isinstance(formatted_component["image"], list):
+                            image_paths.extend(formatted_component["image"])
+                        else:
+                            image_paths.append(formatted_component["image"])
+                else:
+                    parts.append(formatted_component)
             else:
-                # Default formatting if no handler exists
                 parts.append(f"{field_name.capitalize()}: {str(field_value)}")
 
-        return "\n".join(parts)
+        return {
+            "content": "\n".join(parts),
+            "image": image_paths if image_paths else None,
+        }
 
 
 class PromptHandler:
@@ -74,7 +87,11 @@ class PromptHandler:
                 entry = MessageEntry(**kwargs)
                 processed_entry = self._process_entry(entry)
                 formatted_message = self.formatter.format(processed_entry, self.role)
-                self.add_message(content=formatted_message, role="user")
+                self.add_message(
+                    content=formatted_message["content"],
+                    role="user",
+                    image=formatted_message.get("image"),
+                )
                 self.raw_entries.append(entry)
 
             return add_user_message
@@ -89,9 +106,12 @@ class PromptHandler:
                 entry = MessageEntry(**kwargs)
                 processed_entry = self._process_entry(entry)
                 formatted_message = self.formatter.format(processed_entry, self.role)
-                self.add_message(content=formatted_message, role="user")
+                self.add_message(
+                    content=formatted_message["content"],
+                    role="user",
+                    image=formatted_message.get("image"),
+                )
                 self.raw_entries.append(entry)
-
                 # For environment handlers, also store raw observations separately
                 if hasattr(entry, "observation") and entry.observation:
                     self.observations.append(entry.observation)
@@ -217,33 +237,67 @@ class PromptHandler:
 
     def _format_observation(self, observation: Dict, role: str) -> str:
         """Format an observation component"""
-        if isinstance(observation, dict):
-            parts = []
-            if "screenshot" in observation:
-                parts.append(
-                    f"Screenshot: {observation['screenshot']}"
-                )  # NOTE: completely wrong.
-            if "DOM" in observation:
-                dom_str = str(observation["DOM"])
-                dom_summary = dom_str[:50] + "..." if len(dom_str) > 50 else dom_str
-                parts.append(f"DOM: {dom_summary}")
-            return f"Observation: {' | '.join(parts)}"
+        result = ["## Observation"]
+        image_paths = []
+        if self.observation_type == "screenshot":
+            result.append("### Screenshot")
+            if "screenshot" in observation and isinstance(
+                observation["screenshot"], str
+            ):
+                image_paths.append(observation["screenshot"])
+        elif self.observation_type == "a11y_tree":
+            result.append(
+                "### Accessibility Tree\n```\n{}\n```".format(
+                    observation.get("accessibility_tree", "")
+                )
+            )
+        elif self.observation_type == "screenshot_a11y_tree":
+            result.append("### Screenshot")
+            if "screenshot" in observation and isinstance(
+                observation["screenshot"], str
+            ):
+                image_paths.append(observation["screenshot"])
+            result.append(
+                "### Accessibility Tree\n```\n{}\n```".format(
+                    observation.get("accessibility_tree", "")
+                )
+            )
+        elif self.observation_type == "som":
+            result.append("### Tagged Screenshot")
+            if "screenshot" in observation and isinstance(
+                observation["screenshot"], str
+            ):
+                image_paths.append(observation["screenshot"])
+            result.append(
+                "### Accessibility Tree\n```\n{}\n```".format(
+                    observation.get("accessibility_tree", "")
+                )
+            )
+        else:
+            raise ValueError(
+                f"Invalid observation_type: {self.observation_type}. Expected one of [{OBSERVATION_TYPE_values}]"
+            )
 
-    def _format_query(self, query: str, role: str) -> str:
+        return {
+            "content": "\n\n".join(result),
+            "image": image_paths if image_paths else None,
+        }
+
+    def _format_query(self, query: str, role: str) -> Dict[str, str]:
         """Format a query component"""
-        return f"Query: {query}"
+        return {"content": f"Query: {query}"}
 
-    def _format_response(self, response: str, role: str) -> str:
+    def _format_response(self, response: str, role: str) -> Dict[str, str]:
         """Format a response component"""
-        return f"Response: {response}"
+        return {"content": f"Response: {response}"}
 
-    def _format_plan(self, plan: str, role: str) -> str:
+    def _format_plan(self, plan: str, role: str) -> Dict[str, str]:
         """Format a plan component"""
-        return f"Plan: {plan}"
+        return {"content": f"Plan: {plan}"}
 
-    def _format_task(self, task: str, role: str) -> str:
+    def _format_task(self, task: str, role: str) -> Dict[str, str]:
         """Format a task component"""
-        return f"Task: {task}"
+        return {"content": f"Task: {task}"}
 
     @classmethod
     def register_handler_type(

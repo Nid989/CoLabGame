@@ -1,11 +1,14 @@
 from enum import Enum
-from typing import Literal
+from typing import Literal, get_args
 
 
 # Declared Literals
 ACTION_SPACE = Literal["computer_13", "pyautogui"]
+ACTION_SPACE_values = ", ".join(get_args(ACTION_SPACE))
 OBSERVATION_TYPE = Literal["screenshot", "a11y_tree", "screenshot_a11y_tree", "som"]
+OBSERVATION_TYPE_values = ", ".join(get_args(OBSERVATION_TYPE))
 HANDLER_TYPE = Literal["standard", "environment"]
+HANDLER_TYPE_values = ", ".join(get_args(HANDLER_TYPE))
 
 
 # Have to make this more descriptive and use-case specific

@@ -138,13 +138,12 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
                     "a11y_tree_max_tokens": kwargs.get("a11y_tree_max_tokens", 10000),
                 }
             )
-
             use_images = (
                 "screenshot" in handler_kwargs.get("observation_type", "")
                 or handler_kwargs.get("observation_type", "") == "som"
             )
             if use_images:
-                handler_kwargs["temp_manager"] = TemporaryImageManager()
+                handler_kwargs["temporary_image_manager"] = TemporaryImageManager()
 
         self.prompt_handler = PromptHandler(
             handler_type=handler_type, prompt_header=prompt_header, **handler_kwargs

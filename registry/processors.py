@@ -1,5 +1,8 @@
 from typing import Callable, Dict, Any
+
 from .base import Registry
+from osworld_utils import preprocess_observation
+
 
 processors = Registry[Callable]()
 
@@ -13,14 +16,30 @@ def process_observation(observation: Dict[str, Any], handler) -> Dict[str, Any]:
     Returns:
         Processed observation data
     """
-    # In a real implementation, you might:
-    # - Extract key information from DOM
-    # - Process screenshots
-    # - Convert formats
-    # - Summarize large data
-    # observation_type = getattr(handler, 'observation_type', None)
-    # For now, just return the original data
-    return observation
+    processed_obs = {}
+    observation_type = handler.get("observation_type", "a11y_tree")
+    platform = handler.get("platform", "ubuntu")
+    a11y_tree_max_tokens = handler.get("a11y_tree_max_tokens", None)
+    temporary_image_manager = handler.get("temporary_image_manager", None)
+    preprocessed_obs = preprocess_observation(
+        observation=observation,
+        observation_type=observation_type,
+        platform=platform,
+        a11y_tree_max_tokens=a11y_tree_max_tokens,
+    )
+    processed_obs = processed_obs.update(preprocessed_obs)
+    if temporary_image_manager and "screenshot" in preprocessed_obs:
+        screenshot = preprocessed_obs["screenshot"]
+        if isinstance(screenshot, bytes):
+            image_path = temporary_image_manager.save_image(screenshot)
+            processed_obs["screenshot"] = image_path
+        else:
+            raise ValueError(
+                "Expected 'screenshot' to be bytes, but got {}".format(
+                    type(screenshot).__name__
+                )
+            )
+    return processed_obs
 
 
 @processors.register("query")
