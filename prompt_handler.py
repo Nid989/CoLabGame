@@ -87,8 +87,11 @@ class PromptHandler:
                 entry = MessageEntry(**kwargs)
                 processed_entry = self._process_entry(entry)
                 formatted_message = self.formatter.format(processed_entry, self.role)
+                content = formatted_message["content"]
+                if self.prompt_footer:
+                    content += f"\n\n{self.prompt_footer}"
                 self.add_message(
-                    content=formatted_message["content"],
+                    content=content,
                     role="user",
                     image=formatted_message.get("image"),
                 )
@@ -106,8 +109,11 @@ class PromptHandler:
                 entry = MessageEntry(**kwargs)
                 processed_entry = self._process_entry(entry)
                 formatted_message = self.formatter.format(processed_entry, self.role)
+                content = formatted_message["content"]
+                if self.prompt_footer:
+                    content += f"\n\n{self.prompt_footer}"
                 self.add_message(
-                    content=formatted_message["content"],
+                    content=content,
                     role="user",
                     image=formatted_message.get("image"),
                 )
@@ -130,6 +136,7 @@ class PromptHandler:
         self,
         handler_type: HANDLER_TYPE = "standard",
         prompt_header: str = None,
+        prompt_footer: str = None,
         **kwargs,
     ):
         """Initialize the prompt handler

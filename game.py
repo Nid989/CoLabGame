@@ -122,6 +122,7 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         model,
         role: str = "executor",
         prompt_header: str = None,
+        prompt_footer: str = None,
         handler_type: HANDLER_TYPE = "standard",
         **kwargs,
     ):
@@ -146,7 +147,10 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
                 handler_kwargs["temporary_image_manager"] = TemporaryImageManager()
 
         self.prompt_handler = PromptHandler(
-            handler_type=handler_type, prompt_header=prompt_header, **handler_kwargs
+            handler_type=handler_type,
+            prompt_header=prompt_header,
+            prompt_footer=prompt_footer,
+            **handler_kwargs,
         )
 
     @property
