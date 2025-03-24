@@ -15,8 +15,7 @@ from constants import OBSERVATION_TYPE, ACTION_SPACE
 
 
 class TemporaryImageManager:
-    """
-    Manages temporary image files that persist until the program termination.
+    """Manages temporary image files that persist until the program termination.
     Uses tempfile for secure temporary file handling and caches files to avoid duplicates.
     """
 
@@ -28,10 +27,8 @@ class TemporaryImageManager:
         atexit.register(self.cleanup)
 
     def save_image(self, image_binary: bytes) -> str:
-        """
-        Saves a binary image to a temporary file that persists until program exit.
+        """Saves a binary image to a temporary file that persists until program exit.
         Returns cached path if the same image was saved before.
-
         Args:
             image_binary (bytes): Binary image data (PNG format)
 
@@ -40,20 +37,16 @@ class TemporaryImageManager:
         """
         # Use image content as cache key
         image_hash = hash(image_binary)
-
         # Return cached path if image was saved before
         if image_hash in self.image_cache:
             return self.image_cache[image_hash]
-
         # Create new file if image hasn't been saved before
         tmp_file = tempfile.NamedTemporaryFile(
             suffix=".png", dir=self.temp_dir, delete=False
         )
-
         with tmp_file as f:
             f.write(image_binary)
             f.flush()
-
         # Cache the path
         self.image_cache[image_hash] = tmp_file.name
         return tmp_file.name
@@ -173,9 +166,15 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         self.prompt_handler.add_assistant_message(content)
 
     def _custom_response(self, messages, turn_idx) -> str:
-        """
-        Base implementation - will be overridden by role-specific implementation
-        This should never be called directly.
+        """Response for programmatic Player interaction.
+        - Overwrite this method to implement programmatic behavior (model_name: mock, dry_run, programmatic, custom).
+        - Base implementation - will be overridden by role-specific implementation
+        - This should never be called directly.
+        Args:
+            messages: A list of dicts that contain the history of the conversation.
+            turn_idx: The index of the current turn.
+        Returns:
+            The programmatic response as text.
         """
         raise NotImplementedError("No role-specific implementation found")
 

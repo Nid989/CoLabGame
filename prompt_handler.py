@@ -41,7 +41,6 @@ class MessageFormatter:
             Dict with 'content' key containing formatted text and optional 'image' key with image paths"""
         parts = []
         image_paths = []
-
         for field_name, field_value in entry.__dict__.items():
             if field_value is None:
                 continue
