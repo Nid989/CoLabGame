@@ -146,14 +146,16 @@ class PromptHandler:
             **kwargs: Additional configuration parameters
         """
         self.handler_type = handler_type
+        self.prompt_header = prompt_header
+        self.prompt_footer = prompt_footer
         self.history: List[Dict[str, str]] = []
         self.raw_entries: List[MessageEntry] = []
         if self.handler_type == "environment":
             self.observations = []
             for key, value in kwargs.items():
                 setattr(self, key, value)
-        if prompt_header:
-            self.add_message(content=prompt_header, role="user")
+        if self.prompt_header:
+            self.add_message(content=self.prompt_header, role="user")
 
         self.formatter = MessageFormatter()
         self._configure_formatter()
