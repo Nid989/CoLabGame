@@ -17,17 +17,17 @@ def process_observation(observation: Dict[str, Any], handler) -> Dict[str, Any]:
         Processed observation data
     """
     processed_obs = {}
-    observation_type = handler.get("observation_type", "a11y_tree")
-    platform = handler.get("platform", "ubuntu")
-    a11y_tree_max_tokens = handler.get("a11y_tree_max_tokens", None)
-    temporary_image_manager = handler.get("temporary_image_manager", None)
+    observation_type = getattr(handler, "observation_type", "a11y_tree")
+    platform = getattr(handler, "platform", "ubuntu")
+    a11y_tree_max_tokens = getattr(handler, "a11y_tree_max_tokens", None)
+    temporary_image_manager = getattr(handler, "temporary_image_manager", None)
     preprocessed_obs = preprocess_observation(
         observation=observation,
         observation_type=observation_type,
         platform=platform,
         a11y_tree_max_tokens=a11y_tree_max_tokens,
     )
-    processed_obs = processed_obs.update(preprocessed_obs)
+    processed_obs.update(preprocessed_obs)
     if temporary_image_manager and "screenshot" in preprocessed_obs:
         screenshot = preprocessed_obs["screenshot"]
         if isinstance(screenshot, bytes):

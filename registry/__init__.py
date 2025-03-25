@@ -1,5 +1,5 @@
-from base import Registry
-from registry.parsers import parsers
-from registry.processors import processors
+from .base import Registry
+from .parsers import parsers
+from .processors import processors
 
-__all__ = [Registry, parsers, processors]
+__all__ = ["Registry", "parsers", "processors"]

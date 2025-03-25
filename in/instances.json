@@ -4,10 +4,18 @@
             "name": "collab: free",
             "game_instances": [
                 {
-                    "game_id": "1954cced-e748-45c4-9c26-9855b97fbc5e",
+                    "game_id": "bb5e4c0d-f964-439c-97b6-bdb9747de3f4",
                     "roles": [
-                        "executor",
-                        "advisor"
+                        {
+                            "name": "executor",
+                            "handler_type": "environment",
+                            "valid_entries": ["observation", "response"]
+                        },
+                        {
+                            "name": "advisor",
+                            "handler_type": "environment", 
+                            "valid_entries": ["observation", "query"]
+                        }
                     ],
                     "prompt_headers": [
                         "You are the Executor. Your job is to execute commands to complete tasks. Use EXECUTE ```command``` to run commands, QUERY ```question``` to ask the Advisor for help, and DONE when the task is complete or FAIL if you cannot complete it.",
@@ -46,95 +54,79 @@
                                 "to": "advisor",
                                 "type": "DECISION",
                                 "condition": {
-                                    "parse_function_id": "parse_query"
+                                    "parse_function_id": "query"
                                 },
-                                "description": "executor → advisor (parse_query)"
+                                "description": "executor → advisor (query)"
                             },
                             {
                                 "from": "advisor",
                                 "to": "executor",
                                 "type": "DECISION",
                                 "condition": {
-                                    "parse_function_id": "parse_response"
+                                    "parse_function_id": "response"
                                 },
-                                "description": "advisor → executor (parse_response)"
+                                "description": "advisor → executor (response)"
                             },
                             {
                                 "from": "executor",
                                 "to": "executor",
                                 "type": "DECISION",
                                 "condition": {
-                                    "parse_function_id": "parse_pyautogui_actions"
+                                    "parse_function_id": "pyautogui_actions"
                                 },
-                                "description": "executor → executor (parse_pyautogui_actions)"
+                                "description": "executor → executor (pyautogui_actions)"
                             },
                             {
                                 "from": "executor",
                                 "to": "END",
                                 "type": "DECISION",
                                 "condition": {
-                                    "parse_function_id": "parse_done_or_fail"
+                                    "parse_function_id": "done_or_fail"
                                 },
-                                "description": "executor → END (parse_done_or_fail)"
+                                "description": "executor → END (done_or_fail)"
                             }
                         ],
                         "anchor_node": "executor"
                     },
                     "task_config": {
-                        "id": "ec4e3f68-9ea4-4c18-a5c9-69f89d1178b3",
-                        "snapshot": "os",
-                        "instruction": "Can you remove the first favorite app from 'favorites'?",
-                        "source": "https://www.youtube.com/watch?v=D4WyNjt_hbQ&t=2s",
+                        "id": "bb5e4c0d-f964-439c-97b6-bdb9747de3f4",
+                        "snapshot": "chrome",
+                        "instruction": "Can you make Bing the main search thingy when I look stuff up on the internet?",
+                        "source": "https://support.google.com/chrome/answer/95426?sjid=16867045591165135686-AP",
                         "config": [
                             {
-                                "type": "execute",
-                                "parameters": {
-                                    "command": "export DBUS_SESSION_BUS_ADDRESS='unix:path=/run/user/1000/bus'\ngsettings set org.gnome.shell favorite-apps \"['thunderbird.desktop']\"",
-                                    "shell": true
-                                }
-                            },
-                            {
-                                "type": "sleep",
-                                "parameters": {
-                                    "seconds": 0.5
-                                }
-                            },
-                            {
-                                "type": "execute",
-                                "parameters": {
-                                    "command": "export DBUS_SESSION_BUS_ADDRESS='unix:path=/run/user/1000/bus'\ngsettings set org.gnome.shell favorite-apps \"['thunderbird.desktop', 'vim.desktop', 'google-chrome.desktop']\"",
-                                    "shell": true
-                                }
-                            },
-                            {
-                                "type": "execute",
+                                "type": "launch",
                                 "parameters": {
                                     "command": [
-                                        "python",
-                                        "-c",
-                                        "import pyautogui; import time; pyautogui.click(960, 540); time.sleep(0.5);"
+                                        "google-chrome",
+                                        "--remote-debugging-port=1337"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "socat",
+                                        "tcp-listen:9222,fork",
+                                        "tcp:localhost:1337"
                                     ]
                                 }
                             }
                         ],
                         "trajectory": "trajectories/",
                         "related_apps": [
-                            "os"
+                            "chrome"
                         ],
                         "evaluator": {
-                            "func": "check_gnome_favorite_apps",
+                            "func": "exact_match",
                             "result": {
-                                "type": "vm_command_line",
-                                "command": "export DBUS_SESSION_BUS_ADDRESS='unix:path=/run/user/1000/bus'\ngsettings get org.gnome.shell favorite-apps",
-                                "shell": true
+                                "type": "default_search_engine"
                             },
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": [
-                                        "google-chrome.desktop",
-                                        "thunderbird.desktop"
-                                    ]
+                                    "expected": "Bing"
                                 }
                             }
                         }

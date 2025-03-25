@@ -18,24 +18,70 @@ class MessageEntry:
     task: Optional[str] = None
     # Additional fields can be added upon requirement.
 
+    def __post_init__(self):
+        if not any(v is not None for v in self.__dict__.values()):
+            raise ValueError("At least one entry must be provided")
+
+    @classmethod
+    def for_handler(
+        cls,
+        handler_type: HANDLER_TYPE = "standard",
+        valid_entries: set = None,
+        **kwargs,
+    ) -> "MessageEntry":
+        """Creates a validated MessageEntry instance based on handler type and valid entries.
+        Args:
+            handler_type: Type of handler ('standard' or 'environment')
+            valid_entries: Set of allowed entry types
+            **kwargs: Message entry components
+        Returns:
+            MessageEntry: Validated instance with filtered entries
+        Raises:
+            ValueError: If invalid entries provided or no valid entries remain after filtering
+        """
+        handler_rules = {
+            "standard": {"query", "response", "plan", "task"},
+            "environment": {"observation", "query", "response", "plan", "task"},
+        }
+        if not valid_entries or not kwargs:
+            raise ValueError("Both valid_entries and message components are required")
+        valid_fields = {f.name for f in cls.__dataclass_fields__.values()}
+        if invalid_fields := valid_entries - valid_fields:
+            raise ValueError(
+                f"Invalid entries in valid_entries: {invalid_fields}. "
+                f"Must be one of: {valid_fields}"
+            )
+        allowed_entries = handler_rules.get(handler_type, set()) & valid_entries
+        valid_components = {
+            k: v for k, v in kwargs.items() if k in allowed_entries and v is not None
+        }
+        if invalid_entries := set(kwargs) - allowed_entries:
+            raise ValueError(
+                f"Invalid entries for {handler_type} handler: {invalid_entries}"
+            )
+        if not valid_components:
+            raise ValueError(f"No valid entries provided for {handler_type} handler")
+
+        return cls(**valid_components)
+
 
 class ComponentHandler(Protocol):
     """Protocol for component handlers"""
 
-    def __call__(self, value: Any, role: str) -> str: ...
+    def __call__(self, value: Any) -> str: ...
 
 
 class MessageFormatter:
     """Formatter for message entries with component-specific handlers"""
 
     def __init__(self):
-        self.handlers = Dict[str, ComponentHandler] = {}
+        self.handlers: Dict[str, ComponentHandler] = {}
 
     def register_handler(self, component_name: str, handler: ComponentHandler) -> None:
         """Register a handler for a specific component type"""
         self.handlers[component_name] = handler
 
-    def format(self, entry: MessageEntry, role: str) -> str:
+    def format(self, entry: MessageEntry) -> str:
         """Format a message entry using registered handlers
         Returns:
             Dict with 'content' key containing formatted text and optional 'image' key with image paths"""
@@ -46,7 +92,7 @@ class MessageFormatter:
                 continue
             if field_name in self.handlers:
                 handler = self.handlers[field_name]
-                formatted_component = handler(field_value, role)
+                formatted_component = handler(field_value)
                 if isinstance(formatted_component, dict):
                     parts.append(formatted_component.get("content", ""))
                     if "image" in formatted_component and formatted_component["image"]:
@@ -84,9 +130,11 @@ class PromptHandler:
                 Args:
                     **kwargs: Message components (query, response, etc.)
                 """
-                entry = MessageEntry(**kwargs)
+                entry = MessageEntry.for_handler(
+                    handler_type, set(self.valid_entries), **kwargs
+                )
                 processed_entry = self._process_entry(entry)
-                formatted_message = self.formatter.format(processed_entry, self.role)
+                formatted_message = self.formatter.format(processed_entry)
                 content = formatted_message["content"]
                 if self.prompt_footer:
                     content += f"\n\n{self.prompt_footer}"
@@ -106,9 +154,11 @@ class PromptHandler:
                 Args:
                     **kwargs: Message components (observation, response, etc.)
                 """
-                entry = MessageEntry(**kwargs)
+                entry = MessageEntry.for_handler(
+                    handler_type, set(self.valid_entries), **kwargs
+                )
                 processed_entry = self._process_entry(entry)
-                formatted_message = self.formatter.format(processed_entry, self.role)
+                formatted_message = self.formatter.format(processed_entry)
                 content = formatted_message["content"]
                 if self.prompt_footer:
                     content += f"\n\n{self.prompt_footer}"
@@ -137,6 +187,7 @@ class PromptHandler:
         handler_type: HANDLER_TYPE = "standard",
         prompt_header: str = None,
         prompt_footer: str = None,
+        valid_entries: List[str] = None,
         **kwargs,
     ):
         """Initialize the prompt handler
@@ -148,6 +199,7 @@ class PromptHandler:
         self.handler_type = handler_type
         self.prompt_header = prompt_header
         self.prompt_footer = prompt_footer
+        self.valid_entries = valid_entries
         self.history: List[Dict[str, str]] = []
         self.raw_entries: List[MessageEntry] = []
         if self.handler_type == "environment":
@@ -183,7 +235,7 @@ class PromptHandler:
         message = {"role": role, "content": content}
         if image and len(image) > 0:
             message["image"] = image
-        self.messages.append(message)
+        self.history.append(message)
 
     def clear_history(self) -> None:
         """Clear all conversation history and observations."""
@@ -226,7 +278,7 @@ class PromptHandler:
         Returns:
             MessageEntry: New entry with processed component
         """
-        processed_entry = MessageEntry()
+        processed_entry = {}
         for field_name, field_value in entry.__dict__.items():
             if field_value is None:
                 continue
@@ -234,15 +286,16 @@ class PromptHandler:
                 try:
                     processor = processors[field_name]
                     processed_value = processor(field_value, self)
-                    setattr(processed_entry, field_name, processed_value)
+                    if processed_value is not None:
+                        processed_entry[field_name] = processed_value
                 except Exception as e:
                     raise Exception(f"Failed to process field '{field_name}': {str(e)}")
             else:
                 raise ValueError(f"No processor registered for field '{field_name}'")
 
-        return processed_entry
+        return MessageEntry(**processed_entry)
 
-    def _format_observation(self, observation: Dict, role: str) -> str:
+    def _format_observation(self, observation: Dict) -> str:
         """Format an observation component"""
         result = ["## Observation"]
         image_paths = []
@@ -290,19 +343,19 @@ class PromptHandler:
             "image": image_paths if image_paths else None,
         }
 
-    def _format_query(self, query: str, role: str) -> Dict[str, str]:
+    def _format_query(self, query: str) -> Dict[str, str]:
         """Format a query component"""
         return {"content": f"Query: {query}"}
 
-    def _format_response(self, response: str, role: str) -> Dict[str, str]:
+    def _format_response(self, response: str) -> Dict[str, str]:
         """Format a response component"""
         return {"content": f"Response: {response}"}
 
-    def _format_plan(self, plan: str, role: str) -> Dict[str, str]:
+    def _format_plan(self, plan: str) -> Dict[str, str]:
         """Format a plan component"""
         return {"content": f"Plan: {plan}"}
 
-    def _format_task(self, task: str, role: str) -> Dict[str, str]:
+    def _format_task(self, task: str) -> Dict[str, str]:
         """Format a task component"""
         return {"content": f"Task: {task}"}
 

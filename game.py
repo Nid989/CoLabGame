@@ -1,7 +1,7 @@
 import os
 import shutil
 import time
-from typing import Dict, Any
+from typing import Dict, Any, List
 import tempfile
 import atexit
 
@@ -31,7 +31,6 @@ class TemporaryImageManager:
         Returns cached path if the same image was saved before.
         Args:
             image_binary (bytes): Binary image data (PNG format)
-
         Returns:
             str: Path to saved image file
         """
@@ -117,16 +116,18 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         prompt_header: str = None,
         prompt_footer: str = None,
         handler_type: HANDLER_TYPE = "standard",
+        valid_entries: List[str] = None,
         **kwargs,
     ):
         super().__init__(model)
         self._role = role
 
         handler_kwargs = kwargs.copy()
+        handler_kwargs.update({"valid_entries": valid_entries})
         if handler_type == "environment":
             handler_kwargs.update(
                 {
-                    "observation_type": kwargs.get("observation_type", "screenshot"),
+                    "observation_type": kwargs.get("observation_type", "a11y_tree"),
                     "action_space": kwargs.get("action_space", "computer_13"),
                     "platform": kwargs.get("platform", "ubuntu"),
                     "a11y_tree_max_tokens": kwargs.get("a11y_tree_max_tokens", 10000),
