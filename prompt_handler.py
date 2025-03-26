@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from typing import Dict, List, Callable, Optional, Any, Union, Protocol, Literal
 from PIL import Image
@@ -5,6 +6,9 @@ import copy
 
 from registry import processors
 from constants import HANDLER_TYPE, OBSERVATION_TYPE_values
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -56,7 +60,7 @@ class MessageEntry:
             k: v for k, v in kwargs.items() if k in allowed_entries and v is not None
         }
         if invalid_entries := set(kwargs) - allowed_entries:
-            raise ValueError(
+            logger.warning(
                 f"Invalid entries for {handler_type} handler: {invalid_entries}"
             )
         if not valid_components:
