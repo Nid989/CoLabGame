@@ -9,17 +9,21 @@
                         {
                             "name": "executor",
                             "handler_type": "environment",
-                            "valid_entries": ["observation", "response"]
+                            "prompt_header": "You are the Executor. Your job is to execute commands to complete tasks.\n\n- Use ACTION\n```python\n<command>\n``` to run commands.\n- You may use QUERY\n```\n<question>\n``` to ask the Advisor for help, but it is not required.\n- When the task is complete, respond with ```DONE```.\n- If you cannot complete the task, respond with ```FAIL```.\n\nYou will receive observations from the environment as input. If you choose to ask the Advisor for help, the Advisor’s response will be provided as additional input.",
+                            "valid_entries": [
+                                "observation",
+                                "response"
+                            ]
                         },
                         {
                             "name": "advisor",
-                            "handler_type": "environment", 
-                            "valid_entries": ["observation", "query"]
+                            "handler_type": "environment",
+                            "prompt_header": "You are the Advisor. Your job is to assist the Executor in completing tasks.\n\n- When the Executor asks a question using QUERY: <question>, respond with RESPONSE\n```\n<detailed answer>\n```.\n- You may also interact with the environment by using ACTION\n```python\n<command>\n``` to execute commands when necessary.\n\nYou will receive observations from the environment as input, along with the Executor's query (if they ask one). Your response and actions will then be provided to the Executor.`.",
+                            "valid_entries": [
+                                "observation",
+                                "query"
+                            ]
                         }
-                    ],
-                    "prompt_headers": [
-                        "You are the Executor. Your job is to execute commands to complete tasks. Use EXECUTE ```command``` to run commands, QUERY ```question``` to ask the Advisor for help, and DONE when the task is complete or FAIL if you cannot complete it.",
-                        "You are the Advisor. Your job is to help the Executor complete tasks. When the Executor asks a question with QUERY, respond with RESPONSE ```your detailed answer```."
                     ],
                     "graph": {
                         "nodes": [

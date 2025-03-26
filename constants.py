@@ -43,5 +43,8 @@ DEFAULT_ENV_CONFIG = {
 # Default roles
 DEFAULT_ROLE = "executor"
 
+# Default handler_type
+DEFAULT_HANDLER_TYPE = "standard"
+
 # Action message templates
 ACTION_RESULT_TEMPLATE = "Action: {action}, Reward: {reward}, Done: {done}"
