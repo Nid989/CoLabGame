@@ -110,9 +110,8 @@ class NetworkDialogueGameMaster(GameMaster):
         """
         super().__init__(name, path, experiment, player_models)
 
-        # the logging works with an internal mapping  of "Player N" -> Player
+        # The logging works with an internal mapping of "Player N" -> Player
         self.players_by_names: Dict[str, Player] = collections.OrderedDict()
-        self.messages_by_names: Dict[str, List] = dict()
         self.current_turn: int = 0
 
         self.graph = nx.MultiDiGraph()
@@ -120,8 +119,6 @@ class NetworkDialogueGameMaster(GameMaster):
         self.graph.add_node("END", type=NodeType.END)
 
         self.current_node = "START"
-        self.last_player: Optional[Player] = None
-        self.last_utterance: Optional[str] = None
 
         self.node_positions = None
         self.edge_labels = {}
@@ -149,7 +146,6 @@ class NetworkDialogueGameMaster(GameMaster):
         idx = len(self.players_by_names)
         player.descriptor = f"Player {idx + 1}"
         self.players_by_names[player.descriptor] = player
-        self.messages_by_names[player.descriptor] = []
 
         node_id = node_id
         self.graph.add_node(node_id, type=NodeType.PLAYER, player=player)
@@ -258,6 +254,7 @@ class NetworkDialogueGameMaster(GameMaster):
                     f"{self.game_name}: %s turn: %d", self.game_name, self.current_turn
                 )
                 self._reset_turn_tracking()
+
             next_node = self.transition.next_node
             self.transition = NodeTransition()
             if next_node is None:
@@ -265,12 +262,15 @@ class NetworkDialogueGameMaster(GameMaster):
                     f"No valid transitions from node '{self.current_node}'"
                 )
                 break
+
             self._on_before_node_transition(self.current_node, next_node)
             prev_node = self.current_node
             self.current_node = next_node
             self._update_turn_tracking(prev_node, next_node)
+
             if self.current_node == "END":
                 break
+
             node_data = self.graph.nodes[self.current_node]
             if node_data["type"] == NodeType.PLAYER:
                 player = node_data["player"]
@@ -278,10 +278,7 @@ class NetworkDialogueGameMaster(GameMaster):
                 while self._should_reprompt(player):
                     self._on_before_reprompt(player)
                     self.prompt(player, is_reprompt=True)
-                self.last_player = player
-                self.last_utterance = self.messages_by_names[player.descriptor][-1][
-                    "content"
-                ]
+
             if self._is_turn_complete():
                 self._on_after_turn(self.current_turn)
                 self.current_turn += 1
@@ -297,19 +294,14 @@ class NetworkDialogueGameMaster(GameMaster):
             is_reprompt: If this is a reprompt attempt. This is intended for re-prompting with modified prompts.
         """
         # GM -> Player
-        history = self.messages_by_names[player.descriptor]
-        assert history, f"messages history must not be empty for {player.descriptor}"
-
-        last_entry = history[-1]
-        assert last_entry["role"] != "assistant", (
-            "Last entry should not be assistant "
-            "b.c. this would be the role of the current player"
-        )
-        message = last_entry["content"]
-
-        action_type = "send message" if not is_reprompt else "send message (reprompt)"
-        action = {"type": action_type, "content": message}
-        self.log_event(from_="GM", to=player.descriptor, action=action)
+        history = player.get_messages()
+        if history and history[-1]["role"] == "user":
+            message = history[-1]["content"]
+            action_type = (
+                "send message" if not is_reprompt else "send message (reprompt)"
+            )
+            action = {"type": action_type, "content": message}
+            self.log_event(from_="GM", to=player.descriptor, action=action)
 
         _prompt, _response, response_message = player(history, self.current_turn)
 
@@ -335,7 +327,7 @@ class NetworkDialogueGameMaster(GameMaster):
         """Method executed before reprompt is passed to a Player.
         Hook
         Change the prompt to reprompt the player on e.g. an invalid response.
-        Add the new prompt to the players message via self.add_user_message(player, new_prompt)
+        Attach new message components to the players message via player.prompt_handler.add_user_message(player, **kwargs)
         Args:
             player: The Player instance that produced the invalid response.
         """
@@ -370,36 +362,6 @@ class NetworkDialogueGameMaster(GameMaster):
         action = {"type": type_, "content": value}
         self.log_event("GM", "GM", action)
 
-    def add_message(self, player: Player, utterance: str, role: str):
-        """Adds a message to the conversation history.
-        This method is used to iteratively create the conversation history, but will not log/record messages
-        automatically.
-        Args:
-            player: The Player instance that produced the message.
-            utterance: The text content of the message to be added.
-            role: The chat/instruct conversation role to use for this message. Either 'user' or 'assistant', or 'system'
-                for models/templates that support it.
-        """
-        message = {"role": role, "content": utterance}
-        history = self.messages_by_names[player.descriptor]
-        history.append(message)
-
-    def add_user_message(self, player: Player, utterance: str):
-        """Adds a message with the 'user' role to the conversation history.
-        Args:
-            player: The Player instance that produced the message.
-            utterance: The text content of the message to be added.
-        """
-        self.add_message(player, utterance, role="user")
-
-    def add_assistant_message(self, player: Player, utterance: str):
-        """Adds a message with the 'assistant' role to the conversation history.
-        Args:
-            player: The Player instance that produced the message.
-            utterance: The text content of the message to be added.
-        """
-        self.add_message(player, utterance, role="assistant")
-
     def __validate_process_and_add_player_response(
         self, player: Player, utterance: str
     ):
@@ -412,7 +374,8 @@ class NetworkDialogueGameMaster(GameMaster):
         """
         if self._validate_player_response(player, utterance):
             utterance = self.__process_response(player, utterance)
-            self.add_assistant_message(player, utterance)
+            # Add assistant message (player, utterance)
+            player.add_assistant_message(utterance)
             self._after_add_player_response(player, utterance)
 
     def _after_add_player_response(self, player: Player, utterance: str):

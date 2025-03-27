@@ -166,6 +166,17 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         """
         self.prompt_handler.add_assistant_message(content)
 
+    def get_messages(self) -> List[Dict]:
+        """Get the current message history from the prompt handler
+        Returns:
+            List of message dictionaries
+        """
+        return self.prompt_handler.get_messages()
+
+    def clear_history(self) -> None:
+        """Clear all conversation history in the prompt handler"""
+        self.prompt_handler.clear_history()
+
     def _custom_response(self, messages, turn_idx) -> str:
         """Response for programmatic Player interaction.
         - Overwrite this method to implement programmatic behavior (model_name: mock, dry_run, programmatic, custom).
