@@ -2,18 +2,19 @@ import json
 import re
 from typing import Callable, Optional, Tuple
 
-from clemcore.clemgame import Player, DialogicNetworkGameMaster
+from clemcore.clemgame import Player
+from game_master import NetworkDialogueGameMaster
 from registry.base import Registry
 
 parsers = Registry[
-    Callable[[Player, str, "DialogicNetworkGameMaster"], Tuple[bool, Optional[str]]]
+    Callable[[Player, str, "NetworkDialogueGameMaster"], Tuple[bool, Optional[str]]]
 ]()
 
 
 # EXECUTE```python\n<content>```
 @parsers.register("pyautogui_actions")
 def parse_pyautogui_actions(
-    player: Player, utterance: str, gm: "DialogicNetworkGameMaster"
+    player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
 ) -> Tuple[bool, Optional[str]]:
     """Parse pyautogui code-actions from player utterances.
     Usage:
@@ -53,7 +54,7 @@ def parse_pyautogui_actions(
 # EXECUTE```json\n<content>```
 @parsers.register("computer13_actions")
 def parse_computer13_actions(
-    player: Player, utterance: str, gm: "DialogicNetworkGameMaster"
+    player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
 ) -> Tuple[bool, Optional[str]]:
     """Parse computer13 json-actions from player utterances.
     Usage:
@@ -99,7 +100,7 @@ def parse_computer13_actions(
 # TODO: revisit this later; it doesn't align with the current parsing approach.
 @parsers.register("som_pyautogui_actions")
 def parse_som_pyautogui_actions(
-    player: Player, utterance: str, gm: "DialogicNetworkGameMaster"
+    player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
 ) -> Tuple[bool, Optional[str]]:
     """Parse pyautogui code-actions with screen object model (SOM) tags from player utterances.
     Usage:
@@ -135,7 +136,7 @@ def parse_som_pyautogui_actions(
 # DONE or FAIL
 @parsers.register("done_or_fail")
 def parse_done_or_fail(
-    player: Player, utterance: str, gm: "DialogicNetworkGameMaster"
+    player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
 ) -> Tuple[bool, Optional[str]]:
     """Parse player utterances for status keywords (DONE, FAIL)
     Args:
@@ -157,7 +158,7 @@ def parse_done_or_fail(
 # QUERY```<content>```
 @parsers.register("query")
 def parse_query(
-    player: Player, utterance: str, gm: "DialogicNetworkGameMaster"
+    player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
 ) -> Tuple[bool, Optional[str]]:
     """Parse player utterances for QUERY blocks.
     Usage:
@@ -184,7 +185,7 @@ def parse_query(
 # RESPONSE```<content>```
 @parsers.register("response")
 def parse_response(
-    player: Player, utterance: str, gm: "DialogicNetworkGameMaster"
+    player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
 ) -> Tuple[bool, Optional[str]]:
     """Parse player utterances for RESPONSE blocks.
     Usage:
