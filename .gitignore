@@ -6,12 +6,12 @@ __pycache__
 .venv/
 remove/
 
-
 # Project directories
 /results/
 /in/legacy
 /cache/
 /legacy/
+/debug_output/
 
 # Temporary and system files
 .DS_Store

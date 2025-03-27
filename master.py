@@ -1,16 +1,13 @@
 import json
 import logging
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Tuple
 from dataclasses import dataclass
 from PIL import Image
 import os
 
 from clemcore import backends
-from clemcore.clemgame import (
-    Player,
-    DialogicNetworkGameMaster,
-)
-from clemcore.clemgame.master import EdgeCondition
+from clemcore.clemgame import Player, GameMaster, GameBenchmark
+from game_master import NetworkDialogueGameMaster, EdgeCondition, NodeType, EdgeType
 from game import ComputerGame, RoleBasedPlayer
 from registry import parsers
 from constants import (
@@ -47,7 +44,7 @@ class MessageState:
                 setattr(self, field, value)
 
 
-class ComputerGameMaster(DialogicNetworkGameMaster):
+class ComputerGameMaster(NetworkDialogueGameMaster):
     def __init__(
         self,
         name: str,
@@ -79,8 +76,7 @@ class ComputerGameMaster(DialogicNetworkGameMaster):
         self.message_state.update(observation=self.current_observation)
 
     def _initialize_environment(self) -> None:
-        """Initializes game environment with recording capabilities.
-        Also retrieves initial environment-state observation"""
+        """Initializes game environment with recording capabilities and retrieves the inital state observation"""
         try:
             env_config = DEFAULT_ENV_CONFIG.copy()
             self.game = ComputerGame(
@@ -181,18 +177,188 @@ class ComputerGameMaster(DialogicNetworkGameMaster):
         pass
 
     def _on_before_game(self):
-        """Initializes the game by prompting the anchor node with initial observation."""
+        """Executed once at the start, before entering the play loop.
+        Key Actions
+            - Adds the initial game-context to the anchor player
+        """
         anchor_player = self.get_player_from_node(self.anchor_node)
-        try:
-            anchor_player.add_user_message(**self.message_state.__dict__)
-            logger.info(
-                f"Initial observation added for anchor player: {anchor_player.descriptor}"
+        anchor_player.add_user_message(**self.message_state.__dict__)
+        logger.info(
+            f"Added the initial game-context for anchor player: {anchor_player.descriptor}"
+        )
+
+    def _on_before_node_transition(self, from_node: str, to_node: str):
+        """Executed right before transitioning from one node to another.
+        Key Actions:
+            - Updates the player at the target node with the current message state.
+        Args:
+            from_node: The node ID that the system is transitioning from.
+            to_node: The node ID that the system is transitioning to.
+        """
+        to_player = self.get_player_from_node(to_node)
+        if not to_player:
+            return
+        to_player.add_user_message(**self.message_state.__dict__)
+        logger.info(
+            f"Added message state to player at node {to_node} (player: {to_player.descriptor})"
+        )
+
+    def _parse_response_for_decision_routing(
+        self, player: Player, utterance: str
+    ) -> Tuple[str, bool, Optional[str], Optional[str]]:
+        """Parse player response and evaluate decision edge conditions.
+        Key Actions:
+            1. Parse the player's utterance for relevant content
+            2. Evaluate decision edge conditions based on the parsed content
+            3. Determine which decision edge (if any) should be taken
+        Args:
+            player: The Player instance that produced the response.
+            utterance: The text content of the response.
+        Returns:
+            Tuple containing:
+            - Modified utterance (or original if no modification)
+            - Boolean flag for logging
+            - Next node ID from a decision edge, or None if no decision edge condition is met
+            - Extracted content (if any)
+        """
+        decision_edges = [
+            (to_node, edge_data["condition"])
+            for _, to_node, edge_data in self.graph.out_edges(
+                self.current_node, data=True
             )
-        except Exception as e:
-            self.terminated = True
-            raise RuntimeError(
-                f"Failed to initialize game with anchor player: {str(e)}"
+            if edge_data.get("type") == EdgeType.DECISION and edge_data.get("condition")
+        ]
+        if not decision_edges:
+            return utterance, False, None, None
+        # Evaluate each decision edge condition
+        for to_node, condition in decision_edges:
+            try:
+                is_match, extracted_content = condition.parse(player, utterance, self)
+                if is_match and extracted_content:
+                    logger.info(
+                        f"Decision edge condition met: {self.current_node} → {to_node} with content: {extracted_content[:50]}..."
+                        if len(extracted_content) > 50
+                        else extracted_content
+                    )
+                    return utterance, True, to_node, extracted_content
+
+            except Exception as e:
+                logger.error(
+                    f"Error evaluating condition for edge to {to_node}: {str(e)}"
+                )
+
+        return utterance, False, None, None
+
+    def _test_parse_response_for_decision_routing(
+        self, test_node_id=None, test_utterance=None
+    ):
+        """Test function for validating the decision edge routing logic.
+
+        Args:
+            test_node_id: Optional node ID to set as current node for testing
+            test_utterance: Optional test utterance to parse
+
+        Returns:
+            Dict containing test results and diagnostic information
+        """
+        # Store original current node to restore later
+        original_node = self.current_node
+
+        # Use provided node or default to anchor node
+        if test_node_id and test_node_id in self.graph:
+            self.current_node = test_node_id
+        elif self.anchor_node:
+            self.current_node = self.anchor_node
+
+        # Get the player associated with the current node
+        test_player = self.get_player_from_node(self.current_node)
+        if not test_player:
+            self.current_node = original_node
+            return {"error": f"No player found at node {self.current_node}"}
+
+        # Use provided utterance or create test utterances for different parsers
+        test_results = {}
+
+        if test_utterance:
+            # Test with the specific utterance provided
+            utterance, log_flag, next_node, extracted = (
+                self._parse_response_for_decision_routing(test_player, test_utterance)
             )
+            test_results["custom_test"] = {
+                "utterance": test_utterance[:100] + "..."
+                if len(test_utterance) > 100
+                else test_utterance,
+                "next_node": next_node,
+                "extracted_content": extracted[:100] + "..."
+                if extracted and len(extracted) > 100
+                else extracted,
+                "success": next_node is not None,
+            }
+        else:
+            # Create and test sample utterances for each parser
+            test_utterances = {
+                "pyautogui_actions": "EXECUTE```python\nimport pyautogui\npyautogui.moveTo(100, 100)\npyautogui.click()```",
+                "query": "QUERY```How do I open Chrome settings?```",
+                "response": "RESPONSE```Click on the three dots in the top right corner and select Settings.```",
+                "done_or_fail": "I've completed the task successfully. DONE",
+                "computer13_actions": 'EXECUTE```json\n[{"action": "click", "position": [100, 100]}]```',
+            }
+
+            # Execute tests for each utterance type
+            for parser_id, utterance_text in test_utterances.items():
+                utterance, log_flag, next_node, extracted = (
+                    self._parse_response_for_decision_routing(
+                        test_player, utterance_text
+                    )
+                )
+                test_results[parser_id] = {
+                    "utterance": utterance_text[:100] + "..."
+                    if len(utterance_text) > 100
+                    else utterance_text,
+                    "next_node": next_node,
+                    "extracted_content": extracted[:100] + "..."
+                    if extracted and len(extracted) > 100
+                    else extracted,
+                    "success": next_node is not None,
+                }
+
+        # Collect information about available edges for diagnostics
+        available_edges = []
+        for _, to_node, edge_data in self.graph.out_edges(self.current_node, data=True):
+            edge_type = edge_data.get("type", "UNKNOWN")
+            condition = None
+            if edge_type == EdgeType.DECISION and "condition" in edge_data:
+                condition = (
+                    edge_data["condition"].description
+                    if hasattr(edge_data["condition"], "description")
+                    else "No description"
+                )
+            available_edges.append(
+                {
+                    "to_node": to_node,
+                    "edge_type": str(edge_type),
+                    "condition": condition,
+                }
+            )
+
+        # Restore original node
+        self.current_node = original_node
+
+        # Return comprehensive results
+        return {
+            "test_node": test_node_id or self.current_node,
+            "available_edges": available_edges,
+            "test_results": test_results,
+        }
+
+
+class ComputerGameBenchmark(GameBenchmark):
+    def create_game_master(
+        self, experiment: Dict, player_models: List[backends.Model]
+    ) -> GameMaster:
+        return ComputerGameMaster(
+            self.game_name, self.game_path, experiment, player_models
+        )
 
 
 if __name__ == "__main__":
@@ -228,7 +394,7 @@ if __name__ == "__main__":
             player_nodes = [
                 node
                 for node, data in master.graph.nodes(data=True)
-                if data.get("type") == "PLAYER"
+                if data.get("type") == NodeType.PLAYER
             ]
             print(f"✓ Player nodes: {player_nodes}")
             print(f"✓ Total nodes: {len(master.graph.nodes())}")
@@ -270,35 +436,36 @@ if __name__ == "__main__":
         print("\n[TEST 4] Player Message History")
         print("-" * 40)
         try:
-            anchor_player = master.get_player_from_node(master.anchor_node)
-            if anchor_player:
-                print(f"Anchor player '{master.anchor_node}' message history:")
-                for i, msg in enumerate(anchor_player.prompt_handler.history):
-                    print(
-                        f"  [{i}] Role: {msg.get('role')}, Length: {len(msg.get('content', ''))}"
+            # Loop through all player nodes
+            for node_id in player_nodes:
+                player = master.get_player_from_node(node_id)
+                if player:
+                    # Mark if this is the anchor node
+                    anchor_indicator = (
+                        " (ANCHOR NODE)" if node_id == master.anchor_node else ""
                     )
-                    if i < 2:  # Show preview of first messages only
-                        content_preview = (
-                            msg.get("content", "")[:100] + "..."
-                            if len(msg.get("content", "")) > 100
-                            else msg.get("content", "")
-                        )
-                        print(f"      Preview: {content_preview}")
-                print(
-                    f"✓ Total messages in history: {len(anchor_player.prompt_handler.history)}"
-                )
+                    print(f"Player '{node_id}'{anchor_indicator} message history:")
 
-                # Check if any other players have message history
-                for node_id in player_nodes:
-                    if node_id != master.anchor_node:
-                        player = master.get_player_from_node(node_id)
-                        if player and player.prompt_handler.history:
+                    if hasattr(player, "prompt_handler") and hasattr(
+                        player.prompt_handler, "history"
+                    ):
+                        for i, msg in enumerate(player.prompt_handler.history):
                             print(
-                                f"Player '{node_id}' has {len(player.prompt_handler.history)} messages in history"
+                                f"  [{i}] Role: {msg.get('role')}, Length: {len(msg.get('content', ''))}"
                             )
-            else:
-                print("✗ No anchor player found")
-            print("✓ Message history validation complete")
+                            if i < 2:  # Show preview of first messages only
+                                content_preview = (
+                                    msg.get("content", "")[:100] + "..."
+                                    if len(msg.get("content", "")) > 100
+                                    else msg.get("content", "")
+                                )
+                                print(f"      Preview: {content_preview}")
+                        print(f"  Total messages: {len(player.prompt_handler.history)}")
+                    else:
+                        print("  No message history available")
+                    print("-" * 30)  # Separator between players
+
+            print("✓ Player message history validation complete")
         except Exception as e:
             print(f"✗ Message history test failed: {str(e)}")
 
@@ -314,6 +481,129 @@ if __name__ == "__main__":
             print("✓ Game state validation complete")
         except Exception as e:
             print(f"✗ Game state test failed: {str(e)}")
+
+        print("\n[TEST 6] Node Transition Message Update")
+        print("-" * 40)
+        try:
+            # Test node transition behavior
+            if len(player_nodes) >= 2:
+                # Find a node that's not the anchor node to test transition to
+                test_node = next(
+                    (node for node in player_nodes if node != master.anchor_node),
+                    player_nodes[0],
+                )
+
+                # Get the player's message count before transition
+                test_player = master.get_player_from_node(test_node)
+                msg_count_before = (
+                    len(test_player.prompt_handler.history) if test_player else 0
+                )
+
+                # Add a test value to message state
+                master.message_state.update(query="This is a test transition query")
+
+                # Simulate transition
+                current_node = (
+                    master.anchor_node if master.anchor_node else player_nodes[0]
+                )
+                print(f"✓ Simulating transition: {current_node} -> {test_node}")
+                master._on_before_node_transition(current_node, test_node)
+
+                # Check if message was added
+                msg_count_after = (
+                    len(test_player.prompt_handler.history) if test_player else 0
+                )
+                print(
+                    f"✓ Messages before: {msg_count_before}, after: {msg_count_after}"
+                )
+
+                # Verify message content
+                if msg_count_after > msg_count_before:
+                    newest_msg = test_player.prompt_handler.history[-1]
+                    preview = (
+                        newest_msg.get("content", "")[:100] + "..."
+                        if len(newest_msg.get("content", "")) > 100
+                        else newest_msg.get("content", "")
+                    )
+                    print(f"✓ New message content: {preview}")
+
+                    # Check if our test query was included
+                    if "This is a test transition query" in newest_msg.get(
+                        "content", ""
+                    ):
+                        print("✓ Test query successfully passed to destination player")
+                    else:
+                        print("✗ Test query not found in destination player message")
+
+                print("✓ Node transition messaging test complete")
+            else:
+                print("✓ Skipping node transition test (insufficient player nodes)")
+        except Exception as e:
+            print(f"✗ Node transition test failed: {str(e)}")
+
+        print("\n[TEST 7] Decision Edge Routing")
+        print("-" * 40)
+        try:
+            # Test the decision edge routing logic
+            if hasattr(master, "_test_parse_response_for_decision_routing"):
+                routing_test_results = (
+                    master._test_parse_response_for_decision_routing()
+                )
+
+                print(
+                    f"Testing decision edge routing from node: {routing_test_results.get('test_node', 'Unknown')}"
+                )
+                print("\nAvailable edges:")
+                for edge in routing_test_results.get("available_edges", []):
+                    edge_desc = f"→ {edge['to_node']} ({edge['edge_type']})"
+                    if edge.get("condition"):
+                        edge_desc += f": {edge['condition']}"
+                    print(f"  {edge_desc}")
+
+                print("\nRouting test results:")
+                for parser_id, result in routing_test_results.get(
+                    "test_results", {}
+                ).items():
+                    status = "✓" if result.get("success") else "✗"
+                    print(f"\n  {status} Parser: {parser_id}")
+                    print(f"    Utterance: {result.get('utterance', 'N/A')}")
+                    print(f"    Next node: {result.get('next_node', 'None')}")
+                    if result.get("extracted_content"):
+                        print(
+                            f"    Extracted: {result.get('extracted_content', 'N/A')}"
+                        )
+
+                # Test with a specific utterance if we have a query edge
+                query_edge = next(
+                    (
+                        edge
+                        for edge in routing_test_results.get("available_edges", [])
+                        if edge.get("condition")
+                        and "query" in str(edge.get("condition")).lower()
+                    ),
+                    None,
+                )
+                if query_edge:
+                    specific_test = master._test_parse_response_for_decision_routing(
+                        test_utterance="QUERY```Can you help me find the settings menu?```"
+                    )
+                    result = specific_test.get("test_results", {}).get(
+                        "custom_test", {}
+                    )
+                    status = "✓" if result.get("success") else "✗"
+                    print(f"\n  {status} Custom Query Test")
+                    print(f"    Utterance: {result.get('utterance', 'N/A')}")
+                    print(f"    Next node: {result.get('next_node', 'None')}")
+                    if result.get("extracted_content"):
+                        print(
+                            f"    Extracted: {result.get('extracted_content', 'N/A')}"
+                        )
+
+                print("\n✓ Decision edge routing test complete")
+            else:
+                print("✗ Test method not found on master instance")
+        except Exception as e:
+            print(f"✗ Decision edge routing test failed: {str(e)}")
 
         print("\n" + "=" * 50)
         print("DEBUG HARNESS: Summary")
