@@ -7,10 +7,7 @@ import atexit
 
 from clemcore.clemgame import Player
 from prompt_handler import PromptHandler, HANDLER_TYPE
-
-# FIXME: (OSWorld) Soon these prompts will be replaced by player specific prompts accessible through instances.json file.
 from environment import EnvironmentFactory, Environment
-
 from constants import OBSERVATION_TYPE, ACTION_SPACE
 
 
