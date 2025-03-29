@@ -6,6 +6,23 @@ from clemcore.clemgame import Player
 from game_master import NetworkDialogueGameMaster
 from registry.base import Registry
 
+
+# Function to store metadata about parsers
+def parser_config(target_field: None, description=None):
+    """Configure a parser with field mapping and description
+    Args:
+        target_field: field to update with parsed content (e.g. master.MessageState.__dataclass_fields__ like query, response, etc.)
+        description: Human-readable description of the parser
+    """
+
+    def decorator(func):
+        func.target_field = target_field
+        func.description = description
+        return func
+
+    return decorator
+
+
 parsers = Registry[
     Callable[[Player, str, "NetworkDialogueGameMaster"], Tuple[bool, Optional[str]]]
 ]()
@@ -13,6 +30,7 @@ parsers = Registry[
 
 # EXECUTE```python\n<content>```
 @parsers.register("pyautogui_actions")
+@parser_config(target_field="actions")
 def parse_pyautogui_actions(
     player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
 ) -> Tuple[bool, Optional[str]]:
@@ -53,6 +71,7 @@ def parse_pyautogui_actions(
 
 # EXECUTE```json\n<content>```
 @parsers.register("computer13_actions")
+@parser_config(target_field="actions")
 def parse_computer13_actions(
     player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
 ) -> Tuple[bool, Optional[str]]:
@@ -135,6 +154,7 @@ def parse_som_pyautogui_actions(
 
 # DONE or FAIL
 @parsers.register("done_or_fail")
+@parser_config(target_field="closure")
 def parse_done_or_fail(
     player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
 ) -> Tuple[bool, Optional[str]]:
@@ -157,6 +177,7 @@ def parse_done_or_fail(
 
 # QUERY```<content>```
 @parsers.register("query")
+@parser_config(target_field="query")
 def parse_query(
     player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
 ) -> Tuple[bool, Optional[str]]:
@@ -184,6 +205,7 @@ def parse_query(
 
 # RESPONSE```<content>```
 @parsers.register("response")
+@parser_config(target_field="response")
 def parse_response(
     player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
 ) -> Tuple[bool, Optional[str]]:

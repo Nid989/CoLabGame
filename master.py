@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, List, Optional, Union, Tuple
+from typing import Dict, List, Optional, Union, Tuple, Any
 from dataclasses import dataclass
 from PIL import Image
 import os
@@ -42,6 +42,78 @@ class MessageState:
         for field, value in kwargs.items():
             if field in self.__dataclass_fields__:
                 setattr(self, field, value)
+
+
+class ProcessingStep:
+    """Defines a single processing step for parsed content"""
+
+    def __init__(self, processor_func, output_field=None, description=""):
+        self.processor_func = processor_func
+        self.output_field = output_field
+        self.description = description
+
+    # NOTE: might remove 'context' argument, do not see any purpose (especially for bound-methods)
+    def execute(self, content, message_state, **context):
+        """Execute the processing step with dynamic context passing
+        Args:
+            content: The input content to process
+            message_state: MessageState instance to update
+            **context: Additional context (game_master, player, etc.)
+        """
+        # Check if this is a bound method (instance method of a class)
+        if (
+            hasattr(self.processor_func, "__self__")
+            and self.processor_func.__self__ is not None
+        ):
+            # Get the instance to which the method is bound
+            bound_instance = self.processor_func.__self__
+            # Check if the bound instance is present in the context
+            for key, obj in context.items():
+                if obj in bound_instance:
+                    filtered_context = {
+                        k: v for k, v in context.items() if v is not bound_instance
+                    }
+                    result = self.processor_func(content, **filtered_context)
+                    break
+            else:
+                result = self.processor_func(content, **context)
+        else:
+            # Not a bound method, call as a standalone function
+            result = self.processor_func(content, **context)
+        if self.output_field and hasattr(message_state, self.output_field):
+            message_state.update(**{self.output_field: result})
+
+        return result
+
+
+class ParserProcessingRegistry:
+    """Registry that links parsers to processing pipeline"""
+
+    def __init__(self):
+        self.parser_piplines = {}
+
+    def register_pipeline(self, parser_id: str, steps: List[ProcessingStep]):
+        """Register a processing pipeline for a parser"""
+        self.parser_pipelines[parser_id] = steps
+
+    def get_pipeline(self, parser_id: str) -> List[ProcessingStep]:
+        """Get processing pipeline for a parser"""
+        return self.parser_pipelines.get(parser_id, [])
+
+    def execute_pipeline(
+        self, parser_id: str, content: Any, message_state, player=None, game_master=None
+    ) -> Tuple[bool, Any]:
+        """Execute the entire processing pipeline for a parser"""
+        if parser_id not in self.parser_pipelines:
+            return False, content
+
+        current_content = content
+        result = None
+        for step in self.parser_pipelines[parser_id]:
+            result = step.execute(current_content, message_state, player, game_master)
+            current_content = result
+
+        return True, result
 
 
 class ComputerGameMaster(NetworkDialogueGameMaster):
