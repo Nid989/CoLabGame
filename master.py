@@ -9,7 +9,7 @@ from clemcore import backends
 from clemcore.clemgame import Player, GameMaster, GameBenchmark
 from game_master import NetworkDialogueGameMaster, EdgeCondition, NodeType, EdgeType
 from game import ComputerGame, RoleBasedPlayer
-from registry import parsers
+from registry import parsers, get_parser_metadata
 from constants import (
     DEFAULT_ENV_CONFIG,
     DEFAULT_HANDLER_TYPE,
@@ -69,7 +69,7 @@ class ProcessingStep:
             bound_instance = self.processor_func.__self__
             # Check if the bound instance is present in the context
             for key, obj in context.items():
-                if obj in bound_instance:
+                if obj is bound_instance:
                     filtered_context = {
                         k: v for k, v in context.items() if v is not bound_instance
                     }
@@ -90,7 +90,7 @@ class ParserProcessingRegistry:
     """Registry that links parsers to processing pipeline"""
 
     def __init__(self):
-        self.parser_piplines = {}
+        self.parser_pipelines = {}
 
     def register_pipeline(self, parser_id: str, steps: List[ProcessingStep]):
         """Register a processing pipeline for a parser"""
@@ -131,6 +131,8 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         self.game_instance: Dict = None
         self.terminated: bool = False
         self.message_state = MessageState()
+
+        self.processing_pipelines = {}
 
     def _on_setup(self, **game_instance) -> None:
         """Method executed at the start of the default setup method.
@@ -307,6 +309,33 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             try:
                 is_match, extracted_content = condition.parse(player, utterance, self)
                 if is_match and extracted_content:
+                    parser_id = None
+                    parse_func_name = condition.parse_func.__name__
+                    for pid in parsers:
+                        if (
+                            parse_func_name.startswith(f"parse_{pid}")
+                            or pid in parse_func_name
+                        ):
+                            parser_id = pid
+                            break
+                    if parser_id:
+                        metadata = get_parser_metadata(parser_id)
+                        target_field = metadata.get("target_field")
+                        if target_field and hasattr(self.message_state, target_field):
+                            self.message_state.update(
+                                **{target_field: extracted_content}
+                            )
+                        # If we have a processing pipeline for this parser, execute
+                        if parser_id in self.processing_pipelines:
+                            context = {
+                                "player": player,
+                                "gm": self,
+                                "parser_id": parser_id,
+                            }
+                        for step in self.processing_pipelines[parser_id]:
+                            step.execute(
+                                extracted_content, self.message_state, **context
+                            )
                     logger.info(
                         f"Decision edge condition met: {self.current_node} → {to_node} with content: {extracted_content[:50]}..."
                         if len(extracted_content) > 50

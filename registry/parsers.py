@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional, Tuple, Dict, Any
 
 from clemcore.clemgame import Player
 from game_master import NetworkDialogueGameMaster
@@ -21,6 +21,26 @@ def parser_config(target_field: None, description=None):
         return func
 
     return decorator
+
+
+def get_parser_metadata(parser_id: str) -> Dict[str, Any]:
+    """Get metadata for a parser
+    Args:
+        parser_id: The identifier of the parser
+    Returns:
+        Dict containing parser metadata (target_field, description)
+    """
+    if parser_id not in parsers:
+        return {}
+
+    parser_func = parsers[parser_id]
+    metadata = {}
+    if hasattr(parser_func, "target_field"):
+        metadata["target_field"] = parser_func.target_field
+    if hasattr(parser_func, "description"):
+        metadata["description"] = parser_func.description
+
+    return metadata
 
 
 parsers = Registry[
