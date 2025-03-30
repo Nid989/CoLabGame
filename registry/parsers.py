@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Callable, Optional, Tuple, Dict, Any
+from typing import Callable, Optional, Tuple, Dict, Any, List
 
 from clemcore.clemgame import Player
 from game_master import NetworkDialogueGameMaster
@@ -53,7 +53,7 @@ parsers = Registry[
 @parser_config(target_field="actions")
 def parse_pyautogui_actions(
     player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
-) -> Tuple[bool, Optional[str]]:
+) -> Tuple[bool, Optional[List[str]]]:
     """Parse pyautogui code-actions from player utterances.
     Usage:
         Should be used when 'action_space' is set to 'pyautogui'.
@@ -64,16 +64,15 @@ def parse_pyautogui_actions(
     Returns:
         Tuple containing:
         - Boolean indicating if parsing was successful (code blocks or commands found)
-        - Extracted content as a string, or None if no valid content was found
+        - List of extracted code actions, or None if no valid content was found
     """
     execute_pattern = r"EXECUTE\s*(.*?)(?=EXECUTE|\Z)"
     execute_matches = re.findall(execute_pattern, utterance, re.DOTALL)
 
-    if execute_matches:
-        utterance = execute_matches[0]
-    else:
+    if not execute_matches:
         return False, None
 
+    utterance = execute_matches[0]
     normalized_utterance = "\n".join(
         [line.strip() for line in utterance.split(";") if line.strip()]
     )
@@ -84,7 +83,7 @@ def parse_pyautogui_actions(
     if not code_matches:
         return False, None
 
-    parsed_content = "\n".join(code_block.strip() for code_block in code_matches)
+    parsed_content = [code_block.strip() for code_block in code_matches]
 
     return bool(parsed_content), parsed_content if parsed_content else None
 
@@ -94,7 +93,7 @@ def parse_pyautogui_actions(
 @parser_config(target_field="actions")
 def parse_computer13_actions(
     player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
-) -> Tuple[bool, Optional[str]]:
+) -> Tuple[bool, Optional[List[dict]]]:
     """Parse computer13 json-actions from player utterances.
     Usage:
         Should be used when 'action_space' is set to 'computer13'
@@ -105,16 +104,15 @@ def parse_computer13_actions(
     Returns:
         Tuple containing:
         - Boolean indicating if parsing was successful
-        - Extracted JSON content as a string, or None if no valid content was found
+        - List of parsed action dictionaries, or None if no valid content was found
     """
     execute_pattern = r"EXECUTE\s*(.*?)(?=EXECUTE|\Z)"
     execute_matches = re.findall(execute_pattern, utterance, re.DOTALL)
 
-    if execute_matches:
-        utterance = execute_matches[0]
-    else:
+    if not execute_matches:
         return False, None
 
+    utterance = execute_matches[0]
     json_blocks = re.findall(r"```(?:json\s+)?(.*?)```", utterance, re.DOTALL)
 
     if json_blocks:
@@ -127,11 +125,11 @@ def parse_computer13_actions(
                 continue
 
         if parsed_actions:
-            return True, json.dumps(parsed_actions)
+            return True, parsed_actions
 
     try:
         action_dict = json.loads(utterance)
-        return True, json.dumps([action_dict])
+        return True, [action_dict]
     except json.JSONDecodeError:
         return False, None
 
