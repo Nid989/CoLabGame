@@ -27,6 +27,8 @@ class MessageState:
     response: Optional[str] = None
     plan: Optional[str] = None
     task: Optional[str] = None
+    actions: Optional[List[str]] = None
+    closure: Optional[str] = None
 
     def reset_except_observation(self) -> None:
         """Reset all fields to None except observation using dynamic field iteration"""
@@ -44,8 +46,8 @@ class MessageState:
                 setattr(self, field, value)
 
 
-class ProcessingStep:
-    """Defines a single processing step for parsed content"""
+class PipeStage:
+    """Defines a individual processing stage within a parser pipeline."""
 
     def __init__(self, processor_func, output_field=None, description=""):
         self.processor_func = processor_func
@@ -58,7 +60,7 @@ class ProcessingStep:
         Args:
             content: The input content to process
             message_state: MessageState instance to update
-            **context: Additional context (game_master, player, etc.)
+            **context: Additional context (gm, player, etc.)
         """
         # Check if this is a bound method (instance method of a class)
         if (
@@ -86,17 +88,17 @@ class ProcessingStep:
         return result
 
 
-class ParserProcessingRegistry:
-    """Registry that links parsers to processing pipeline"""
+class PipeManager:
+    """Manages and executes parser-specific processing pipelines"""
 
     def __init__(self):
         self.parser_pipelines = {}
 
-    def register_pipeline(self, parser_id: str, steps: List[ProcessingStep]):
+    def register_pipeline(self, parser_id: str, steps: List[PipeStage]):
         """Register a processing pipeline for a parser"""
         self.parser_pipelines[parser_id] = steps
 
-    def get_pipeline(self, parser_id: str) -> List[ProcessingStep]:
+    def get_pipeline(self, parser_id: str) -> List[PipeStage]:
         """Get processing pipeline for a parser"""
         return self.parser_pipelines.get(parser_id, [])
 
@@ -131,14 +133,14 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         self.game_instance: Dict = None
         self.terminated: bool = False
         self.message_state = MessageState()
-
-        self.processing_pipelines = {}
+        self.pipe_manager = PipeManager()
 
     def _on_setup(self, **game_instance) -> None:
         """Method executed at the start of the default setup method.
         Key Actions:
             - Sets up environment and loads initial observation + starts gameplay recording.
             - Constructs player interaction graph/ network.
+            - Sets up trigger pipeline (specific) "parse func. -> after parse steps"
         Args:
             game_instance: Keyword arguments of the game_instance
         """
@@ -146,8 +148,22 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
 
         self._initialize_environment()
         self._build_graph()
+        self._setup_after_parse_pipelines()
 
         self.message_state.update(observation=self.current_observation)
+
+    def _setup_after_parse_pipelines(self) -> None:
+        """Initialize processing pipelines for different parser"""
+        self.pipe_manager.register_pipeline(
+            "pyautogui_actions",
+            [
+                PipeStage(
+                    self._execute_actions(),
+                    output_field="observation",
+                    description="applies player actions to environment, producing state-based observations.",
+                )
+            ],
+        )
 
     def _initialize_environment(self) -> None:
         """Initializes game environment with recording capabilities and retrieves the inital state observation"""
@@ -325,23 +341,21 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                             self.message_state.update(
                                 **{target_field: extracted_content}
                             )
-                        # If we have a processing pipeline for this parser, execute
-                        if parser_id in self.processing_pipelines:
-                            context = {
-                                "player": player,
-                                "gm": self,
-                                "parser_id": parser_id,
-                            }
-                        for step in self.processing_pipelines[parser_id]:
-                            step.execute(
-                                extracted_content, self.message_state, **context
+                        success, result = self.pipe_manager.execute_pipeline(
+                            parser_id=parser_id,
+                            content=extracted_content,
+                            message_state=self.message_state,
+                            player=player,
+                            gm=self,
+                        )
+                        if success:
+                            logger.info(
+                                f"Processing pipeline executed for parser {parser_id}"
                             )
                     logger.info(
-                        f"Decision edge condition met: {self.current_node} → {to_node} with content: {extracted_content[:50]}..."
-                        if len(extracted_content) > 50
-                        else extracted_content
+                        f"Decision edge condition met: {self.current_node} → {to_node}"
                     )
-                    return utterance, True, to_node, extracted_content
+                    return utterance, True, to_node, (extracted_content, result)
 
             except Exception as e:
                 logger.error(
@@ -349,6 +363,16 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                 )
 
         return utterance, False, None, None
+
+    def _execute_actions(
+        self, content: str, **context
+    ) -> Optional[Dict[str, Union[str, Image.Image, Dict]]]:
+        """Execute either pyautogui or computer13 actions and record observations (upon environment-state change)
+        Args:
+            content: Parser extracted actions typically either pyautogui python-code (as str.), or computer13 actions in JSON (as str.)
+            **context: Additionally context as dict (e.g., Player)
+        """
+        pass
 
     def _test_parse_response_for_decision_routing(
         self, test_node_id=None, test_utterance=None

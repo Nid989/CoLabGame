@@ -75,7 +75,7 @@ class NodeTransition:
     """Temporary storage for node transition data."""
 
     next_node: Optional[str] = None
-    extracted_content: Optional[str] = None
+    # Additional attributes can be added upon requirement.
 
 
 class NetworkDialogueGameMaster(GameMaster):
@@ -409,7 +409,7 @@ class NetworkDialogueGameMaster(GameMaster):
             The response content, potentially modified.
         """
         self.transition = NodeTransition()
-        _utterance, log_action, next_node, extracted_content = (
+        _utterance, log_action, next_node, _ = (
             self._parse_response_for_decision_routing(player, utterance)
         )
         # If no decision edge was taken, fall back to standard edges
@@ -423,8 +423,6 @@ class NetworkDialogueGameMaster(GameMaster):
         # Store transition data in temporary registry
         if next_node:
             self.transition.next_node = next_node
-        if extracted_content:
-            self.transition.extracted_content = extracted_content
         if _utterance != utterance and log_action:
             action = {"type": "parse", "content": _utterance}
             self.log_event(from_="GM", to="GM", action=action)
