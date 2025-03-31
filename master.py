@@ -34,7 +34,7 @@ class MessageState:
         """Reset all fields to None except observation using dynamic field iteration"""
         for field in self.__dataclass_fields__:
             if field != "observation":
-                setattr(self, self, field, None)
+                setattr(self, field, None)
 
     def update(self, **kwargs) -> None:
         """Update state fields with new values
@@ -54,34 +54,26 @@ class PipeStage:
         self.output_field = output_field
         self.description = description
 
-    # NOTE: might remove 'context' argument, do not see any purpose (especially for bound-methods)
-    def execute(self, content, message_state, **context):
-        """Execute the processing step with dynamic context passing
+    def execute(self, content, message_state):
+        """Execute the processing step
         Args:
             content: The input content to process
             message_state: MessageState instance to update
-            **context: Additional context (gm, player, etc.)
+        Returns:
+            The result of the processor function execution
         """
         # Check if this is a bound method (instance method of a class)
-        if (
+        is_bound_method = (
             hasattr(self.processor_func, "__self__")
             and self.processor_func.__self__ is not None
-        ):
-            # Get the instance to which the method is bound
-            bound_instance = self.processor_func.__self__
-            # Check if the bound instance is present in the context
-            for key, obj in context.items():
-                if obj is bound_instance:
-                    filtered_context = {
-                        k: v for k, v in context.items() if v is not bound_instance
-                    }
-                    result = self.processor_func(content, **filtered_context)
-                    break
-            else:
-                result = self.processor_func(content, **context)
-        else:
-            # Not a bound method, call as a standalone function
-            result = self.processor_func(content, **context)
+        )
+        try:
+            result = self.processor_func(content)
+        except Exception as e:
+            logger.error(
+                f"{'Bound' if is_bound_method else 'Unbound'} processor function failed: {str(e)}"
+            )
+            raise
         if self.output_field and hasattr(message_state, self.output_field):
             message_state.update(**{self.output_field: result})
 
@@ -103,7 +95,7 @@ class PipeManager:
         return self.parser_pipelines.get(parser_id, [])
 
     def execute_pipeline(
-        self, parser_id: str, content: Any, message_state, player=None, game_master=None
+        self, parser_id: str, content: Any, message_state
     ) -> Tuple[bool, Any]:
         """Execute the entire processing pipeline for a parser"""
         if parser_id not in self.parser_pipelines:
@@ -112,7 +104,7 @@ class PipeManager:
         current_content = content
         result = None
         for step in self.parser_pipelines[parser_id]:
-            result = step.execute(current_content, message_state, player, game_master)
+            result = step.execute(current_content, message_state)
             current_content = result
 
         return True, result
@@ -239,7 +231,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             "pyautogui_actions",
             [
                 PipeStage(
-                    self._execute_actions(),
+                    self._execute_actions,
                     output_field="observation",
                     description="applies player actions to environment, producing state-based observations.",
                 )
@@ -249,7 +241,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             "done_or_fail",
             [
                 PipeStage(
-                    self._execute_actions(),
+                    self._execute_actions,
                     output_field="observation",  # maybe?
                     description="applies player actions (either done or fail) to environment, producing final-state-based observation",
                 )
@@ -354,8 +346,6 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                             parser_id=parser_id,
                             content=extracted_content,
                             message_state=self.message_state,
-                            player=player,
-                            gm=self,
                         )
                         if success:
                             logger.info(
@@ -374,12 +364,11 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         return utterance, False, None, None
 
     def _execute_actions(
-        self, content: str, **context
+        self, content: str
     ) -> Optional[Dict[str, Union[str, Image.Image, Dict]]]:
         """Execute either pyautogui or computer13 actions and record observations (upon environment-state change)
         Args:
             content: Parser extracted actions typically either pyautogui python-code (as str.), or computer13 actions in JSON (as str.)
-            **context: Additionally context as dict (e.g., Player)
         """
         try:
             if not content:
@@ -407,108 +396,6 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         except Exception as e:
             logger.error(f"Action execution failed: {str(e)}")
             return None
-
-    def _test_parse_response_for_decision_routing(
-        self, test_node_id=None, test_utterance=None
-    ):
-        """Test function for validating the decision edge routing logic.
-
-        Args:
-            test_node_id: Optional node ID to set as current node for testing
-            test_utterance: Optional test utterance to parse
-
-        Returns:
-            Dict containing test results and diagnostic information
-        """
-        # Store original current node to restore later
-        original_node = self.current_node
-
-        # Use provided node or default to anchor node
-        if test_node_id and test_node_id in self.graph:
-            self.current_node = test_node_id
-        elif self.anchor_node:
-            self.current_node = self.anchor_node
-
-        # Get the player associated with the current node
-        test_player = self.get_player_from_node(self.current_node)
-        if not test_player:
-            self.current_node = original_node
-            return {"error": f"No player found at node {self.current_node}"}
-
-        # Use provided utterance or create test utterances for different parsers
-        test_results = {}
-
-        if test_utterance:
-            # Test with the specific utterance provided
-            utterance, log_flag, next_node, extracted = (
-                self._parse_response_for_decision_routing(test_player, test_utterance)
-            )
-            test_results["custom_test"] = {
-                "utterance": test_utterance[:100] + "..."
-                if len(test_utterance) > 100
-                else test_utterance,
-                "next_node": next_node,
-                "extracted_content": extracted[:100] + "..."
-                if extracted and len(extracted) > 100
-                else extracted,
-                "success": next_node is not None,
-            }
-        else:
-            # Create and test sample utterances for each parser
-            test_utterances = {
-                "pyautogui_actions": "EXECUTE```python\nimport pyautogui\npyautogui.moveTo(100, 100)\npyautogui.click()```",
-                "query": "QUERY```How do I open Chrome settings?```",
-                "response": "RESPONSE```Click on the three dots in the top right corner and select Settings.```",
-                "done_or_fail": "I've completed the task successfully. DONE",
-                "computer13_actions": 'EXECUTE```json\n[{"action": "click", "position": [100, 100]}]```',
-            }
-
-            # Execute tests for each utterance type
-            for parser_id, utterance_text in test_utterances.items():
-                utterance, log_flag, next_node, extracted = (
-                    self._parse_response_for_decision_routing(
-                        test_player, utterance_text
-                    )
-                )
-                test_results[parser_id] = {
-                    "utterance": utterance_text[:100] + "..."
-                    if len(utterance_text) > 100
-                    else utterance_text,
-                    "next_node": next_node,
-                    "extracted_content": extracted[:100] + "..."
-                    if extracted and len(extracted) > 100
-                    else extracted,
-                    "success": next_node is not None,
-                }
-
-        # Collect information about available edges for diagnostics
-        available_edges = []
-        for _, to_node, edge_data in self.graph.out_edges(self.current_node, data=True):
-            edge_type = edge_data.get("type", "UNKNOWN")
-            condition = None
-            if edge_type == EdgeType.DECISION and "condition" in edge_data:
-                condition = (
-                    edge_data["condition"].description
-                    if hasattr(edge_data["condition"], "description")
-                    else "No description"
-                )
-            available_edges.append(
-                {
-                    "to_node": to_node,
-                    "edge_type": str(edge_type),
-                    "condition": condition,
-                }
-            )
-
-        # Restore original node
-        self.current_node = original_node
-
-        # Return comprehensive results
-        return {
-            "test_node": test_node_id or self.current_node,
-            "available_edges": available_edges,
-            "test_results": test_results,
-        }
 
 
 class ComputerGameBenchmark(GameBenchmark):
@@ -592,177 +479,171 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"✗ Environment test failed: {str(e)}")
 
-        print("\n[TEST 4] Player Message History")
+        print("\n[TEST 4] Decision Edge Routing and Pipeline Processing")
         print("-" * 40)
         try:
-            # Loop through all player nodes
-            for node_id in player_nodes:
-                player = master.get_player_from_node(node_id)
-                if player:
-                    # Mark if this is the anchor node
-                    anchor_indicator = (
-                        " (ANCHOR NODE)" if node_id == master.anchor_node else ""
-                    )
-                    print(f"Player '{node_id}'{anchor_indicator} message history:")
-
-                    if hasattr(player, "prompt_handler") and hasattr(
-                        player.prompt_handler, "history"
-                    ):
-                        for i, msg in enumerate(player.prompt_handler.history):
-                            print(
-                                f"  [{i}] Role: {msg.get('role')}, Length: {len(msg.get('content', ''))}"
-                            )
-                            if i < 2:  # Show preview of first messages only
-                                content_preview = (
-                                    msg.get("content", "")[:100] + "..."
-                                    if len(msg.get("content", "")) > 100
-                                    else msg.get("content", "")
-                                )
-                                print(f"      Preview: {content_preview}")
-                        print(f"  Total messages: {len(player.prompt_handler.history)}")
-                    else:
-                        print("  No message history available")
-                    print("-" * 30)  # Separator between players
-
-            print("✓ Player message history validation complete")
-        except Exception as e:
-            print(f"✗ Message history test failed: {str(e)}")
-
-        print("\n[TEST 5] Game State and Turn Tracking")
-        print("-" * 40)
-        try:
-            print(f"✓ Current turn: {master.current_turn}")
-            print(f"✓ Game terminated: {master.terminated}")
-            if hasattr(master, "turn_path"):
-                print(f"✓ Turn path: {master.turn_path}")
-            if hasattr(master, "turn_visited_nodes"):
-                print(f"✓ Visited nodes: {master.turn_visited_nodes}")
-            print("✓ Game state validation complete")
-        except Exception as e:
-            print(f"✗ Game state test failed: {str(e)}")
-
-        print("\n[TEST 6] Node Transition Message Update")
-        print("-" * 40)
-        try:
-            # Test node transition behavior
-            if len(player_nodes) >= 2:
-                # Find a node that's not the anchor node to test transition to
-                test_node = next(
-                    (node for node in player_nodes if node != master.anchor_node),
-                    player_nodes[0],
-                )
-
-                # Get the player's message count before transition
-                test_player = master.get_player_from_node(test_node)
-                msg_count_before = (
-                    len(test_player.prompt_handler.history) if test_player else 0
-                )
-
-                # Add a test value to message state
-                master.message_state.update(query="This is a test transition query")
-
-                # Simulate transition
-                current_node = (
-                    master.anchor_node if master.anchor_node else player_nodes[0]
-                )
-                print(f"✓ Simulating transition: {current_node} -> {test_node}")
-                master._on_before_node_transition(current_node, test_node)
-
-                # Check if message was added
-                msg_count_after = (
-                    len(test_player.prompt_handler.history) if test_player else 0
-                )
+            # First verify the decision edges are properly set up
+            decision_edges = [
+                (from_node, to_node, data)
+                for from_node, to_node, data in master.graph.edges(data=True)
+                if data.get("type") == EdgeType.DECISION
+            ]
+            print(f"Found {len(decision_edges)} decision edges:")
+            for from_node, to_node, data in decision_edges:
                 print(
-                    f"✓ Messages before: {msg_count_before}, after: {msg_count_after}"
+                    f"  - {from_node} → {to_node} ({data.get('condition').parse_func.__name__})"
                 )
 
-                # Verify message content
-                if msg_count_after > msg_count_before:
-                    newest_msg = test_player.prompt_handler.history[-1]
-                    preview = (
-                        newest_msg.get("content", "")[:100] + "..."
-                        if len(newest_msg.get("content", "")) > 100
-                        else newest_msg.get("content", "")
+            # Test parsing and pipeline execution for different message types
+            test_cases = {
+                "pyautogui": {
+                    "utterance": "EXECUTE```python\nimport pyautogui\npyautogui.click(100, 100)```",
+                    "parser": "pyautogui_actions",
+                    "expected_field": "actions",
+                    "from_node": "executor",  # Add source node
+                    "to_node": "executor",  # Add target node
+                },
+                "query": {
+                    "utterance": "QUERY```How do I change search settings?```",
+                    "parser": "query",
+                    "expected_field": "query",
+                    "from_node": "executor",
+                    "to_node": "advisor",
+                },
+                "response": {
+                    "utterance": "RESPONSE```Click the three dots menu and go to Settings```",
+                    "parser": "response",
+                    "expected_field": "response",
+                    "from_node": "advisor",
+                    "to_node": "executor",
+                },
+                "done": {
+                    "utterance": "Task completed successfully. DONE",
+                    "parser": "done_or_fail",
+                    "expected_field": "actions",
+                    "from_node": "executor",
+                    "to_node": "END",
+                },
+            }
+
+            for test_name, test_data in test_cases.items():
+                print(f"\nTesting {test_name} parsing and pipeline:")
+
+                # Set current node before testing
+                master.current_node = test_data["from_node"]
+                test_player = master.get_player_from_node(master.current_node)
+
+                if not test_player:
+                    print(f"  ✗ No player found at node {master.current_node}")
+                    continue
+
+                # Test parsing
+                utterance, log_flag, next_node, extracted = (
+                    master._parse_response_for_decision_routing(
+                        test_player, test_data["utterance"]
                     )
-                    print(f"✓ New message content: {preview}")
+                )
+                print(f"  ✓ Current node: {master.current_node}")
+                print(f"  ✓ Expected next node: {test_data['to_node']}")
+                print(f"  ✓ Actual next node: {next_node}")
+                print(f"  ✓ Extracted content available: {extracted is not None}")
 
-                    # Check if our test query was included
-                    if "This is a test transition query" in newest_msg.get(
-                        "content", ""
-                    ):
-                        print("✓ Test query successfully passed to destination player")
-                    else:
-                        print("✗ Test query not found in destination player message")
+                # Test pipeline execution if content was extracted
+                if extracted:
+                    content, result = extracted
+                    success, pipeline_result = master.pipe_manager.execute_pipeline(
+                        parser_id=test_data["parser"],
+                        content=content,
+                        message_state=master.message_state,
+                    )
+                    print(f"  ✓ Pipeline execution success: {success}")
+                    print(
+                        f"  ✓ Target field '{test_data['expected_field']}' updated: "
+                        f"{hasattr(master.message_state, test_data['expected_field'])}"
+                    )
 
-                print("✓ Node transition messaging test complete")
-            else:
-                print("✓ Skipping node transition test (insufficient player nodes)")
+            print("\n✓ Decision routing and pipeline testing complete")
         except Exception as e:
-            print(f"✗ Node transition test failed: {str(e)}")
+            print(f"✗ Decision routing test failed: {str(e)}")
 
-        print("\n[TEST 7] Decision Edge Routing")
+        print("\n[TEST 5] Action Execution Pipeline")
         print("-" * 40)
         try:
-            # Test the decision edge routing logic
-            if hasattr(master, "_test_parse_response_for_decision_routing"):
-                routing_test_results = (
-                    master._test_parse_response_for_decision_routing()
-                )
+            # Test action execution pipeline
+            test_actions = ["pyautogui.click(100, 100)", "pyautogui.press('enter')"]
+            print("Testing action execution pipeline:")
 
-                print(
-                    f"Testing decision edge routing from node: {routing_test_results.get('test_node', 'Unknown')}"
-                )
-                print("\nAvailable edges:")
-                for edge in routing_test_results.get("available_edges", []):
-                    edge_desc = f"→ {edge['to_node']} ({edge['edge_type']})"
-                    if edge.get("condition"):
-                        edge_desc += f": {edge['condition']}"
-                    print(f"  {edge_desc}")
+            # Get pipeline for pyautogui actions
+            pipeline = master.pipe_manager.get_pipeline("pyautogui_actions")
+            print(f"  ✓ Pipeline stages found: {len(pipeline)}")
+            for stage in pipeline:
+                print(f"    - Stage: {stage.description}")
+                print(f"    - Output field: {stage.output_field}")
 
-                print("\nRouting test results:")
-                for parser_id, result in routing_test_results.get(
-                    "test_results", {}
-                ).items():
-                    status = "✓" if result.get("success") else "✗"
-                    print(f"\n  {status} Parser: {parser_id}")
-                    print(f"    Utterance: {result.get('utterance', 'N/A')}")
-                    print(f"    Next node: {result.get('next_node', 'None')}")
-                    if result.get("extracted_content"):
-                        print(
-                            f"    Extracted: {result.get('extracted_content', 'N/A')}"
-                        )
+            # Test direct execution of actions
+            print("\nTesting direct action execution:")
+            result = master._execute_actions(content=test_actions)
+            print(f"  ✓ Action execution returned observation: {result is not None}")
+            if result:
+                print(f"  ✓ Observation type: {type(result).__name__}")
 
-                # Test with a specific utterance if we have a query edge
-                query_edge = next(
-                    (
-                        edge
-                        for edge in routing_test_results.get("available_edges", [])
-                        if edge.get("condition")
-                        and "query" in str(edge.get("condition")).lower()
-                    ),
-                    None,
-                )
-                if query_edge:
-                    specific_test = master._test_parse_response_for_decision_routing(
-                        test_utterance="QUERY```Can you help me find the settings menu?```"
-                    )
-                    result = specific_test.get("test_results", {}).get(
-                        "custom_test", {}
-                    )
-                    status = "✓" if result.get("success") else "✗"
-                    print(f"\n  {status} Custom Query Test")
-                    print(f"    Utterance: {result.get('utterance', 'N/A')}")
-                    print(f"    Next node: {result.get('next_node', 'None')}")
-                    if result.get("extracted_content"):
-                        print(
-                            f"    Extracted: {result.get('extracted_content', 'N/A')}"
-                        )
+            # Test pipeline integration
+            print("\nTesting pipeline integration:")
+            initial_state = {
+                k: getattr(master.message_state, k)
+                for k in master.message_state.__dataclass_fields__
+            }
+            success, pipeline_result = master.pipe_manager.execute_pipeline(
+                parser_id="pyautogui_actions",
+                content=test_actions,
+                message_state=master.message_state,
+            )
+            print(f"  ✓ Pipeline execution success: {success}")
+            print(f"  ✓ Pipeline result available: {pipeline_result is not None}")
 
-                print("\n✓ Decision edge routing test complete")
-            else:
-                print("✗ Test method not found on master instance")
+            # Check state changes
+            changed_fields = []
+            for field in master.message_state.__dataclass_fields__:
+                if getattr(master.message_state, field) != initial_state[field]:
+                    changed_fields.append(field)
+            print(f"  ✓ Changed state fields: {changed_fields}")
+
+            print("\n✓ Action execution pipeline testing complete")
         except Exception as e:
-            print(f"✗ Decision edge routing test failed: {str(e)}")
+            print(f"✗ Action execution test failed: {str(e)}")
+
+        print("\n[TEST 6] Message State Management")
+        print("-" * 40)
+        try:
+            # Test message state updates through pipeline
+            print("Testing message state management:")
+
+            # Reset message state
+            master.message_state.reset_except_observation()
+            print("  ✓ Message state reset")
+
+            # Test state updates through different pipelines
+            test_query = "QUERY```How do I access settings?```"
+            test_player = master.get_player_from_node(master.anchor_node)
+
+            _, _, _, extracted = master._parse_response_for_decision_routing(
+                test_player, test_query
+            )
+            if extracted:
+                content, _ = extracted
+                success, _ = master.pipe_manager.execute_pipeline(
+                    parser_id="query",
+                    content=content,
+                    message_state=master.message_state,
+                )
+                print(f"  ✓ Query pipeline updated message state: {success}")
+                print(
+                    f"  ✓ Query field populated: {master.message_state.query is not None}"
+                )
+
+            print("\n✓ Message state management testing complete")
+        except Exception as e:
+            print(f"✗ Message state test failed: {str(e)}")
 
         print("\n" + "=" * 50)
         print("DEBUG HARNESS: Summary")

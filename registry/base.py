@@ -70,3 +70,10 @@ class Registry(Generic[T]):
             func_id: str(inspect.signature(func))
             for func_id, func in self._registry.items()
         }
+
+    def __iter__(self):
+        """Makes the registry iterable, yielding function IDs.
+        Returns:
+            Iterator over function IDs in the registry.
+        """
+        return iter(self._registry)
