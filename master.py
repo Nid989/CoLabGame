@@ -150,21 +150,6 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         self._build_graph()
         self._setup_after_parse_pipelines()
 
-        self.message_state.update(observation=self.current_observation)
-
-    def _setup_after_parse_pipelines(self) -> None:
-        """Initialize processing pipelines for different parser"""
-        self.pipe_manager.register_pipeline(
-            "pyautogui_actions",
-            [
-                PipeStage(
-                    self._execute_actions(),
-                    output_field="observation",
-                    description="applies player actions to environment, producing state-based observations.",
-                )
-            ],
-        )
-
     def _initialize_environment(self) -> None:
         """Initializes game environment with recording capabilities and retrieves the inital state observation"""
         try:
@@ -172,9 +157,10 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             self.game = ComputerGame(
                 **env_config, game_instance=self.game_instance["task_config"]
             )
-            self.current_observation = self.game.env.reset(
+            observation = self.game.env.reset(
                 task_config=self.game_instance["task_config"]
             )
+            self.message_state.update(observation=observation)
             if not self.game.env.start_recording():
                 raise RuntimeError("Failed to start environment recording")
 
@@ -246,6 +232,29 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
 
         except Exception as e:
             raise RuntimeError(f"Failed to build interaction graph: {str(e)}") from e
+
+    def _setup_after_parse_pipelines(self) -> None:
+        """Initialize processing pipelines for different parser"""
+        self.pipe_manager.register_pipeline(
+            "pyautogui_actions",
+            [
+                PipeStage(
+                    self._execute_actions(),
+                    output_field="observation",
+                    description="applies player actions to environment, producing state-based observations.",
+                )
+            ],
+        )
+        self.pipe_manager.register_pipeline(
+            "done_or_fail",
+            [
+                PipeStage(
+                    self._execute_actions(),
+                    output_field="observation",  # maybe?
+                    description="applies player actions (either done or fail) to environment, producing final-state-based observation",
+                )
+            ],
+        )
 
     def _does_game_proceed(self) -> bool:
         """Determine if the game should continue to the next turn.
@@ -372,7 +381,32 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             content: Parser extracted actions typically either pyautogui python-code (as str.), or computer13 actions in JSON (as str.)
             **context: Additionally context as dict (e.g., Player)
         """
-        pass
+        try:
+            if not content:
+                logger.error("No acxtions to execute")
+                return None
+            observation = None
+            for action in content:
+                try:
+                    observation, reward, done, info = self.game.env.step(
+                        action, self.game.sleep_after_execution
+                    )
+                    if observation is None:
+                        logger.error("Recieved None observation after game execution")
+                        return None
+                    self.current_observation = observation
+                    if done:
+                        logger.info("Game termination signal recieved (done=True)")
+                        break
+
+                except Exception as e:
+                    logger.error(f"Failed to execute action {str(action)}: {str(e)}")
+
+            return observation
+
+        except Exception as e:
+            logger.error(f"Action execution failed: {str(e)}")
+            return None
 
     def _test_parse_response_for_decision_routing(
         self, test_node_id=None, test_utterance=None

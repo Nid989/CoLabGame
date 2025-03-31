@@ -170,10 +170,6 @@ def parse_som_pyautogui_actions(
     return True, result
 
 
-# NOTE I have to make a difference between done or fail in the code and outside the code!?
-# I have to change the way we think about this!..
-# DONE or FAIL -> END? but DONE or FAIL also signals the task completion? Is it necessary to have done or fail in actions to make sure that the task is done!?
-# DONE or FAIL
 @parsers.register("done_or_fail")
 @parser_config(target_field="actions")
 def parse_done_or_fail(
