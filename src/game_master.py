@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 from clemcore import backends
-from clemcore.clemgame import Player, GameMaster
+from clemcore.clemgame import GameMaster
+from .game import RoleBasedPlayer
 
 module_logger = logging.getLogger(__name__)
 
@@ -37,7 +38,8 @@ class EdgeCondition:
     def __init__(
         self,
         parse_func: Callable[
-            [Player, str, "NetworkDialogueGameMaster"], Tuple[bool, Optional[str]]
+            [RoleBasedPlayer, str, "NetworkDialogueGameMaster"],
+            Tuple[bool, Optional[str]],
         ],
         description: str = "",
     ):
@@ -53,7 +55,7 @@ class EdgeCondition:
 
     def parse(
         self,
-        player: Player,
+        player: RoleBasedPlayer,
         utterance: str,
         game_master: "NetworkDialogueGameMaster",
     ) -> Tuple[bool, Optional[str]]:
@@ -111,7 +113,7 @@ class NetworkDialogueGameMaster(GameMaster):
         super().__init__(name, path, experiment, player_models)
 
         # The logging works with an internal mapping of "Player N" -> Player
-        self.players_by_names: Dict[str, Player] = collections.OrderedDict()
+        self.players_by_names: Dict[str, RoleBasedPlayer] = collections.OrderedDict()
         self.current_turn: int = 0
 
         self.graph = nx.MultiDiGraph()
@@ -130,14 +132,14 @@ class NetworkDialogueGameMaster(GameMaster):
 
         self.transition = NodeTransition()
 
-    def get_players(self) -> List[Player]:
+    def get_players(self) -> List[RoleBasedPlayer]:
         """Get a list of the players.
         Returns:
             List of Player instances in the order they are added.
         """
         return list(self.players_by_names.values())
 
-    def add_player(self, player: Player, node_id: str = None):
+    def add_player(self, player: RoleBasedPlayer, node_id: str = None):
         """Add a player to the game and the graph.
         Args:
             player: The player to be added to the game.
@@ -284,7 +286,7 @@ class NetworkDialogueGameMaster(GameMaster):
                 self.current_turn += 1
         self._on_after_game()
 
-    def prompt(self, player: Player, is_reprompt=False):
+    def prompt(self, player: RoleBasedPlayer, is_reprompt=False):
         """Prompt a player model.
         Includes logging of 'send message' and 'get message' actions.
         Intended to be left as-is by inheriting classes. Implement game-specific functionality in the
@@ -315,7 +317,7 @@ class NetworkDialogueGameMaster(GameMaster):
         # GM -> GM
         self.__validate_process_and_add_player_response(player, response_message)
 
-    def _should_reprompt(self, player: Player):
+    def _should_reprompt(self, player: RoleBasedPlayer):
         """Method to check if a Player should be re-prompted.
         This is intended to check for invalid responses.
         Args:
@@ -323,7 +325,7 @@ class NetworkDialogueGameMaster(GameMaster):
         """
         return False
 
-    def _on_before_reprompt(self, player: Player):
+    def _on_before_reprompt(self, player: RoleBasedPlayer):
         """Method executed before reprompt is passed to a Player.
         Hook
         Change the prompt to reprompt the player on e.g. an invalid response.
@@ -333,7 +335,7 @@ class NetworkDialogueGameMaster(GameMaster):
         """
         pass
 
-    def log_message_to(self, player: Player, message: str):
+    def log_message_to(self, player: RoleBasedPlayer, message: str):
         """Logs a 'send message' action from GM to Player.
         This is a logging method, and will not add the message to the conversation history on its own!
         Args:
@@ -363,7 +365,7 @@ class NetworkDialogueGameMaster(GameMaster):
         self.log_event("GM", "GM", action)
 
     def __validate_process_and_add_player_response(
-        self, player: Player, utterance: str
+        self, player: RoleBasedPlayer, utterance: str
     ):
         """Checks player response validity, parses it and adds it to the conversation history.
         Part of the play loop, not intended to be modified - modify _validate_player_response,
@@ -378,7 +380,7 @@ class NetworkDialogueGameMaster(GameMaster):
             player.add_assistant_message(utterance)
             self._after_add_player_response(player, utterance)
 
-    def _after_add_player_response(self, player: Player, utterance: str):
+    def _after_add_player_response(self, player: RoleBasedPlayer, utterance: str):
         """Method executed after a player response has been validated and added to the conversation history.
         Hook: Modify this method for game-specific functionality.
         Add the utterance to other player's history, if necessary.
@@ -388,7 +390,9 @@ class NetworkDialogueGameMaster(GameMaster):
         """
         pass
 
-    def _validate_player_response(self, player: Player, utterance: str) -> bool:
+    def _validate_player_response(
+        self, player: RoleBasedPlayer, utterance: str
+    ) -> bool:
         """Decide if an utterance should be added to the conversation history.
         Hook: Modify this method for game-specific functionality.
         Args:
@@ -399,7 +403,7 @@ class NetworkDialogueGameMaster(GameMaster):
         """
         return True
 
-    def __process_response(self, player: Player, utterance: str) -> str:
+    def __process_response(self, player: RoleBasedPlayer, utterance: str) -> str:
         """Parses a response, determines next node, and stores extracted content.
         Part of the validate-process loop, not intended to be modified.
         Args:
@@ -429,7 +433,7 @@ class NetworkDialogueGameMaster(GameMaster):
         return _utterance
 
     def _parse_response_for_decision_routing(
-        self, player: Player, utterance: str
+        self, player: RoleBasedPlayer, utterance: str
     ) -> Tuple[str, bool, Optional[str], Optional[str]]:
         """Parse player response and evaluate decision edge conditions.
         Hook: Modify this method for game-specific functionality.
@@ -814,7 +818,7 @@ class NetworkDialogueGameMaster(GameMaster):
         """
         pass
 
-    def get_player_from_node(self, node_id: str) -> Optional[Player]:
+    def get_player_from_node(self, node_id: str) -> Optional[RoleBasedPlayer]:
         """Get the Player instance associated with a node ID.
         Args:
             node_id: The ID of the node to get the player from.
