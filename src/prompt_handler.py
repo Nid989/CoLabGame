@@ -7,7 +7,6 @@ import copy
 from .utils.registry.processors import processors
 from .utils.constants import HANDLER_TYPE, OBSERVATION_TYPE_values
 
-
 logger = logging.getLogger(__name__)
 
 
