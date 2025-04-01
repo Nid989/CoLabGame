@@ -242,7 +242,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             [
                 PipeStage(
                     self._execute_actions,
-                    output_field="observation",  # maybe?
+                    output_field="observation",
                     description="applies player actions (either done or fail) to environment, producing final-state-based observation",
                 )
             ],
