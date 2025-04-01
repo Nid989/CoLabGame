@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw, ImageFont
 import tiktoken
 import numpy as np
 
-from constants import OBSERVATION_TYPE
+from .constants import OBSERVATION_TYPE
 
 
 def find_leaf_nodes(xlm_file_str):

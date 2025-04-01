@@ -4,8 +4,8 @@ from typing import Dict, List, Callable, Optional, Any, Union, Protocol, Literal
 from PIL import Image
 import copy
 
-from registry import processors
-from constants import HANDLER_TYPE, OBSERVATION_TYPE_values
+from .utils.registry.processors import processors
+from .utils.constants import HANDLER_TYPE, OBSERVATION_TYPE_values
 
 
 logger = logging.getLogger(__name__)

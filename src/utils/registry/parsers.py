@@ -3,8 +3,8 @@ import re
 from typing import Callable, Optional, Tuple, Dict, Any, List
 
 from clemcore.clemgame import Player
-from game_master import NetworkDialogueGameMaster
-from registry.base import Registry
+from ...game_master import NetworkDialogueGameMaster
+from .base import Registry
 
 
 # Function to store metadata about parsers

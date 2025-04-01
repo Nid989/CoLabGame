@@ -7,10 +7,10 @@ import os
 
 from clemcore import backends
 from clemcore.clemgame import Player, GameMaster, GameBenchmark
-from game_master import NetworkDialogueGameMaster, EdgeCondition, NodeType, EdgeType
-from game import ComputerGame, RoleBasedPlayer
-from registry import parsers, get_parser_metadata
-from constants import (
+from src.game_master import NetworkDialogueGameMaster, EdgeCondition, NodeType, EdgeType
+from src.game import ComputerGame, RoleBasedPlayer
+from src.utils.registry.parsers import parsers, get_parser_metadata
+from src.utils.constants import (
     DEFAULT_ENV_CONFIG,
     DEFAULT_HANDLER_TYPE,
 )
@@ -654,3 +654,12 @@ if __name__ == "__main__":
     # Run the debugging tests
     run_debug_tests()
     # --- END_DEBUG_HARNESS ---
+
+
+# TODO
+# 1. add the log_to_self messaging everywhere
+# 2 (a). _validate_xxx function is not yet implemented--do it today!
+# 2 (b). connect the parts with proper logging and other related issues.
+# 3. run one instance, the current instances.json file should work just fine.
+# 4. maybe need to rewrite the prompt-header
+# 5. think about the re-prompting part.

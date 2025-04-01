@@ -6,9 +6,9 @@ import tempfile
 import atexit
 
 from clemcore.clemgame import Player
-from prompt_handler import PromptHandler, HANDLER_TYPE
-from environment import EnvironmentFactory, Environment
-from constants import OBSERVATION_TYPE, ACTION_SPACE
+from .prompt_handler import PromptHandler, HANDLER_TYPE
+from .environment import EnvironmentFactory, Environment
+from .utils.constants import OBSERVATION_TYPE, ACTION_SPACE
 
 
 class TemporaryImageManager:
