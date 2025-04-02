@@ -191,6 +191,8 @@ def parse_done_or_fail(
         if re.search(r"\b" + keyword + r"\b", utterance):
             return True, [keyword]
 
+    return False, None
+
 
 # QUERY```<content>```
 @parsers.register("query")

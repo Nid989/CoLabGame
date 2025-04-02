@@ -294,6 +294,26 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             f"Added message state to player at node {to_node} (player: {to_player.descriptor})"
         )
 
+    def _validate_player_response(self, player: Player, utterance: str) -> bool:
+        """Decide if an utterance should be added to the conversation history.
+        Args:
+            player: The Player instance for which the response is added.
+            utterance: The text content of the message to be added.
+        Returns:
+            True, if the utterance is fine; False, if the response should not be added to the history.
+        """
+        # Disadvantage-I have to write Player class for every single player. (RoleBasedPlayer does it automatically, arg; role='xxx')
+        # Probably, _validate_player_response will always be similar to the parsers implementation--instead of returning a value it would
+        # just be getting a validation success or a error (should be propogated out-smhw)!
+        # However, I do need an additional pre && post validation check which does something extra!?
+        #   - Check if the utterance adheres to a specific structure
+        #   - Like if we have thinking involved, does it opens to thinking tokens or not?
+        #   - Should we have a thinking option?--some models are meant to think and enabling other models to think with a specific format and the same reasoning model to think does not make sense.
+        if utterance is not None:
+            return True
+        else:
+            return False
+
     def _parse_response_for_decision_routing(
         self, player: Player, utterance: str
     ) -> Tuple[str, bool, Optional[str], Optional[str]]:
@@ -319,12 +339,15 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             )
             if edge_data.get("type") == EdgeType.DECISION and edge_data.get("condition")
         ]
+        print("::DECISION_EDGES::", decision_edges)
         if not decision_edges:
             return utterance, False, None, None
         # Evaluate each decision edge condition
         for to_node, condition in decision_edges:
+            print("::TO_NODE::", to_node, "::CONDITION::", condition)
             try:
                 is_match, extracted_content = condition.parse(player, utterance, self)
+                print("::IS_MATCH, EXTRACTED_CONTENT::", is_match, extracted_content)
                 if is_match and extracted_content:
                     parser_id = None
                     parse_func_name = condition.parse_func.__name__

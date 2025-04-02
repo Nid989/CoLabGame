@@ -111,7 +111,7 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         model,
         role: str = "executor",
         prompt_header: str = None,
-        prompt_footer: str = None,
+        prompt_footer: str = "What will be your next step to complete the task?",
         handler_type: HANDLER_TYPE = "standard",
         valid_entries: List[str] = None,
         **kwargs,

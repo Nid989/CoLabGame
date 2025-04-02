@@ -238,7 +238,44 @@ class PromptHandler:
         message = {"role": role, "content": content}
         if image and len(image) > 0:
             message["image"] = image
-        self.history.append(message)
+
+        # Either consolidate with previous message or add as new message
+        if not self._try_consolidate_with_previous(message):
+            self.history.append(message)
+
+    def _try_consolidate_with_previous(self, message: Dict[str, Any]) -> bool:
+        """Attempt to consolidate a message with the previous one if roles match.
+        Args:
+            message: The message to potentially consolidate
+        Returns:
+            bool: True if consolidated, False if no consolidation occurred
+        """
+        if not self.history:
+            return False
+
+        prev_message = self.history[-1]
+        if prev_message["role"] != message["role"]:
+            return False
+        prev_content = prev_message["content"].strip()
+        new_content = message["content"].strip()
+        prev_message["content"] = f"{prev_content}\n\n{new_content}"
+        if "image" in message:
+            if "image" not in prev_message:
+                prev_message["image"] = message["image"]
+            else:
+                prev_images = prev_message["image"]
+                new_images = message["image"]
+                if not isinstance(prev_images, list):
+                    prev_images = [prev_images]
+                if not isinstance(new_images, list):
+                    new_images = [new_images]
+                if len(prev_images) > 0 and len(new_images) > 0:
+                    logger.warning(
+                        f"Consolidating multiple images: {len(prev_images)} previous + {len(new_images)} new"
+                    )
+                prev_message["image"] = prev_images + new_images
+
+        return True
 
     def clear_history(self) -> None:
         """Clear all conversation history and observations."""

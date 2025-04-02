@@ -246,29 +246,50 @@ class NetworkDialogueGameMaster(GameMaster):
         _on_after_game methods.
         """
         self._on_before_game()
+        self.log_next_turn()
         self.current_node = "START"
         while self.current_node != "END" and self._does_game_proceed():
-            # Check if a turn has completed based on the anchor node definition
-            if self._is_turn_complete():
-                self.log_next_turn()
-                self._on_before_turn(self.current_turn)
-                module_logger.info(
-                    f"{self.game_name}: %s turn: %d", self.game_name, self.current_turn
-                )
-                self._reset_turn_tracking()
+            # Special handling for START node
+            if self.current_node == "START":
+                standard_edges = [
+                    (_, to_node)
+                    for _, to_node, edge_data in self.graph.out_edges(
+                        "START", data=True
+                    )
+                    if edge_data.get("type") == EdgeType.STANDARD
+                ]
+                if not standard_edges:
+                    raise ValueError("No standard edges found from START node")
+                if len(standard_edges) > 1:
+                    raise ValueError("Multiple standard edges found from START node")
+                prev_node = self.current_node
+                self.current_node = standard_edges[0][1]
+                self._update_turn_tracking(prev_node, self.current_node)
+            else:
+                # Normal flow for non-START node
+                # Check if a turn has completed based on the anchor node definition
+                if self._is_turn_complete():
+                    self.log_next_turn()
+                    self._on_before_turn(self.current_turn)
+                    module_logger.info(
+                        f"{self.game_name}: %s turn: %d",
+                        self.game_name,
+                        self.current_turn,
+                    )
+                    self._reset_turn_tracking()
+                # Handle next node transition
+                next_node = self.transition.next_node
+                self.transition = NodeTransition()
+                if next_node is None:
+                    module_logger.warning(
+                        f"No valid transitions from node '{self.current_node}'"
+                    )
+                    break
 
-            next_node = self.transition.next_node
-            self.transition = NodeTransition()
-            if next_node is None:
-                module_logger.warning(
-                    f"No valid transitions from node '{self.current_node}'"
-                )
-                break
-
-            self._on_before_node_transition(self.current_node, next_node)
-            prev_node = self.current_node
-            self.current_node = next_node
-            self._update_turn_tracking(prev_node, next_node)
+                self._on_before_node_transition(self.current_node, next_node)
+                prev_node = self.current_node
+                self.current_node = next_node
+                self._update_turn_tracking(prev_node, next_node)
 
             if self.current_node == "END":
                 break
