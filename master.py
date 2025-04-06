@@ -28,7 +28,7 @@ class MessageState:
     plan: Optional[str] = None
     task: Optional[str] = None
     actions: Optional[List[str]] = None
-    closure: Optional[str] = None
+    additional: Optional[Dict[str, str]] = None  # {tag: content}
 
     def reset_except_observation(self) -> None:
         """Reset all fields to None except observation using dynamic field iteration"""

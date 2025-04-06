@@ -88,3 +88,15 @@ def process_task(task: str, handler) -> str:
         Processed task string
     """
     return task
+
+
+@processors.register("additional")
+def process_additional(additional: Dict[str, str], handler) -> Dict[str, str]:
+    """Process additional tagged content
+    Args:
+        additional: Dictionary containing tag and content pairs
+        handler: Reference to the prompt handler instance
+    Returns:
+        Processed additional content dictionary
+    """
+    return additional

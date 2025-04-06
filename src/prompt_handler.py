@@ -19,7 +19,7 @@ class MessageEntry:
     response: Optional[str] = None
     plan: Optional[str] = None
     task: Optional[str] = None
-    # Additional fields can be added upon requirement.
+    additional: Optional[Dict[str, str]] = None  # {tag: content}
 
     def __post_init__(self):
         if not any(v is not None for v in self.__dict__.values()):
@@ -43,8 +43,15 @@ class MessageEntry:
             ValueError: If invalid entries provided or no valid entries remain after filtering
         """
         handler_rules = {
-            "standard": {"query", "response", "plan", "task"},
-            "environment": {"observation", "query", "response", "plan", "task"},
+            "standard": {"query", "response", "plan", "task", "additional"},
+            "environment": {
+                "observation",
+                "query",
+                "response",
+                "plan",
+                "task",
+                "additional",
+            },
         }
         if not valid_entries or not kwargs:
             raise ValueError("Both valid_entries and message components are required")
@@ -309,6 +316,7 @@ class PromptHandler:
         self.formatter.register_handler("response", self._format_response)
         self.formatter.register_handler("plan", self._format_plan)
         self.formatter.register_handler("task", self._format_task)
+        self.formatter.register_handler("additional", self._format_additional)
         # Additional handlers can be registered upon requirement
 
     def _process_entry(self, entry: MessageEntry) -> MessageEntry:
@@ -398,6 +406,18 @@ class PromptHandler:
     def _format_task(self, task: str) -> Dict[str, str]:
         """Format a task component"""
         return {"content": f"## Task\n {task}"}
+
+    def _format_additional(self, additional: Dict[str, str]) -> Dict[str, str]:
+        """Format additional tagged content
+        Args:
+            additional: Dictionary containing tag and content pairs
+        Returns:
+            Formatted content with tag as header
+        """
+        formatted_parts = []
+        for tag, content in additional.items():
+            formatted_parts.append(f"## {tag}\n{content}")
+        return {"content": "\n\n".join(formatted_parts)}
 
     @classmethod
     def register_handler_type(
