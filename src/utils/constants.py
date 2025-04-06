@@ -30,7 +30,7 @@ class LogType(Enum):
 # Default environment configuration
 DEFAULT_ENV_CONFIG = {
     "headless": False,
-    "observation_type": "a11y_tree",
+    "observation_type": "screenshot_a11y_tree",
     "action_space": "pyautogui",
     "screen_width": 1920,
     "screen_height": 1080,

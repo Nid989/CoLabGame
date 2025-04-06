@@ -385,19 +385,19 @@ class PromptHandler:
 
     def _format_query(self, query: str) -> Dict[str, str]:
         """Format a query component"""
-        return {"content": f"Query: {query}"}
+        return {"content": f"## Query\n {query}"}
 
     def _format_response(self, response: str) -> Dict[str, str]:
         """Format a response component"""
-        return {"content": f"Response: {response}"}
+        return {"content": f"## Response\n {response}"}
 
     def _format_plan(self, plan: str) -> Dict[str, str]:
         """Format a plan component"""
-        return {"content": f"Plan: {plan}"}
+        return {"content": f"## Plan\n {plan}"}
 
     def _format_task(self, task: str) -> Dict[str, str]:
         """Format a task component"""
-        return {"content": f"Task: {task}"}
+        return {"content": f"## Task\n {task}"}
 
     @classmethod
     def register_handler_type(

@@ -192,6 +192,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                         prompt_header=prompt_header,
                         handler_type=handler_type,
                         valid_entries=valid_entries,
+                        **DEFAULT_ENV_CONFIG,
                     )
                     self.add_player(player, node_id)
 
@@ -302,6 +303,9 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         Returns:
             True, if the utterance is fine; False, if the response should not be added to the history.
         """
+        # Types of validation to do here
+        # 1. Need to check if the response follows a specific format i.e., It has a structure similar to this
+
         # Disadvantage-I have to write Player class for every single player. (RoleBasedPlayer does it automatically, arg; role='xxx')
         # Probably, _validate_player_response will always be similar to the parsers implementation--instead of returning a value it would
         # just be getting a validation success or a error (should be propogated out-smhw)!
@@ -395,7 +399,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         """
         try:
             if not content:
-                logger.error("No acxtions to execute")
+                logger.error("No actions to execute")
                 return None
             observation = None
             for action in content:
@@ -683,6 +687,6 @@ if __name__ == "__main__":
 # 1. add the log_to_self messaging everywhere
 # 2 (a). _validate_xxx function is not yet implemented--do it today!
 # 2 (b). connect the parts with proper logging and other related issues.
-# 3. run one instance, the current instances.json file should work just fine.
+# 3. run one instance, the current instances.json file should work just fine. [DID THIS]
 # 4. maybe need to rewrite the prompt-header
 # 5. think about the re-prompting part.
