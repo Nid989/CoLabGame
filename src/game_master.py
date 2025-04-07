@@ -2,13 +2,28 @@ import collections
 import logging
 from enum import Enum, auto
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Union, Optional, Tuple, NamedTuple
 import matplotlib.pyplot as plt
 import networkx as nx
 
 from clemcore import backends
 from clemcore.clemgame import GameMaster
 from .game import RoleBasedPlayer
+from .utils.registry.parsers import (
+    parse_computer13_actions,
+    parse_pyautogui_actions,
+    parse_done_or_fail,
+    parse_query,
+    parse_response,
+)
+from .utils.registry.validators import (
+    validate_computer13_actions,
+    validate_pyautogui_actions,
+    validate_done_or_fail,
+    validate_query,
+    validate_response,
+    ValidationError,
+)
 
 module_logger = logging.getLogger(__name__)
 
@@ -32,44 +47,101 @@ class EdgeType(Enum):
     )  # Conditional connection, traversed only if condition evaluates to True
 
 
+class ConditionType(str, Enum):
+    """Pre-defined types of edge conditions"""
+
+    COMPUTER13_ACTIONS = "computer13_actions"
+    PYAUTOGUI_ACTIONS = "pyautogui_actions"
+    DONE_OR_FAIL = "done_or_fail"
+    QUERY = "query"
+    RESPONSE = "response"
+
+
+@dataclass
+class ParseResult:
+    """Container for parsing results"""
+
+    is_match: bool
+    content: Optional[Any] = None
+
+
+@dataclass
+class ValidationResult:
+    """Container for validation results"""
+
+    is_valid: bool
+    error: Optional[ValidationError] = None
+
+
+class ConditionPair(NamedTuple):
+    """Pair of parse and validate functions for a condition"""
+
+    parse_func: Callable
+    validate_func: Callable
+
+
+# Pre-defined pairs of parse and validate functions
+CONDITION_PAIRS: Dict[ConditionType, ConditionPair] = {
+    ConditionType.COMPUTER13_ACTIONS: ConditionPair(
+        parse_computer13_actions, validate_computer13_actions
+    ),
+    ConditionType.PYAUTOGUI_ACTIONS: ConditionPair(
+        parse_pyautogui_actions, validate_pyautogui_actions
+    ),
+    ConditionType.DONE_OR_FAIL: ConditionPair(
+        parse_done_or_fail, validate_done_or_fail
+    ),
+    ConditionType.QUERY: ConditionPair(parse_query, validate_query),
+    ConditionType.RESPONSE: ConditionPair(parse_response, validate_response),
+}
+
+
 class EdgeCondition:
-    """Condition for transitioning between nodes in the Network with content extraction."""
+    """Condition for transitioning between nodes in the Network with paired parsing and validation."""
 
     def __init__(
         self,
-        parse_func: Callable[
-            [RoleBasedPlayer, str, "NetworkDialogueGameMaster"],
-            Tuple[bool, Optional[str]],
-        ],
+        condition_type: Union[ConditionType, str],
         description: str = "",
     ):
-        """Args:
-        parse_func: Function that takes (player, utterance, game_master) and returns
-                   a tuple containing (is_match, parsed_content). The is_match indicates
-                   if parsing was successful, and parsed_content contains the extracted text
-                   (or None if parsing failed).
-        description: Human-readable description of the condition for visualization.
+        """Initialize an edge condition with paired parser and validator.
+        Args:
+            condition_type: Type of condition that determines which function pair to use
+            description: Human-readable description of the condition
         """
-        self.parse_func = parse_func
+        # Convert string to enum if needed
+        if isinstance(condition_type, str):
+            condition_type = ConditionType(condition_type)
+
+        if condition_type not in CONDITION_PAIRS:
+            raise KeyError(
+                f"No function pair found for condition type {condition_type}"
+            )
+
+        self.function_pair = CONDITION_PAIRS[condition_type]
         self.description = description
 
-    def parse(
-        self,
-        player: RoleBasedPlayer,
-        utterance: str,
-        game_master: "NetworkDialogueGameMaster",
-    ) -> Tuple[bool, Optional[str]]:
-        """Parse the utterance and determine if the condition is satisfied.
+    def parse(self, utterance: str) -> ParseResult:
+        """Parse the utterance using the paired parse function.
         Args:
-            player: The Player instance that produced the response.
-            utterance: The text content of the response.
-            game_master: The DialogicNetworkGameMaster instance.
+            player: The Player instance that produced the response
+            utterance: The text content to parse
+            game_master: The NetworkDialogueGameMaster instance
         Returns:
-            A tuple containing (is_match, parsed_content). The is_match indicates
-            if parsing was successful, and parsed_content contains the extracted text
-            (or None if parsing failed).
+            ParseResult containing match status and parsed content
         """
-        return self.parse_func(player, utterance, game_master)
+        is_match, content = self.function_pair.parse_func(utterance)
+        return ParseResult(is_match=is_match, content=content)
+
+    def validate(self, utterance: str) -> ValidationResult:
+        """Validate the utterance using the paired validate function.
+        Args:
+            utterance: The text content to validate
+        Returns:
+            ValidationResult containing validation status and any error
+        """
+        is_valid, error = self.function_pair.validate_func(utterance)
+        return ValidationResult(is_valid=is_valid, error=error)
 
 
 @dataclass

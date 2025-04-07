@@ -97,8 +97,6 @@ def is_computer13_format(utterance: str) -> bool:
 
 def is_pyautogui_format(utterance: str) -> bool:
     """Check if an utterance is intended for the PyAutoGUI action format.
-    This is a lightweight structural check that determines if the basic format matches,
-    without validating the content details or raising errors.
     Args:
         utterance (str): The utterance to check
     Returns:
@@ -320,11 +318,6 @@ def validate_pyautogui_actions(
     utterance: str,
 ) -> Tuple[bool, Optional[ValidationError]]:
     """Validates that the utterance follows the PyAutoGUI action format.
-    This is a two-stage validation process:
-        1. First, we check if the utterance is intended for this format using is_pyautogui_format()
-            If not, we should return early without raising format-specific errors
-        2. If the utterance is intended for this format, we perform detailed validation
-            including structure and content validation against ACTION_SPACE
     Args:
         utterance (str): The utterance to validate
     Returns:

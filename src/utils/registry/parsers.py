@@ -2,8 +2,6 @@ import json
 import re
 from typing import Callable, Optional, Tuple, Dict, Any, List
 
-from clemcore.clemgame import Player
-from ...game_master import NetworkDialogueGameMaster
 from .base import Registry
 
 
@@ -43,24 +41,16 @@ def get_parser_metadata(parser_id: str) -> Dict[str, Any]:
     return metadata
 
 
-parsers = Registry[
-    Callable[[Player, str, "NetworkDialogueGameMaster"], Tuple[bool, Optional[str]]]
-]()
+parsers = Registry[Callable[[str], Tuple[bool, Optional[str]]]]()
 
 
 # EXECUTE```python\n<content>```
 @parsers.register("pyautogui_actions")
 @parser_config(target_field="actions")
-def parse_pyautogui_actions(
-    player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
-) -> Tuple[bool, Optional[List[str]]]:
+def parse_pyautogui_actions(utterance: str) -> Tuple[bool, Optional[List[str]]]:
     """Parse pyautogui code-actions from player utterances.
-    Usage:
-        Should be used when 'action_space' is set to 'pyautogui'.
     Args:
-        player: The player who produced the utterance
         utterance: The text content to parse
-        gm: The game master instance
     Returns:
         Tuple containing:
         - Boolean indicating if parsing was successful (code blocks or commands found)
@@ -91,16 +81,10 @@ def parse_pyautogui_actions(
 # EXECUTE```json\n<content>```
 @parsers.register("computer13_actions")
 @parser_config(target_field="actions")
-def parse_computer13_actions(
-    player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
-) -> Tuple[bool, Optional[List[dict]]]:
+def parse_computer13_actions(utterance: str) -> Tuple[bool, Optional[List[dict]]]:
     """Parse computer13 json-actions from player utterances.
-    Usage:
-        Should be used when 'action_space' is set to 'computer13'
     Args:
-        player: The player who produced the utterance
         utterance: The text content to parse
-        gm: The game master instance
     Returns:
         Tuple containing:
         - Boolean indicating if parsing was successful
@@ -136,22 +120,20 @@ def parse_computer13_actions(
 
 # TODO: revisit this later; it doesn't align with the current parsing approach.
 @parsers.register("som_pyautogui_actions")
-def parse_som_pyautogui_actions(
-    player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
-) -> Tuple[bool, Optional[str]]:
+def parse_som_pyautogui_actions(utterance: str) -> Tuple[bool, Optional[str]]:
     """Parse pyautogui code-actions with screen object model (SOM) tags from player utterances.
     Usage:
         Should be used when 'action_space' is set to 'pyautogui'
         \ & 'observation_space' is set to 'SOM'
     Args:
-        player: The player who produced the utterance
         utterance: The text content to parse
-        gm: The game master instance
     Returns:
         Tuple containing:
         - Boolean indicating if parsing was successful
         - Extracted code with SOM tags, or None if no valid content was found
     """
+    # TODO: GameMaster should be provided but it somehow raise circular dependency error.
+    gm = None  #
     masks = getattr(gm, "masks", [])
     if not masks:
         return False, None
@@ -161,7 +143,7 @@ def parse_som_pyautogui_actions(
         for i, (x, y, w, h) in enumerate(masks)
     )
 
-    is_valid, extracted_code = parse_pyautogui_actions(player, utterance, gm)
+    is_valid, extracted_code = parse_pyautogui_actions(utterance)
 
     if not is_valid:
         return False, None
@@ -172,14 +154,10 @@ def parse_som_pyautogui_actions(
 
 @parsers.register("done_or_fail")
 @parser_config(target_field="actions")
-def parse_done_or_fail(
-    player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
-) -> Tuple[bool, Optional[str]]:
+def parse_done_or_fail(utterance: str) -> Tuple[bool, Optional[str]]:
     """Parse player utterances for status keywords (DONE, FAIL)
     Args:
-        player: The player who produced the utterance
         utterance: The text content to parse
-        gm: The game master instance
     Returns:
         Tuple containing:
         - Boolean indicating if any status keyword was found
@@ -197,16 +175,10 @@ def parse_done_or_fail(
 # QUERY```<content>```
 @parsers.register("query")
 @parser_config(target_field="query")
-def parse_query(
-    player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
-) -> Tuple[bool, Optional[str]]:
+def parse_query(utterance: str) -> Tuple[bool, Optional[str]]:
     """Parse player utterances for QUERY blocks.
-    Usage:
-        Should be used to extract content from QUERY```<content>``` blocks.
     Args:
-        player: The player who produced the utterance
         utterance: The text content to parse
-        gm: The game master instance
     Returns:
         Tuple containing:
         - Boolean indicating if a QUERY block was found
@@ -225,16 +197,10 @@ def parse_query(
 # RESPONSE```<content>```
 @parsers.register("response")
 @parser_config(target_field="response")
-def parse_response(
-    player: Player, utterance: str, gm: "NetworkDialogueGameMaster"
-) -> Tuple[bool, Optional[str]]:
+def parse_response(utterance: str) -> Tuple[bool, Optional[str]]:
     """Parse player utterances for RESPONSE blocks.
-    Usage:
-        Should be used to extract content from RESPONSE```<content>``` blocks.
     Args:
-        player: The player who produced the utterance
         utterance: The text content to parse
-        gm: The game master instance
     Returns:
         Tuple containing:
         - Boolean indicating if a RESPONSE block was found

@@ -58,7 +58,7 @@
                                 "to": "advisor",
                                 "type": "DECISION",
                                 "condition": {
-                                    "parse_function_id": "query"
+                                    "condition_type": "query"
                                 },
                                 "description": "executor → advisor (query)"
                             },
@@ -67,7 +67,7 @@
                                 "to": "executor",
                                 "type": "DECISION",
                                 "condition": {
-                                    "parse_function_id": "response"
+                                    "condition_type": "response"
                                 },
                                 "description": "advisor → executor (response)"
                             },
@@ -76,7 +76,7 @@
                                 "to": "executor",
                                 "type": "DECISION",
                                 "condition": {
-                                    "parse_function_id": "pyautogui_actions"
+                                    "condition_type": "pyautogui_actions"
                                 },
                                 "description": "executor → executor (pyautogui_actions)"
                             },
@@ -85,7 +85,7 @@
                                 "to": "advisor",
                                 "type": "DECISION",
                                 "condition": {
-                                    "parse_function_id": "pyautogui_actions"
+                                    "condition_type": "pyautogui_actions"
                                 },
                                 "description": "advisor → advisor (pyautogui_actions)"
                             },
@@ -94,7 +94,7 @@
                                 "to": "END",
                                 "type": "DECISION",
                                 "condition": {
-                                    "parse_function_id": "done_or_fail"
+                                    "condition_type": "done_or_fail"
                                 },
                                 "description": "executor → END (done_or_fail)"
                             }

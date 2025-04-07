@@ -7,7 +7,13 @@ import os
 
 from clemcore import backends
 from clemcore.clemgame import Player, GameMaster, GameBenchmark
-from src.game_master import NetworkDialogueGameMaster, EdgeCondition, NodeType, EdgeType
+from src.game_master import (
+    NetworkDialogueGameMaster,
+    EdgeCondition,
+    NodeType,
+    EdgeType,
+    ConditionType,
+)
 from src.game import ComputerGame, RoleBasedPlayer
 from src.utils.registry.parsers import parsers, get_parser_metadata
 from src.utils.constants import (
@@ -207,14 +213,16 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                     self.add_standard_edge(from_node, to_node, description)
                 elif edge_type == "DECISION":
                     condition_config = edge.get("condition", {})
-                    parse_function_id = condition_config.get("parse_function_id")
-                    if not parse_function_id or parse_function_id not in parsers:
+                    condition_type = condition_config.get("condition_type")
+                    if (
+                        not condition_type
+                        or condition_type not in ConditionType._value2member_map_
+                    ):
                         raise KeyError(
-                            f"Invalid parse function ID: {parse_function_id}"
+                            f"Invalid condition-type field: {condition_type}"
                         )
-                    parse_func = parsers[parse_function_id]
                     condition = EdgeCondition(
-                        parse_func=parse_func, description=description
+                        condition_type=condition_type, description=description
                     )
                     self.add_decision_edge(from_node, to_node, condition, description)
 
@@ -303,16 +311,6 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         Returns:
             True, if the utterance is fine; False, if the response should not be added to the history.
         """
-        # Types of validation to do here
-        # 1. Need to check if the response follows a specific format i.e., It has a structure similar to this
-
-        # Disadvantage-I have to write Player class for every single player. (RoleBasedPlayer does it automatically, arg; role='xxx')
-        # Probably, _validate_player_response will always be similar to the parsers implementation--instead of returning a value it would
-        # just be getting a validation success or a error (should be propogated out-smhw)!
-        # However, I do need an additional pre && post validation check which does something extra!?
-        #   - Check if the utterance adheres to a specific structure
-        #   - Like if we have thinking involved, does it opens to thinking tokens or not?
-        #   - Should we have a thinking option?--some models are meant to think and enabling other models to think with a specific format and the same reasoning model to think does not make sense.
         if utterance is not None:
             return True
         else:
@@ -320,7 +318,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
 
     def _parse_response_for_decision_routing(
         self, player: Player, utterance: str
-    ) -> Tuple[str, bool, Optional[str], Optional[str]]:
+    ) -> Tuple[str, bool, Optional[str], Optional[Any]]:
         """Parse player response and evaluate decision edge conditions.
         Key Actions:
             1. Parse the player's utterance for relevant content
@@ -350,11 +348,15 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         for to_node, condition in decision_edges:
             print("::TO_NODE::", to_node, "::CONDITION::", condition)
             try:
-                is_match, extracted_content = condition.parse(player, utterance, self)
-                print("::IS_MATCH, EXTRACTED_CONTENT::", is_match, extracted_content)
-                if is_match and extracted_content:
+                parse_result = condition.parse(utterance)
+                print(
+                    "::IS_MATCH, EXTRACTED_CONTENT::",
+                    parse_result.is_match,
+                    parse_result.content,
+                )
+                if parse_result.is_match and parse_result.content:
                     parser_id = None
-                    parse_func_name = condition.parse_func.__name__
+                    parse_func_name = condition.function_pair.parse_func.__name__
                     for pid in parsers:
                         if (
                             parse_func_name.startswith(f"parse_{pid}")
@@ -367,11 +369,11 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                         target_field = metadata.get("target_field")
                         if target_field and hasattr(self.message_state, target_field):
                             self.message_state.update(
-                                **{target_field: extracted_content}
+                                **{target_field: parse_result.content}
                             )
                         success, result = self.pipe_manager.execute_pipeline(
                             parser_id=parser_id,
-                            content=extracted_content,
+                            content=parse_result.content,
                             message_state=self.message_state,
                         )
                         if success:
@@ -381,7 +383,15 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                     logger.info(
                         f"Decision edge condition met: {self.current_node} → {to_node}"
                     )
-                    return utterance, True, to_node, (extracted_content, result)
+                    return (
+                        utterance,
+                        True,
+                        to_node,
+                        (
+                            parse_result.content,
+                            result if "result" in locals() else None,
+                        ),
+                    )
 
             except Exception as e:
                 logger.error(
@@ -518,7 +528,7 @@ if __name__ == "__main__":
             print(f"Found {len(decision_edges)} decision edges:")
             for from_node, to_node, data in decision_edges:
                 print(
-                    f"  - {from_node} → {to_node} ({data.get('condition').parse_func.__name__})"
+                    f"  - {from_node} → {to_node} ({data.get('condition').function_pair.parse_func.__name__})"
                 )
 
             # Test parsing and pipeline execution for different message types
