@@ -4,7 +4,7 @@ import ast
 from enum import Enum
 from typing import Optional, Tuple, Union, Dict, Any, Callable
 
-from ..constants import ACTION_SPACE
+from ..constants import COMPUTER13_ACTIONS
 from .base import Registry
 
 
@@ -214,7 +214,7 @@ def validate_computer13_actions(
             ),
         )
 
-    # Validate against ACTION_SPACE
+    # Validate against COMPUTER13_ACTIONS (available)
     if "action_type" not in obj:
         return (
             False,
@@ -227,7 +227,11 @@ def validate_computer13_actions(
 
     action_type = obj["action_type"]
     action_spec = next(
-        (action for action in ACTION_SPACE if action["action_type"] == action_type),
+        (
+            action
+            for action in COMPUTER13_ACTIONS
+            if action["action_type"] == action_type
+        ),
         None,
     )
 

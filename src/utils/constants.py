@@ -253,7 +253,7 @@ def get_keyboard_keys():
 X_MAX, Y_MAX = DEFAULT_ENV_CONFIG["screen_width"], DEFAULT_ENV_CONFIG["screen_height"]
 KEYBOARD_KEYS = get_keyboard_keys()
 
-ACTION_SPACE = [
+COMPUTER13_ACTIONS = [
     {
         "action_type": "MOVE_TO",
         "note": "move the cursor to the specified position",
