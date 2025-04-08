@@ -311,10 +311,51 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         Returns:
             True, if the utterance is fine; False, if the response should not be added to the history.
         """
-        if utterance is not None:
-            return True
-        else:
+        if utterance is None:
             return False
+
+        player_node = self.get_node_from_player(player)
+        decision_edges = [
+            (to_node, edge_data["condition"])
+            for _, to_node, edge_data in self.graph.out_edges(player_node, data=True)
+            if edge_data.get("type") == EdgeType.DECISION and edge_data.get("condition")
+        ]
+        # If no decision edges, check for exactly one standard edge
+        if not decision_edges:
+            standard_edges = [
+                (to_node, edge_data)
+                for _, to_node, edge_data in self.graph.out_edges(
+                    player_node, data=True
+                )
+                if edge_data.get("type") == EdgeType.STANDARD
+            ]
+            if len(standard_edges) != 1:
+                logger.warning(
+                    f"Node {player_node} has {len(standard_edges)} standard edges, expected exactly 1"
+                )
+                return False
+            return True
+        # Check each decision edge's condition
+        for to_node, condition in decision_edges:
+            validation_result = condition.validate(utterance)
+            # Case 1: Valid and intended format - successful validation
+            if validation_result.is_valid and validation_result.intended_format:
+                return True
+            # Case 2: Invalid but intended format - validation failed for intended format
+            elif not validation_result.is_valid and validation_result.intended_format:
+                if validation_result.error:
+                    logger.warning(
+                        f"Validation failed for edge to {to_node}: {validation_result.error.message}"
+                    )
+                return False
+            # Case 3: Not intended format - continue to next edge
+            elif not validation_result.intended_format:
+                continue
+        # Finally, resort to a fallback procedure (TODO)
+        logger.warning(
+            "Validation failed, utterance did not comply with available conditions for connecting edges"
+        )
+        return False
 
     def _parse_response_for_decision_routing(
         self, player: Player, utterance: str
@@ -334,11 +375,10 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             - Next node ID from a decision edge, or None if no decision edge condition is met
             - Extracted content (if any)
         """
+        player_node = self.get_node_from_player(player)
         decision_edges = [
             (to_node, edge_data["condition"])
-            for _, to_node, edge_data in self.graph.out_edges(
-                self.current_node, data=True
-            )
+            for _, to_node, edge_data in self.graph.out_edges(player_node, data=True)
             if edge_data.get("type") == EdgeType.DECISION and edge_data.get("condition")
         ]
         print("::DECISION_EDGES::", decision_edges)
@@ -350,11 +390,11 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             try:
                 parse_result = condition.parse(utterance)
                 print(
-                    "::IS_MATCH, EXTRACTED_CONTENT::",
-                    parse_result.is_match,
+                    "::IS_SUCCESSFUL, EXTRACTED_CONTENT::",
+                    parse_result.is_successful,
                     parse_result.content,
                 )
-                if parse_result.is_match and parse_result.content:
+                if parse_result.is_successful and parse_result.content:
                     parser_id = None
                     parse_func_name = condition.function_pair.parse_func.__name__
                     for pid in parsers:
@@ -407,6 +447,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         Args:
             content: Parser extracted actions typically either pyautogui python-code (as str.), or computer13 actions in JSON (as str.)
         """
+        print(content, "EXECUTE_ACTIONS")
         try:
             if not content:
                 logger.error("No actions to execute")

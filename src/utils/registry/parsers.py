@@ -163,11 +163,16 @@ def parse_done_or_fail(utterance: str) -> Tuple[bool, Optional[str]]:
         - Boolean indicating if any status keyword was found
         - The matched keyword, or None if no keyword was found
     """
-    status_keywords = ["DONE", "FAIL"]
+    status_pattern = r"STATUS\s*```(.*?)```"
+    status_matches = re.findall(status_pattern, utterance, re.DOTALL)
 
-    for keyword in status_keywords:
-        if re.search(r"\b" + keyword + r"\b", utterance):
-            return True, [keyword]
+    if not status_matches:
+        return False, None
+
+    block_content = status_matches[0].strip()
+    status_keywords = ["DONE", "FAIL"]
+    if block_content in status_keywords:
+        return True, [block_content]
 
     return False, None
 

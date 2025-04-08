@@ -49,10 +49,8 @@ DEFAULT_HANDLER_TYPE = "standard"
 # Action message templates
 ACTION_RESULT_TEMPLATE = "Action: {action}, Reward: {reward}, Done: {done}"
 
-# Action space
-# Computer13
 
-
+# Action space - Computer13
 def get_keyboard_keys():
     keyboard_keys = [
         "\t",

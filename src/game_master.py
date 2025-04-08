@@ -25,6 +25,7 @@ from .utils.registry.validators import (
     ValidationError,
 )
 
+
 module_logger = logging.getLogger(__name__)
 
 
@@ -47,6 +48,32 @@ class EdgeType(Enum):
     )  # Conditional connection, traversed only if condition evaluates to True
 
 
+@dataclass
+class ParseResult:
+    """Container for parsing results
+    Attributes:
+        is_successful: Whether the parsing operation succeeded
+        content: The extracted content from parsing, None if parsing failed
+    """
+
+    is_successful: bool
+    content: Optional[Any] = None
+
+
+@dataclass
+class ValidationResult:
+    """Container for validation results
+    Attributes:
+        is_valid: Whether the utterance passed all validation checks
+        intended_format: Whether the utterance was intended to follow this format
+        error: Validation error details if validation failed
+    """
+
+    is_valid: bool
+    intended_format: bool
+    error: Optional[ValidationError] = None
+
+
 class ConditionType(str, Enum):
     """Pre-defined types of edge conditions"""
 
@@ -55,22 +82,6 @@ class ConditionType(str, Enum):
     DONE_OR_FAIL = "done_or_fail"
     QUERY = "query"
     RESPONSE = "response"
-
-
-@dataclass
-class ParseResult:
-    """Container for parsing results"""
-
-    is_match: bool
-    content: Optional[Any] = None
-
-
-@dataclass
-class ValidationResult:
-    """Container for validation results"""
-
-    is_valid: bool
-    error: Optional[ValidationError] = None
 
 
 class ConditionPair(NamedTuple):
@@ -93,6 +104,7 @@ CONDITION_PAIRS: Dict[ConditionType, ConditionPair] = {
     ),
     ConditionType.QUERY: ConditionPair(parse_query, validate_query),
     ConditionType.RESPONSE: ConditionPair(parse_response, validate_response),
+    # Additional condition pairs can be added upon requirement!
 }
 
 
@@ -130,8 +142,8 @@ class EdgeCondition:
         Returns:
             ParseResult containing match status and parsed content
         """
-        is_match, content = self.function_pair.parse_func(utterance)
-        return ParseResult(is_match=is_match, content=content)
+        is_successful, content = self.function_pair.parse_func(utterance)
+        return ParseResult(is_successful=is_successful, content=content)
 
     def validate(self, utterance: str) -> ValidationResult:
         """Validate the utterance using the paired validate function.
@@ -140,8 +152,10 @@ class EdgeCondition:
         Returns:
             ValidationResult containing validation status and any error
         """
-        is_valid, error = self.function_pair.validate_func(utterance)
-        return ValidationResult(is_valid=is_valid, error=error)
+        is_valid, intended_format, error = self.function_pair.validate_func(utterance)
+        return ValidationResult(
+            is_valid=is_valid, intended_format=intended_format, error=error
+        )
 
 
 @dataclass
@@ -924,4 +938,19 @@ class NetworkDialogueGameMaster(GameMaster):
         node_data = self.graph.nodes[node_id]
         if node_data.get("type") == NodeType.PLAYER:
             return node_data.get("player")
+        return None
+
+    def get_node_from_player(self, player: RoleBasedPlayer) -> Optional[str]:
+        """Get the node ID associated with a player instance.
+        Args:
+            player: The Player instance to find the node for.
+        Returns:
+            The node ID if the player is found in the graph, None otherwise.
+        """
+        for node_id, node_data in self.graph.nodes(data=True):
+            if (
+                node_data.get("type") == NodeType.PLAYER
+                and node_data.get("player") == player
+            ):
+                return node_id
         return None
