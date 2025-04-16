@@ -1,4 +1,3 @@
-import collections
 import logging
 from enum import Enum, auto
 from dataclasses import dataclass
@@ -7,7 +6,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 from clemcore import backends
-from clemcore.clemgame import GameMaster
+from clemcore.clemgame import DialogueGameMaster
 from .game import RoleBasedPlayer
 from .utils.registry.parsers import (
     parse_computer13_actions,
@@ -25,12 +24,11 @@ from .utils.registry.validators import (
     ValidationError,
 )
 
-
 module_logger = logging.getLogger(__name__)
 
 
 class NodeType(Enum):
-    """Node types in the Network."""
+    """Enum representing different types of nodes in the network."""
 
     START = auto()
     PLAYER = auto()
@@ -38,7 +36,7 @@ class NodeType(Enum):
 
 
 class EdgeType(Enum):
-    """Edge types in the Network."""
+    """Enum representing different types of edges in the network."""
 
     STANDARD = (
         auto()
@@ -50,10 +48,11 @@ class EdgeType(Enum):
 
 @dataclass
 class ParseResult:
-    """Container for parsing results
+    """Container for parsing results.
+
     Attributes:
-        is_successful: Whether the parsing operation succeeded
-        content: The extracted content from parsing, None if parsing failed
+        is_successful: Whether the parsing operation succeeded.
+        content: The extracted content from parsing, None if parsing failed.
     """
 
     is_successful: bool
@@ -62,11 +61,12 @@ class ParseResult:
 
 @dataclass
 class ValidationResult:
-    """Container for validation results
+    """Container for validation results.
+
     Attributes:
-        is_valid: Whether the utterance passed all validation checks
-        intended_format: Whether the utterance was intended to follow this format
-        error: Validation error details if validation failed
+        is_valid: Whether the response passed all validation checks.
+        intended_format: Whether the response was intended to follow this format.
+        error: Validation error details if validation failed.
     """
 
     is_valid: bool
@@ -75,7 +75,7 @@ class ValidationResult:
 
 
 class ConditionType(str, Enum):
-    """Pre-defined types of edge conditions"""
+    """Enum for pre-defined types of edge conditions."""
 
     COMPUTER13_ACTIONS = "computer13_actions"
     PYAUTOGUI_ACTIONS = "pyautogui_actions"
@@ -85,7 +85,12 @@ class ConditionType(str, Enum):
 
 
 class ConditionPair(NamedTuple):
-    """Pair of parse and validate functions for a condition"""
+    """Pair of parse and validate functions for a condition.
+
+    Attributes:
+        parse_func: Function to parse the response.
+        validate_func: Function to validate the response.
+    """
 
     parse_func: Callable
     validate_func: Callable
@@ -104,24 +109,24 @@ CONDITION_PAIRS: Dict[ConditionType, ConditionPair] = {
     ),
     ConditionType.QUERY: ConditionPair(parse_query, validate_query),
     ConditionType.RESPONSE: ConditionPair(parse_response, validate_response),
-    # Additional condition pairs can be added upon requirement!
 }
 
 
 class EdgeCondition:
-    """Condition for transitioning between nodes in the Network with paired parsing and validation."""
+    """Condition for transitioning between nodes in the network with paired parsing and validation."""
 
     def __init__(
-        self,
-        condition_type: Union[ConditionType, str],
-        description: str = "",
+        self, condition_type: Union[ConditionType, str], description: str = ""
     ):
         """Initialize an edge condition with paired parser and validator.
+
         Args:
-            condition_type: Type of condition that determines which function pair to use
-            description: Human-readable description of the condition
+            condition_type: Type of condition that determines which function pair to use.
+            description: Human-readable description of the condition.
+
+        Raises:
+            KeyError: If no function pair is found for the condition type.
         """
-        # Convert string to enum if needed
         if isinstance(condition_type, str):
             condition_type = ConditionType(condition_type)
 
@@ -133,26 +138,28 @@ class EdgeCondition:
         self.function_pair = CONDITION_PAIRS[condition_type]
         self.description = description
 
-    def parse(self, utterance: str) -> ParseResult:
-        """Parse the utterance using the paired parse function.
+    def parse(self, response: str) -> ParseResult:
+        """Parse the response using the paired parse function.
+
         Args:
-            player: The Player instance that produced the response
-            utterance: The text content to parse
-            game_master: The NetworkDialogueGameMaster instance
+            response: The text content to parse.
+
         Returns:
-            ParseResult containing match status and parsed content
+            ParseResult containing match status and parsed content.
         """
-        is_successful, content = self.function_pair.parse_func(utterance)
+        is_successful, content = self.function_pair.parse_func(response)
         return ParseResult(is_successful=is_successful, content=content)
 
-    def validate(self, utterance: str) -> ValidationResult:
-        """Validate the utterance using the paired validate function.
+    def validate(self, response: str) -> ValidationResult:
+        """Validate the response using the paired validate function.
+
         Args:
-            utterance: The text content to validate
+            response: The text content to validate.
+
         Returns:
-            ValidationResult containing validation status and any error
+            ValidationResult containing validation status and any error.
         """
-        is_valid, intended_format, error = self.function_pair.validate_func(utterance)
+        is_valid, intended_format, error = self.function_pair.validate_func(response)
         return ValidationResult(
             is_valid=is_valid, intended_format=intended_format, error=error
         )
@@ -160,27 +167,18 @@ class EdgeCondition:
 
 @dataclass
 class NodeTransition:
-    """Temporary storage for node transition data."""
+    """Temporary storage for node transition data.
+
+    Attributes:
+        next_node: ID of the next node to transition to, if any.
+    """
 
     next_node: Optional[str] = None
-    # Additional attributes can be added upon requirement.
 
 
-class NetworkDialogueGameMaster(GameMaster):
-    """Extended GameMaster, implements a graph-based approach for player interaction flow.
-    Players are represented as nodes in a directed graph, with edges representing possible
-    transitions between players.
-    The graph supports two types of edges:
-        - Standard edges: Direct connections that are always traversed if no decision edges are taken
-        - Decision edges: Conditional connections that are traversed only if their condition evaluates to True
-    This allows for complex interaction patterns including branching paths, self-loops, and
-    conditional transitions based on player responses.
-    Turn Definition:
-        A turn is defined as the sequence of state transitions that:
-            - Begins when the system enters the anchor node
-            - Progresses through sequential interactions, potentially including repeated anchor node interactions
-            - Requires at least one transition to a non-anchor node
-            - Concludes when the system returns to the anchor node after visiting at least one non-anchor node
+class NetworkDialogueGameMaster(DialogueGameMaster):
+    """This class extends DialogueGameMaster, to implement a graph-based interaction model,
+    where nodes represent game states or players, and edges represent transitions (standard and decision-based)
     """
 
     def __init__(
@@ -190,66 +188,74 @@ class NetworkDialogueGameMaster(GameMaster):
         experiment: dict,
         player_models: List[backends.Model],
     ):
-        """Args:
-        name: The name of the game (as specified in game_registry).
-        path: Path to the game (as specified in game_registry).
-        experiment: The experiment (set of instances) to use.
-        player_models: Player models to use for one or more players.
+        """Initialize the network dialogue game master.
+
+        Args:
+            name: The name of the game (as specified in game_registry).
+            path: Path to the game (as specified in game_registry).
+            experiment: The experiment (set of instances) to use.
+            player_models: Player models to use for one or two players.
         """
         super().__init__(name, path, experiment, player_models)
-
-        # The logging works with an internal mapping of "Player N" -> Player
-        self.players_by_names: Dict[str, RoleBasedPlayer] = collections.OrderedDict()
-        self.current_turn: int = 0
-
         self.graph = nx.MultiDiGraph()
         self.graph.add_node("START", type=NodeType.START)
         self.graph.add_node("END", type=NodeType.END)
-
         self.current_node = "START"
-
         self.node_positions = None
         self.edge_labels = {}
-
         self.anchor_node = None
-        self.current_turn_nodes = []
+        self.current_round_nodes = []
         self.non_anchor_visited = False
-        self.turn_complete = False
-
+        self.round_complete = False
         self.transition = NodeTransition()
 
-    def get_players(self) -> List[RoleBasedPlayer]:
-        """Get a list of the players.
-        Returns:
-            List of Player instances in the order they are added.
-        """
-        return list(self.players_by_names.values())
-
-    def add_player(self, player: RoleBasedPlayer, node_id: str = None):
+    def add_player(
+        self,
+        player: RoleBasedPlayer,
+        initial_prompt: Union[str, Dict] = None,
+        initial_context: Union[str, Dict] = None,
+        node_id: str = None,
+    ):
         """Add a player to the game and the graph.
-        Args:
-            player: The player to be added to the game.
-            node_id: Optional custom node ID for the player. If None, the player's descriptor will be used.
-        """
-        idx = len(self.players_by_names)
-        player.descriptor = f"Player {idx + 1}"
-        self.players_by_names[player.descriptor] = player
 
-        node_id = node_id
+        Args:
+            player: The player instance to add.
+            initial_prompt: Initial prompt for the player, if any.
+            initial_context: Initial context for the player, if any.
+            node_id: Optional custom node ID for the player. If None, player's name is used.
+        """
+        super().add_player(player, initial_prompt, initial_context)
+        node_id = node_id if node_id else player.name
         self.graph.add_node(node_id, type=NodeType.PLAYER, player=player)
 
     def add_standard_edge(self, from_node: str, to_node: str, label: str = ""):
-        """Add a standard edge between nodes in the graph.
-        Standard edges are always traversed if no decision edges are taken.
+        """Add a standard edge between nodes in the graph, ensuring only one standard edge exists.
+
+        Standard edges are traversed when no decision edges are taken.
+
         Args:
-            from_node: The ID of the source node.
-            to_node: The ID of the target node.
+            from_node: ID of the source node.
+            to_node: ID of the target node.
             label: Optional label for the edge (for visualization).
+
+        Raises:
+            ValueError: If either node does not exist in the graph or a standard edge already exists.
         """
         if from_node not in self.graph:
             raise ValueError(f"Node '{from_node}' does not exist in the graph")
         if to_node not in self.graph:
             raise ValueError(f"Node '{to_node}' does not exist in the graph")
+
+        existing_edges = [
+            (u, v, data)
+            for u, v, data in self.graph.edges(data=True)
+            if u == from_node and v == to_node and data.get("type") == EdgeType.STANDARD
+        ]
+
+        if existing_edges:
+            raise ValueError(
+                f"A standard edge already exists from '{from_node}' to '{to_node}'"
+            )
 
         self.graph.add_edge(
             from_node,
@@ -266,12 +272,17 @@ class NetworkDialogueGameMaster(GameMaster):
         self, from_node: str, to_node: str, condition: EdgeCondition, label: str = ""
     ):
         """Add a decision edge between nodes in the graph.
-        Decision edges are traversed only if their condition evaluates to True.
+
+        Decision edges are traversed only if their condition is satisfied.
+
         Args:
-            from_node: The ID of the source node.
-            to_node: The ID of the target node.
-            condition: The condition for the edge transition.
+            from_node: ID of the source node.
+            to_node: ID of the target node.
+            condition: Condition for the edge transition.
             label: Optional label for the edge (for visualization).
+
+        Raises:
+            ValueError: If either node does not exist in the graph.
         """
         if from_node not in self.graph:
             raise ValueError(f"Node '{from_node}' does not exist in the graph")
@@ -293,10 +304,13 @@ class NetworkDialogueGameMaster(GameMaster):
             self.edge_labels[(from_node, to_node, edge_key)] = condition.description
 
     def set_anchor_node(self, node_id: str):
-        """Set the anchor node for turn tracking.
-        The anchor node marks the beginning and end of a turn.
+        """Set the anchor node for round tracking.
+
         Args:
-            node_id: The ID of the node to set as anchor.
+            node_id: ID of the node to set as anchor.
+
+        Raises:
+            ValueError: If the node does not exist in the graph.
         """
         if node_id not in self.graph:
             raise ValueError(f"Node '{node_id}' does not exist in the graph")
@@ -304,226 +318,86 @@ class NetworkDialogueGameMaster(GameMaster):
         self.anchor_node = node_id
         module_logger.info(f"Anchor node set to '{node_id}'")
 
-    def setup(self, **kwargs):
-        """Load resources and prepare everything to play the game.
-        Needs to log the players dictionary via self.log_players(players_dict).
-        Intended to be left as-is by inheriting classes. Implement game-specific setup functionality in the _on_setup
-        method.
-        Called by the game's GameBenchmark run method for each game instance.
-        Args:
-            kwargs: Keyword arguments used to set up the GameMaster instance. This is usually a game instance object
-                read from the game's instances.json.
+    def _should_pass_turn(self) -> bool:
+        """Check if transition to a different node is needed.
+
+        Returns:
+            bool: True if transition to a different node is required.
         """
-        self._on_setup(**kwargs)
-        # log players
-        players_descriptions = collections.OrderedDict(
-            GM=f"Game master for {self.game_name}"
+        return (
+            self.transition.next_node is not None
+            and self.transition.next_node != self.current_node
         )
-        for name, player in self.players_by_names.items():
-            players_descriptions[name] = player.get_description()
-        # log player ID and description dict:
-        self.log_players(players_descriptions)
 
-    def play(self) -> None:
-        """Main play loop method.
-        This method is called to run the game for benchmarking.
-        Intended to be left as-is by inheriting classes. Implement game-specific functionality in the
-        _on_before_game, _does_game_proceed, _on_before_turn, _should_reprompt, _on_before_reprompt, _on_after_turn and
-        _on_after_game methods.
+    def _next_player(self) -> RoleBasedPlayer:
+        """Determine the next player based on graph transitions.
+
+        Returns:
+            RoleBasedPlayer: The player at the next node if next node; otherwise, the current player.
         """
-        self._on_before_game()
-        self.log_next_turn()
-        self.current_node = "START"
-        while self.current_node != "END" and self._does_game_proceed():
-            # Special handling for START node
-            if self.current_node == "START":
-                standard_edges = [
-                    (_, to_node)
-                    for _, to_node, edge_data in self.graph.out_edges(
-                        "START", data=True
-                    )
-                    if edge_data.get("type") == EdgeType.STANDARD
-                ]
-                if not standard_edges:
-                    raise ValueError("No standard edges found from START node")
-                if len(standard_edges) > 1:
-                    raise ValueError("Multiple standard edges found from START node")
-                prev_node = self.current_node
-                self.current_node = standard_edges[0][1]
-                self._update_turn_tracking(prev_node, self.current_node)
-            else:
-                # Normal flow for non-START node
-                # Check if a turn has completed based on the anchor node definition
-                if self._is_turn_complete():
-                    self.log_next_turn()
-                    self._on_before_turn(self.current_turn)
-                    module_logger.info(
-                        f"{self.game_name}: %s turn: %d",
-                        self.game_name,
-                        self.current_turn,
-                    )
-                    self._reset_turn_tracking()
-                # Handle next node transition
-                next_node = self.transition.next_node
-                self.transition = NodeTransition()
-                if next_node is None:
-                    module_logger.warning(
-                        f"No valid transitions from node '{self.current_node}'"
-                    )
-                    break
-
-                self._on_before_node_transition(self.current_node, next_node)
-                prev_node = self.current_node
-                self.current_node = next_node
-                self._update_turn_tracking(prev_node, next_node)
-
-            if self.current_node == "END":
-                break
-
-            node_data = self.graph.nodes[self.current_node]
+        next_node = self.transition.next_node
+        if next_node and next_node in self.graph:
+            node_data = self.graph.nodes[next_node]
             if node_data["type"] == NodeType.PLAYER:
-                player = node_data["player"]
-                self.prompt(player)
-                while self._should_reprompt(player):
-                    self._on_before_reprompt(player)
-                    self.prompt(player, is_reprompt=True)
+                self.current_node = next_node
+                return node_data["player"]
+        return self.current_player
 
-            if self._is_turn_complete():
-                self._on_after_turn(self.current_turn)
-                self.current_turn += 1
-        self._on_after_game()
+    def _start_next_round(self) -> bool:
+        """Check if a new round should start based on anchor node.
 
-    def prompt(self, player: RoleBasedPlayer, is_reprompt=False):
-        """Prompt a player model.
-        Includes logging of 'send message' and 'get message' actions.
-        Intended to be left as-is by inheriting classes. Implement game-specific functionality in the
-        _should_reprompt, _on_before_reprompt, _after_add_player_response, _validate_player_response methods.
-        Args:
-            player: The Player instance to be prompted.
-            is_reprompt: If this is a reprompt attempt. This is intended for re-prompting with modified prompts.
-        """
-        # GM -> Player
-        history = player.get_messages()
-        if history and history[-1]["role"] == "user":
-            message = history[-1]["content"]
-            action_type = (
-                "send message" if not is_reprompt else "send message (reprompt)"
-            )
-            action = {"type": action_type, "content": message}
-            self.log_event(from_="GM", to=player.descriptor, action=action)
-
-        _prompt, _response, response_message = player(history, self.current_turn)
-
-        # Player -> GM
-        action = {"type": "get message", "content": response_message}
-        # log 'get message' event including backend/API call:
-        self.log_event(
-            from_=player.descriptor, to="GM", action=action, call=(_prompt, _response)
-        )
-
-        # GM -> GM
-        self.__validate_process_and_add_player_response(player, response_message)
-
-    def _should_reprompt(self, player: RoleBasedPlayer):
-        """Method to check if a Player should be re-prompted.
-        This is intended to check for invalid responses.
-        Args:
-            player: The Player instance to re-prompt.
-        """
-        return False
-
-    def _on_before_reprompt(self, player: RoleBasedPlayer):
-        """Method executed before reprompt is passed to a Player.
-        Hook
-        Change the prompt to reprompt the player on e.g. an invalid response.
-        Attach new message components to the players message via player.prompt_handler.add_user_message(player, **kwargs)
-        Args:
-            player: The Player instance that produced the invalid response.
-        """
-        pass
-
-    def log_message_to(self, player: RoleBasedPlayer, message: str):
-        """Logs a 'send message' action from GM to Player.
-        This is a logging method, and will not add the message to the conversation history on its own!
-        Args:
-            player: The Player instance the message is targeted at.
-            message: The message content sent to the Player instance.
-        """
-        action = {"type": "send message", "content": message}
-        self.log_event("GM", player.descriptor, action)
-
-    def log_message_to_self(self, message: str):
-        """Logs a 'metadata' action from GM to GM.
-        This is a logging method, and will not add anything to the conversation history.
-        Args:
-            message: The message content logged as metadata.
-        """
-        action = {"type": "metadata", "content": message}
-        self.log_event("GM", "GM", action)
-
-    def log_to_self(self, type_: str, value: str):
-        """Logs an action of the passed type from GM to GM.
-        This is a logging method, and will not add anything to the conversation history.
-        Args:
-            type_: The type of the action to be logged.
-            value: The content value of the action to be logged.
-        """
-        action = {"type": type_, "content": value}
-        self.log_event("GM", "GM", action)
-
-    def __validate_process_and_add_player_response(
-        self, player: RoleBasedPlayer, utterance: str
-    ):
-        """Checks player response validity, parses it and adds it to the conversation history.
-        Part of the play loop, not intended to be modified - modify _validate_player_response,
-        _on_process_response_and_determine_routing and/or _after_add_player_response instead.
-        Args:
-            player: The Player instance that produced the response.
-            utterance: The text content of the response.
-        """
-        if self._validate_player_response(player, utterance):
-            utterance = self.__process_response(player, utterance)
-            # Add assistant message (player, utterance)
-            player.add_assistant_message(utterance)
-            self._after_add_player_response(player, utterance)
-
-    def _after_add_player_response(self, player: RoleBasedPlayer, utterance: str):
-        """Method executed after a player response has been validated and added to the conversation history.
-        Hook: Modify this method for game-specific functionality.
-        Add the utterance to other player's history, if necessary.
-        Args:
-            player: The Player instance that produced the response.
-            utterance: The text content of the message that was added.
-        """
-        pass
-
-    def _validate_player_response(
-        self, player: RoleBasedPlayer, utterance: str
-    ) -> bool:
-        """Decide if an utterance should be added to the conversation history.
-        Hook: Modify this method for game-specific functionality.
-        Args:
-            player: The Player instance for which the response is added.
-            utterance: The text content of the message to be added.
         Returns:
-            True, if the utterance is fine; False, if the response should not be added to the history.
+            bool: True if a new round should start.
         """
-        return True
+        return self.round_complete
 
-    def __process_response(self, player: RoleBasedPlayer, utterance: str) -> str:
-        """Parses a response, determines next node, and stores extracted content.
-        Part of the validate-process loop, not intended to be modified.
+    def _on_after_round(self):
+        """Handle post-round cleanup and preparation for the next round.
+
+        This method performs cleanup by resetting round tracking state and
+        preparing for the next round by logging the round transition.
+        """
+        self._reset_round_tracking()
+        self.log_next_round()
+
+    def _on_before_game(self):
+        """Handle setup before entering the main play loop.
+
+        Handles the initial transition from the START node,
+        Extend this method for game-specific functionality
+
+        Raises:
+            ValueError: If START node has no standard edges.
+        """
+        standard_edges = [
+            (_, to_node)
+            for _, to_node, edge_data in self.graph.out_edges("START", data=True)
+            if edge_data.get("type") == EdgeType.STANDARD
+        ]
+        if not standard_edges:
+            raise ValueError("No standard edges found from START node")
+
+        self.current_node = standard_edges[0][1]
+        self._update_round_tracking("START", self.current_node)
+
+    def _parse_response(self, player: RoleBasedPlayer, response: str) -> str:
+        """Parse current-player response and determine the next node transition.
+
+        This method processes the response using decision routing, falling back to standard edges if needed,
+        and updates round tracking when node transitions occur.
+
         Args:
-            player: The Player instance that produced the response.
-            utterance: The text content of the response.
+            player: Player instance that produced the response. (usually self.current_player)
+            response: The response of the player.
+
         Returns:
-            The response content, potentially modified.
+            str: The parsed response.
         """
         self.transition = NodeTransition()
-        _utterance, log_action, next_node, _ = (
-            self._parse_response_for_decision_routing(player, utterance)
+        _response, log_action, next_node, _ = self._parse_response_for_decision_routing(
+            player, response
         )
-        # If no decision edge was taken, fall back to standard edges
+
         if next_node is None:
             for _, to_node, edge_data in self.graph.out_edges(
                 self.current_node, data=True
@@ -531,95 +405,127 @@ class NetworkDialogueGameMaster(GameMaster):
                 if edge_data.get("type") == EdgeType.STANDARD:
                     next_node = to_node
                     break
-        # Store transition data in temporary registry
+
         if next_node:
+            # Handles both cases: (a) self-loops and (b) transitions between nodes
+            self._update_round_tracking(self.current_node, next_node)
             self.transition.next_node = next_node
-        if _utterance != utterance and log_action:
-            action = {"type": "parse", "content": _utterance}
-            self.log_event(from_="GM", to="GM", action=action)
-        return _utterance
+        if _response != response and log_action:
+            self.log_to_self("parse", f"Parsed response: {_response}")
+        return _response
 
     def _parse_response_for_decision_routing(
-        self, player: RoleBasedPlayer, utterance: str
+        self, player: RoleBasedPlayer, response: str
     ) -> Tuple[str, bool, Optional[str], Optional[str]]:
-        """Parse player response and evaluate decision edge conditions.
-        Hook: Modify this method for game-specific functionality.
-        This method should:
-        1. Parse the player's utterance for relevant content
-        2. Evaluate decision edge conditions based on the parsed content
-        3. Determine which decision edge (if any) should be taken
+        """Parse a response and evaluate decision edge conditions.
+
+        This hook method is intended for subclass override to implement game-specific logic.
+
         Args:
-            player: The Player instance that produced the response.
-            utterance: The text content of the response.
+            player: The player who produced the response.
+            response: The text content of the response.
+
         Returns:
             Tuple containing:
-            - Modified utterance (or original if no modification)
-            - Boolean flag for logging
-            - Next node ID from a decision edge, or None if no decision edge condition is met
-            - Extracted content (if any)
-        """
-        # Default implementation: no parsing or decision edge evaluation
-        return utterance, True, None, None
+                - Modified response (or original if unchanged).
+                - Boolean indicating whether to log the parsing.
+                - Next node ID if a decision edge is taken, None otherwise.
+                - Extracted content, if any.
 
-    def _on_before_turn(self, turn_idx: int):
-        """Executed in play loop after turn advance and before proceed check and prompting.
-        Hook: Modify this method for game-specific functionality.
+        Notes:
+            Default implementation returns the response unchanged with no transition.
+        """
+        return response, True, None, None
+
+    def _update_round_tracking(self, prev_node: str, next_node: str):
+        """Update round tracking state based on node transitions.
+
+        Tracks visited nodes and marks a round complete when returning to the anchor after other nodes.
+
         Args:
-            turn_idx: The current turn index.
+            prev_node: Node being transitioned from.
+            next_node: Node being transitioned to.
         """
-        pass
+        if self.anchor_node is None:
+            return
+        self.current_round_nodes.append(next_node)
+        if next_node != self.anchor_node:
+            self.non_anchor_visited = True
+        if next_node == self.anchor_node and self.non_anchor_visited:
+            self.round_complete = True
+            round_path = " » ".join(str(node) for node in self.current_round_nodes)
+            self.log_to_self("round-complete", f"Round completed: {round_path}")
 
-    def _on_after_turn(self, turn_idx: int):
-        """Executed in play loop after prompting.
-        Hook: Modify this method for game-specific functionality.
+    def _reset_round_tracking(self):
+        """Reset the round tracking state variables.
+
+        Resets all round-related tracking variables to their initial states and
+        adds the current node to the new round's tracking list if one exists.
+        """
+        self.current_round_nodes = []
+        self.non_anchor_visited = False
+        self.round_complete = False
+        if self.current_node:
+            self.current_round_nodes.append(self.current_node)
+
+    def get_player_from_node(self, node_id: str) -> Optional[RoleBasedPlayer]:
+        """Get player associated with a node ID.
+
         Args:
-            turn_idx: The current turn index.
-        """
-        pass
+            node_id: ID of the node to check.
 
-    def _on_before_game(self):
-        """Executed once at the start, before entering the play loop.
-        Hook: Modify this method for game-specific functionality.
+        Returns:
+            Optional[RoleBasedPlayer]: Player instance if node is a player node, None otherwise.
         """
-        pass
+        if node_id not in self.graph:
+            return None
 
-    def _on_after_game(self):
-        """Executed once at the end, after exiting the play loop.
-        Hook: Modify this method for game-specific functionality.
+        node_data = self.graph.nodes[node_id]
+        if node_data.get("type") == NodeType.PLAYER:
+            return node_data.get("player")
+        return None
+
+    def get_node_from_player(self, player: RoleBasedPlayer) -> Optional[str]:
+        """Get node ID associated with a player instance.
+
+        Args:
+            player: Player instance to find.
+
+        Returns:
+            Optional[str]: Node ID if player is found, None otherwise.
         """
-        pass
+        for node_id, node_data in self.graph.nodes(data=True):
+            if (
+                node_data.get("type") == NodeType.PLAYER
+                and node_data.get("player") == player
+            ):
+                return node_id
+        return None
 
     def visualize_graph(self, figsize=(12, 10), save_path=None, dpi=100):
-        """Visualize the Network structure with professional styling.
+        """Visualize the network structure with professional styling.
+
         Args:
-            figsize: Size of the figure (width, height) in inches.
-            save_path: Optional path to save the visualization. If None, the visualization is displayed.
+            figsize: Tuple of (width, height) for figure size in inches.
+            save_path: Optional path to save the visualization.
             dpi: Resolution for the output figure.
         """
         plt.figure(figsize=figsize, dpi=dpi)
 
-        # Better node positioning - hierarchical layout works well for directed graphs
         if not self.node_positions:
             try:
-                # Try to use a hierarchical layout for better flow visualization
                 self.node_positions = nx.nx_pydot.pydot_layout(self.graph, prog="dot")
             except Exception:
-                # Fall back to spring layout with better parameters
                 self.node_positions = nx.spring_layout(
-                    self.graph,
-                    k=0.5,  # Optimal distance between nodes
-                    iterations=100,  # More iterations for better layout
-                    seed=42,  # Consistent layout between runs
+                    self.graph, k=0.5, iterations=100, seed=42
                 )
 
-        # Professional color scheme
         node_colors = {
-            NodeType.START: "#2ECC71",  # Emerald green
-            NodeType.PLAYER: "#3498DB",  # Blue
-            NodeType.END: "#E74C3C",  # Red
+            NodeType.START: "#2ECC71",
+            NodeType.PLAYER: "#3498DB",
+            NodeType.END: "#E74C3C",
         }
 
-        # Draw nodes by type for better styling
         for node_type in NodeType:
             nodes = [
                 node
@@ -636,30 +542,24 @@ class NetworkDialogueGameMaster(GameMaster):
                 node_color=node_colors[node_type],
                 node_size=3000,
                 alpha=0.9,
-                edgecolors="#2C3E50",  # Dark border
+                edgecolors="#2C3E50",
                 linewidths=2,
             )
 
-        # Create better node labels with appropriate text wrapping
         node_labels = {}
         for node in self.graph.nodes():
             node_type = self.graph.nodes[node].get("type")
             if node_type == NodeType.PLAYER:
                 player = self.graph.nodes[node].get("player")
-
-                # Handle either model name or role
-                if hasattr(player, "role") and player.role:
-                    role_text = player.role
-                else:
-                    # Use string representation if no role available
-                    role_text = str(player.model)
-
-                # Limit label length to avoid overflow
+                role_text = (
+                    player.role
+                    if hasattr(player, "role") and player.role
+                    else str(player.model)
+                )
                 node_labels[node] = f"{node}\n({role_text})"
             else:
                 node_labels[node] = node
 
-        # Draw edge types with distinctive styling
         standard_edges = [
             (u, v)
             for u, v, d in self.graph.edges(data=True)
@@ -671,30 +571,27 @@ class NetworkDialogueGameMaster(GameMaster):
             if d.get("type") == EdgeType.DECISION
         ]
 
-        # Standard edges with solid lines
         nx.draw_networkx_edges(
             self.graph,
             self.node_positions,
             edgelist=standard_edges,
             arrowsize=25,
             width=2.5,
-            edge_color="#34495E",  # Dark gray
-            connectionstyle="arc3,rad=0.1",  # Curved edges for better visibility
+            edge_color="#34495E",
+            connectionstyle="arc3,rad=0.1",
         )
 
-        # Decision edges with dashed lines
         nx.draw_networkx_edges(
             self.graph,
             self.node_positions,
             edgelist=decision_edges,
             arrowsize=25,
             width=2,
-            edge_color="#8E44AD",  # Purple
+            edge_color="#8E44AD",
             style="dashed",
-            connectionstyle="arc3,rad=0.1",  # Curved edges
+            connectionstyle="arc3,rad=0.1",
         )
 
-        # Draw node labels with better font
         nx.draw_networkx_labels(
             self.graph,
             self.node_positions,
@@ -702,13 +599,11 @@ class NetworkDialogueGameMaster(GameMaster):
             font_size=10,
             font_family="sans-serif",
             font_weight="bold",
-            font_color="#FFFFFF",  # White text for better contrast
+            font_color="#FFFFFF",
         )
 
-        # Prepare edge labels with better formatting
         edge_labels_dict = {}
         for (u, v, k), label in self.edge_labels.items():
-            # Limit edge label length and add line breaks
             if label and len(label) > 20:
                 words = label.split()
                 chunks = []
@@ -731,7 +626,6 @@ class NetworkDialogueGameMaster(GameMaster):
 
             edge_labels_dict[(u, v)] = label
 
-        # Draw edge labels with better positioning
         nx.draw_networkx_edge_labels(
             self.graph,
             self.node_positions,
@@ -741,20 +635,19 @@ class NetworkDialogueGameMaster(GameMaster):
             bbox=dict(
                 facecolor="white", edgecolor="none", alpha=0.7, boxstyle="round,pad=0.3"
             ),
-            label_pos=0.4,  # Adjust label position along the edge
+            label_pos=0.4,
         )
 
-        # Mark the anchor node with a special border if it exists
         if self.anchor_node and self.anchor_node in self.graph:
             anchor_pos = {self.anchor_node: self.node_positions[self.anchor_node]}
             nx.draw_networkx_nodes(
                 self.graph,
                 anchor_pos,
                 nodelist=[self.anchor_node],
-                node_color="none",  # Transparent fill
-                node_size=3300,  # Slightly larger
+                node_color="none",
+                node_size=3300,
                 alpha=1.0,
-                edgecolors="#FFD700",  # Gold border
+                edgecolors="#FFD700",
                 linewidths=4,
             )
 
@@ -767,7 +660,6 @@ class NetworkDialogueGameMaster(GameMaster):
         plt.axis("off")
         plt.tight_layout()
 
-        # Add legend
         legend_elements = [
             plt.Line2D(
                 [0],
@@ -836,121 +728,8 @@ class NetworkDialogueGameMaster(GameMaster):
 
     def set_node_positions(self, positions: Dict[str, Tuple[float, float]]):
         """Set custom positions for nodes in the visualization.
+
         Args:
             positions: Dictionary mapping node IDs to (x, y) positions.
         """
         self.node_positions = positions
-
-    def _update_turn_tracking(self, prev_node: str, next_node: str):
-        """Update the turn tracking state based on node transitions.
-        Part of the core turn tracking system, not intended to be modified by inheriting classes.
-        Args:
-            prev_node: The node the system is transitioning from.
-            next_node: The node the system is transitioning to.
-        """
-        if self.anchor_node is None:
-            return
-        self.current_turn_nodes.append(next_node)
-        if next_node != self.anchor_node:
-            self.non_anchor_visited = True
-        if next_node == self.anchor_node and self.non_anchor_visited:
-            self.turn_complete = True
-            module_logger.debug(f"Turn complete: {self.current_turn_nodes}")
-
-    def _is_turn_complete(self) -> bool:
-        """Check if a turn is complete based on the formal definition.
-        Part of the core turn tracking system, not intended to be modified by inheriting classes.
-        A turn is complete when:
-        1. The system has visited at least one non-anchor node
-        2. The system has returned to the anchor node
-        Returns:
-            A bool indicating if a turn is complete.
-        """
-        return self.turn_complete
-
-    def _reset_turn_tracking(self):
-        """Reset the turn tracking state.
-        Part of the core turn tracking system, not intended to be modified by inheriting classes.
-        """
-        self.current_turn_nodes = []
-        self.non_anchor_visited = False
-        self.turn_complete = False
-        if self.current_node:
-            self.current_turn_nodes.append(self.current_node)
-
-    def get_current_turn_path(self) -> List[str]:
-        """Get the path of nodes visited in the current turn.
-        Returns:
-            A list of node IDs representing the path of the current turn.
-        """
-        return self.current_turn_nodes.copy()
-
-    def get_turn_completion_status(self) -> Dict[str, Any]:
-        """Get the current status of turn completion.
-        Returns:
-            A dictionary containing turn completion status information.
-        """
-        return {
-            "anchor_node": self.anchor_node,
-            "visited_nodes": self.current_turn_nodes.copy(),
-            "non_anchor_visited": self.non_anchor_visited,
-            "turn_complete": self.turn_complete,
-        }
-
-    def _does_game_proceed(self) -> bool:
-        """Check if game should proceed.
-        Template method: Must be implemented by subclasses!
-        Returns:
-            A bool, True if game continues, False if game should stop.
-        """
-        raise NotImplementedError()
-
-    def _on_setup(self, **kwargs):
-        """Method executed at the start of the default setup method.
-        Template method: Must be implemented by subclasses!
-        Args:
-            kwargs: Keyword arguments of the game instance.
-        """
-        raise NotImplementedError()
-
-    def _on_before_node_transition(self, from_node: str, to_node: str):
-        """Executed right before transitioning from one node to another.
-        Hook: Modify this method for game-specific functionality.
-        This method allows you to prepare messages or perform other actions
-        before a specific node (especially player nodes) is reached.
-
-        Args:
-            from_node: The node ID that the system is transitioning from.
-            to_node: The node ID that the system is transitioning to.
-        """
-        pass
-
-    def get_player_from_node(self, node_id: str) -> Optional[RoleBasedPlayer]:
-        """Get the Player instance associated with a node ID.
-        Args:
-            node_id: The ID of the node to get the player from.
-        Returns:
-            The Player instance if the node is a player node, None otherwise.
-        """
-        if node_id not in self.graph:
-            return None
-
-        node_data = self.graph.nodes[node_id]
-        if node_data.get("type") == NodeType.PLAYER:
-            return node_data.get("player")
-        return None
-
-    def get_node_from_player(self, player: RoleBasedPlayer) -> Optional[str]:
-        """Get the node ID associated with a player instance.
-        Args:
-            player: The Player instance to find the node for.
-        Returns:
-            The node ID if the player is found in the graph, None otherwise.
-        """
-        for node_id, node_data in self.graph.nodes(data=True):
-            if (
-                node_data.get("type") == NodeType.PLAYER
-                and node_data.get("player") == player
-            ):
-                return node_id
-        return None
