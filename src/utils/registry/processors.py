@@ -8,19 +8,21 @@ processors = Registry[Callable]()
 
 
 @processors.register("observation")
-def process_observation(observation: Dict[str, Any], handler) -> Dict[str, Any]:
+def process_observation(
+    observation: Dict[str, Any], game_config: Dict
+) -> Dict[str, Any]:
     """Process raw observation data into a standardized format
     Args:
         observation: Raw observation data
-        handler: Reference to the prompt handler instance
+        game_config: Dictionary containing game configuration
     Returns:
         Processed observation data
     """
     processed_obs = {}
-    observation_type = getattr(handler, "observation_type", "a11y_tree")
-    platform = getattr(handler, "platform", "ubuntu")
-    a11y_tree_max_tokens = getattr(handler, "a11y_tree_max_tokens", None)
-    temporary_image_manager = getattr(handler, "temporary_image_manager", None)
+    observation_type = game_config.get("observation_type", "a11y_tree")
+    platform = game_config.get("platform", "ubuntu")
+    a11y_tree_max_tokens = game_config.get("a11y_tree_max_tokens", None)
+    temporary_image_manager = game_config.get("temporary_image_manager", None)
     preprocessed_obs = preprocess_observation(
         observation=observation,
         observation_type=observation_type,
@@ -43,11 +45,11 @@ def process_observation(observation: Dict[str, Any], handler) -> Dict[str, Any]:
 
 
 @processors.register("query")
-def process_query(query: str, handler) -> str:
+def process_query(query: str, game_config: Dict) -> str:
     """Process a query string
     Args:
         query: Raw query string
-        handler: Reference to the prompt handler instance
+        game_config: Dictionary containing game configuration
     Returns:
         Processed query string
     """
@@ -55,11 +57,11 @@ def process_query(query: str, handler) -> str:
 
 
 @processors.register("response")
-def process_response(response: str, handler) -> str:
+def process_response(response: str, game_config: Dict) -> str:
     """Process a response string
     Args:
         response: Raw response string
-        handler: Reference to the prompt handler instance
+        game_config: Dictionary containing game configuration
     Returns:
         Processed response string
     """
@@ -67,11 +69,11 @@ def process_response(response: str, handler) -> str:
 
 
 @processors.register("plan")
-def process_plan(plan: str, handler) -> str:
+def process_plan(plan: str, game_config: Dict) -> str:
     """Process a plan string
     Args:
         plan: Raw plan string
-        handler: Reference to the prompt handler instance
+        game_config: Dictionary containing game configuration
     Returns:
         Processed plan string
     """
@@ -79,11 +81,11 @@ def process_plan(plan: str, handler) -> str:
 
 
 @processors.register("task")
-def process_task(task: str, handler) -> str:
+def process_task(task: str, game_config: Dict) -> str:
     """Process a task string
     Args:
         task: Raw task string
-        handler: Reference to the prompt handler instance
+        game_config: Dictionary containing game configuration
     Returns:
         Processed task string
     """
@@ -91,11 +93,11 @@ def process_task(task: str, handler) -> str:
 
 
 @processors.register("additional")
-def process_additional(additional: Dict[str, str], handler) -> Dict[str, str]:
+def process_additional(additional: Dict[str, str], game_config: Dict) -> Dict[str, str]:
     """Process additional tagged content
     Args:
         additional: Dictionary containing tag and content pairs
-        handler: Reference to the prompt handler instance
+        game_config: Dictionary containing game configuration
     Returns:
         Processed additional content dictionary
     """
