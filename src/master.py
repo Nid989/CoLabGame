@@ -331,7 +331,12 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         next_node = self.transition.next_node
         if next_node and next_node in self.graph:
             node_data = self.graph.nodes[next_node]
-            if node_data["type"] == NodeType.PLAYER:
+            if node_data["type"] == NodeType.END:
+                self.current_node = next_node
+                # _next_player expects to return a Player instance.
+                # eventhough we transit to the END node, which is a non-Player node.
+                return self.current_player
+            elif node_data["type"] == NodeType.PLAYER:
                 self.current_node = next_node
                 return node_data["player"]
         return self.current_player
@@ -430,7 +435,8 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
     def _update_round_tracking(self, prev_node: str, next_node: str):
         """Update round tracking state based on node transitions.
 
-        Tracks visited nodes and marks a round complete when returning to the anchor after other nodes.
+        Tracks visited nodes and marks a round complete when returning to the anchor after other nodes,
+        or when transitioning to the END node.
 
         Args:
             prev_node: Node being transitioned from.
@@ -441,7 +447,10 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         self.current_round_nodes.append(next_node)
         if next_node != self.anchor_node:
             self.non_anchor_visited = True
-        if next_node == self.anchor_node and self.non_anchor_visited:
+        node_data = self.graph.nodes.get(next_node, {})
+        is_end_node = node_data.get("type") == NodeType.END
+        is_anchor_return = next_node == self.anchor_node and self.non_anchor_visited
+        if is_end_node or is_anchor_return:
             self.round_complete = True
             round_path = " » ".join(str(node) for node in self.current_round_nodes)
             self.log_to_self("round-complete", f"Round completed: {round_path}")
