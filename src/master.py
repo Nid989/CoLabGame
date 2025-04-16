@@ -7,7 +7,7 @@ import networkx as nx
 
 from clemcore import backends
 from clemcore.clemgame import DialogueGameMaster
-from .game import RoleBasedPlayer
+from .player import RoleBasedPlayer
 from .utils.registry.parsers import (
     parse_computer13_actions,
     parse_pyautogui_actions,

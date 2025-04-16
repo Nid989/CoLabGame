@@ -6,13 +6,14 @@ from PIL import Image
 
 from clemcore import backends
 from clemcore.clemgame import Player, GameMaster, GameBenchmark
-from src.game_master import (
+from src.master import (
     NetworkDialogueGameMaster,
     EdgeCondition,
     EdgeType,
     ConditionType,
 )
-from src.game import ComputerGame, RoleBasedPlayer
+from src.game import ComputerGame
+from src.player import RoleBasedPlayer
 from src.utils.registry.parsers import parsers, get_parser_metadata
 from src.utils.registry.processors import processors
 from src.utils.constants import (
@@ -21,6 +22,7 @@ from src.utils.constants import (
     DEFAULT_HANDLER_TYPE,
     OBSERVATION_TYPE_values,
 )
+from src.utils.general_utils import TemporaryImageManager
 
 logger = logging.getLogger(__name__)
 
@@ -231,7 +233,7 @@ class PlayerContextFormatter:
             if component_name in processors:
                 try:
                     processor = processors[component_name]
-                    processed_value = processor(component_value, self)
+                    processed_value = processor(component_value, self.game_config)
                     if processed_value is not None:
                         processed[component_name] = processed_value
                 except (ValueError, TypeError) as e:
@@ -496,8 +498,6 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             else False
         )
         if use_images:
-            from src.game import TemporaryImageManager
-
             game_config["temporary_image_manager"] = TemporaryImageManager()
         self.player_context_formatter = PlayerContextFormatter(game_config=game_config)
         self._build_graph()

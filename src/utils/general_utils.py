@@ -1,0 +1,47 @@
+import os
+import shutil
+import tempfile
+import atexit
+
+
+class TemporaryImageManager:
+    """Manages temporary image files that persist until the program termination.
+    Uses tempfile for secure temporary file handling and caches files to avoid duplicates.
+    """
+
+    def __init__(self):
+        # Create a temporary directory that will be cleaned up at exit
+        self.temp_dir = tempfile.mkdtemp()
+        # Cache to store mapping of image content to file paths
+        self.image_cache = {}
+        atexit.register(self.cleanup)
+
+    def save_image(self, image_binary: bytes) -> str:
+        """Saves a binary image to a temporary file that persists until program exit.
+        Returns cached path if the same image was saved before.
+        Args:
+            image_binary (bytes): Binary image data (PNG format)
+        Returns:
+            str: Path to saved image file
+        """
+        # Use image content as cache key
+        image_hash = hash(image_binary)
+        # Return cached path if image was saved before
+        if image_hash in self.image_cache:
+            return self.image_cache[image_hash]
+        # Create new file if image hasn't been saved before
+        tmp_file = tempfile.NamedTemporaryFile(
+            suffix=".png", dir=self.temp_dir, delete=False
+        )
+        with tmp_file as f:
+            f.write(image_binary)
+            f.flush()
+        # Cache the path
+        self.image_cache[image_hash] = tmp_file.name
+        return tmp_file.name
+
+    def cleanup(self):
+        """Removes the temporary directory and all files in it."""
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
+        self.image_cache.clear()
