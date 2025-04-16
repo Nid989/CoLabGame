@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Tuple, Optional, Literal
+from .utils.constants import OBSERVATION_TYPE, ACTION_SPACE
 
 
 class Environment(ABC):
@@ -248,3 +249,46 @@ class EnvironmentFactory:
         # Add more environment types as needed
         else:
             raise ValueError(f"Unsupported environment type: {env_type}")
+
+
+def create_osworld_environment(
+    path_to_vm: str = None,
+    headless: bool = False,
+    observation_type: OBSERVATION_TYPE = "a11y_tree",
+    action_space: ACTION_SPACE = "pyautogui",
+    screen_width: int = 1920,
+    screen_height: int = 1080,
+    require_a11y_tree: bool = None,
+    **kwargs,
+) -> Environment:
+    """Create an environment instance with the specified configuration.
+
+    Args:
+        path_to_vm: Path to virtual machine file
+        headless: Whether to run in headless mode
+        observation_type: Type of observation to use
+        action_space: Type of action space to use
+        screen_width: Screen width for environment
+        screen_height: Screen height for environment
+        require_a11y_tree: Whether to require accessibility tree
+        **kwargs: Additional arguments passed to environment
+
+    Returns:
+        Environment: Configured environment instance
+    """
+
+    if not require_a11y_tree:
+        require_a11y_tree = observation_type in [
+            "a11y_tree",
+            "screenshot_a11y_tree",
+            "som",
+        ]
+    return EnvironmentFactory.create_environment(
+        "osworld",
+        path_to_vm=path_to_vm,
+        action_space=action_space,
+        screen_size=(screen_width, screen_height),
+        headless=headless,
+        os_type="Ubuntu",
+        require_a11y_tree=require_a11y_tree,
+    )

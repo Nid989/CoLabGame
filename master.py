@@ -11,7 +11,7 @@ from src.master import (
     EdgeType,
     ConditionType,
 )
-from src.game import ComputerGame
+from src.environment import Environment, create_osworld_environment
 from src.player import RoleBasedPlayer
 from src.message import MessageState, PlayerContextFormatter, PipeManager, PipeStage
 from src.utils.registry.parsers import parsers, get_parser_metadata
@@ -19,7 +19,7 @@ from src.utils.constants import (
     DEFAULT_ENV_CONFIG,
     DEFAULT_HANDLER_TYPE,
 )
-from src.utils.general_utils import TemporaryImageManager
+from src.utils.general import TemporaryImageManager
 
 logger = logging.getLogger(__name__)
 
@@ -34,9 +34,9 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
     ):
         super().__init__(name, path, experiment, player_models)
         self.experiment: str = experiment["name"]
-        self.game: ComputerGame = None
+        self.env: Environment = None
         self.game_instance: Dict = None
-        self.terminated: bool = False
+        self.game_config: Dict = None
         self.message_state = MessageState()
         self.player_context_formatter = None
         self.pipe_manager = PipeManager()
@@ -56,20 +56,33 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             None: No return value
         """
         self.game_instance = game_instance
+        self.game_config = self._prepare_game_config()
         self._initialize_environment()
-        # TODO have to standardize the method to either say game or env including src/game.py
-        game_config = DEFAULT_ENV_CONFIG.copy()
-        use_images = (
-            True
-            if game_config["observation_type"]
-            in ["screenshot", "screenshot_a11y_tree", "som"]
-            else False
+        self.player_context_formatter = PlayerContextFormatter(
+            game_config=self.game_config
         )
-        if use_images:
-            game_config["temporary_image_manager"] = TemporaryImageManager()
-        self.player_context_formatter = PlayerContextFormatter(game_config=game_config)
         self._build_graph()
         self._setup_after_parse_pipelines()
+
+    def _prepare_game_config(self) -> Dict:
+        """Prepare game configuration
+
+        Returns:
+            Dict: Complete game configuration dictionary
+        """
+        game_config = DEFAULT_ENV_CONFIG.copy()
+        observation_type = game_config.get("observation_type", "a11y_tree")
+        use_images = observation_type in ["screenshot", "screenshot_a11y_tree", "som"]
+        require_a11y_tree = observation_type in [
+            "a11y_tree",
+            "screenshot_a11y_tree",
+            "som",
+        ]
+        game_config["use_images"] = use_images
+        game_config["require_a11y_tree"] = require_a11y_tree
+        if use_images:
+            game_config["temporary_image_manager"] = TemporaryImageManager()
+        return game_config
 
     def _initialize_environment(self) -> None:
         """Initializes game environment with recording capabilities and retrieves the initial state observation.
@@ -81,15 +94,10 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             RuntimeError: If environment or recording initialization fails
         """
         try:
-            env_config = DEFAULT_ENV_CONFIG.copy()
-            self.game = ComputerGame(
-                **env_config, game_instance=self.game_instance["task_config"]
-            )
-            observation = self.game.env.reset(
-                task_config=self.game_instance["task_config"]
-            )
+            self.env = create_osworld_environment(**self.game_config)
+            observation = self.env.reset(task_config=self.game_instance["task_config"])
             self.message_state.update(observation=observation)
-            if not self.game.env.start_recording():
+            if not self.env.start_recording():
                 raise RuntimeError("Failed to start environment recording")
         except Exception as e:
             error_message = (
@@ -411,8 +419,8 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             observation = None
             for action in content:
                 try:
-                    observation, reward, done, info = self.game.env.step(
-                        action, self.game.sleep_after_execution
+                    observation, reward, done, info = self.env.step(
+                        action, self.game_config.get("sleep_after_execution", 0.0)
                     )
                     print(reward, done, info)
                     if observation is None:

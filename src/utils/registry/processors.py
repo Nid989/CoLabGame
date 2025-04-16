@@ -1,7 +1,7 @@
 from typing import Callable, Dict, Any
 
 from .base import Registry
-from ...utils.osworld_utils import preprocess_observation
+from ..osworld import preprocess_observation
 
 
 processors = Registry[Callable]()
