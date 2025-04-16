@@ -6,11 +6,11 @@ import tempfile
 import atexit
 
 from clemcore.clemgame import Player
-from .prompt_handler import PromptHandler, HANDLER_TYPE
 from .environment import EnvironmentFactory, Environment
 from .utils.constants import OBSERVATION_TYPE, ACTION_SPACE
 
 
+# TODO: move this to somewhere in utils
 class TemporaryImageManager:
     """Manages temporary image files that persist until the program termination.
     Uses tempfile for secure temporary file handling and caches files to avoid duplicates.
@@ -55,24 +55,37 @@ class TemporaryImageManager:
 
 
 class RoleBasedMeta(type(Player)):
-    """Metaclass for creating role-specific class implementations"""
+    """Metaclass for creating role-specific class implementations of RoleBasedPlayer
+
+    This metaclass dynamically generates subclasses based on the specified role,
+    injecting role-specific method implementations (e.g., `_custom_response`).
+    """
 
     _role_implementations: Dict[str, Dict[str, Any]] = {
         "executor": {
-            "_custom_response": lambda self, messages, turn_idx: (
-                # Actor-specific implementation
-                None  # Placeholder
-            )
+            "_custom_response": lambda self,
+            context: f"Executor response to {context['content']}"  # Placeholder
         },
         "advisor": {
-            "_custom_response": lambda self, messages, turn_idx: (
-                # Guide-specific implementation
-                None  # Placeholder
-            )
+            "_custom_response": lambda self,
+            context: f"Advisor response to {context['content']}"  # Placeholder
         },
     }
 
-    def __call__(cls, model, role: str = "actor", *args, **kwargs):
+    def __call__(cls, model, role: str = "executor", *args, **kwargs):
+        """Create an instance of RoleBasedPlayer with role-specific behavior.
+        Args:
+            cls: The class being instantiated (RoleBasedPlayer).
+            model: The model used by the player.
+            role: The role of the player (currently; 'executor' or 'advisor').
+            *args: Positional arguments passed to the class constructor.
+            **kwargs: Keyword arguments passed to the class constructor.
+        Returns:
+            RoleBasedPlayer: An instance of a dynamically generated subclass with
+                role-specific behavior.
+        Raises:
+            ValueError: If the specified role is not supported.
+        """
         if role not in cls._role_implementations:
             raise ValueError(
                 f"Invalid role: {role}. Must be one of {list(cls._role_implementations.keys())}"
@@ -101,78 +114,53 @@ class RoleBasedMeta(type(Player)):
 
 
 class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
-    """
-    A role-based interactive assistant that dynamically changes its implementation
-    based on the provided role.
+    """A role-based interactive player that dynamically changes behavior based on its role.
+
+    Extends the Player class to support role-specific responses, such as 'executor' or
+    'advisor', with behavior defined by a metaclass. Supports additional configuration
+    for response formatting and component restrictions.
     """
 
     def __init__(
         self,
         model,
         role: str = "executor",
-        prompt_header: str = None,
-        prompt_footer: str = "What will be your next step to complete the task?",
-        handler_type: HANDLER_TYPE = "standard",
-        valid_entries: List[str] = None,
+        footer_prompt: str = "What will be your next step to complete the task?",
+        handler_type: str = "standard",
+        allowed_components: List[str] = None,
         **kwargs,
     ):
-        super().__init__(model)
+        """Initialize a RoleBasedPlayer with role-specific configuration.
+        Args (additional):
+            footer_prompt: A string append to user-context, typically a question for response.
+            handler_type: Types of handler ('standard' or 'environment')
+            allowed_components: List of message-components permissible for the player's context.
+        """
+        super().__init__(model, **kwargs)
         self._role = role
-
-        handler_kwargs = kwargs.copy()
-        handler_kwargs.update({"valid_entries": valid_entries})
-        if handler_type == "environment":
-            handler_kwargs.update(
-                {
-                    "observation_type": kwargs.get("observation_type", "a11y_tree"),
-                    "action_space": kwargs.get("action_space", "computer_13"),
-                    "platform": kwargs.get("platform", "ubuntu"),
-                    "a11y_tree_max_tokens": kwargs.get("a11y_tree_max_tokens", 10000),
-                }
-            )
-            use_images = (
-                "screenshot" in handler_kwargs.get("observation_type", "")
-                or handler_kwargs.get("observation_type", "") == "som"
-            )
-            if use_images:
-                handler_kwargs["temporary_image_manager"] = TemporaryImageManager()
-
-        self.prompt_handler = PromptHandler(
-            handler_type=handler_type,
-            prompt_header=prompt_header,
-            prompt_footer=prompt_footer,
-            **handler_kwargs,
-        )
+        self._footer_prompt = footer_prompt
+        self.handler_type = handler_type
+        self.allowed_components = allowed_components or []
 
     @property
     def role(self) -> str:
         """Get the current role of the assistant"""
+
         return self._role
 
-    def add_user_message(self, **kwargs) -> None:
-        """Add a user message using the prompt handler
-        Args:
-            **kwargs: Message components (observation, query, response, etc.)
-        """
-        self.prompt_handler.add_user_message(**kwargs)
+    @property
+    def footer_prompt(self) -> str:
+        """Get the footer prompt appended to responses."""
 
-    def add_assistant_message(self, content: str) -> None:
-        """Add an assistant message to the prompt handler
-        Args:
-            content: The text content of the message
-        """
-        self.prompt_handler.add_assistant_message(content)
+        return self._footer_prompt
 
-    def get_messages(self) -> List[Dict]:
-        """Get the current message history from the prompt handler
-        Returns:
-            List of message dictionaries
-        """
-        return self.prompt_handler.get_messages()
+    @footer_prompt.setter
+    def footer_prompt(self, value):
+        """Set the footer prompt appended to responses."""
+        if not isinstance(value, str):
+            raise ValueError("footer_prompt must be a string")
 
-    def clear_history(self) -> None:
-        """Clear all conversation history in the prompt handler"""
-        self.prompt_handler.clear_history()
+        self._footer_prompt = value
 
     def _custom_response(self, messages, turn_idx) -> str:
         """Response for programmatic Player interaction.

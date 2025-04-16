@@ -49,20 +49,28 @@ class MessageState:
 
     def reset(self, preserve: Optional[List[str]] = None):
         """Reset specified fields to None, preserving others.
+
         Args:
             preserve: List of field names to preserve; defaults to ['observation']
+
+        Returns:
+            None: No return value
         """
         preserve = preserve or ["observation"]
         for field in self.__dataclass_fields__:
             if field not in preserve:
                 setattr(self, field, None)
-
         return None
 
     def update(self, **kwargs):
         """Update state fields with new values, validating types.
+
         Args:
-            **kwargs: Field names and values to update (e.g., query="new query")
+            **kwargs: Field names and values to update (e.g., query='new query')
+
+        Returns:
+            None: No return value
+
         Raises:
             ValueError: If an invalid field or incorrect type is provided
         """
@@ -86,19 +94,23 @@ class MessageState:
                 ):
                     raise ValueError(f"{field} must be a string")
             setattr(self, field, value)
-
         return None
 
     def is_empty(self) -> bool:
-        """Check if all fields are None"""
+        """Check if all fields are None.
+
+        Returns:
+            bool: True if all fields are None, False otherwise
+        """
         return all(getattr(self, field) is None for field in self.__dataclass_fields__)
 
 
 class PlayerContextFormatter:
-    """Formats message contexts for players based on message state and player-specific requirements"""
+    """Formats message contexts for players based on message state and player-specific requirements."""
 
     def __init__(self, game_config: Dict = None):
-        """Initialize the player context formatter
+        """Initialize the player context formatter.
+
         Args:
             game_config: Optional environment configuration dictionary; defaults to DEFAULT_ENV_CONFIG if None
         """
@@ -107,7 +119,7 @@ class PlayerContextFormatter:
         self._setup_handlers()
 
     def _setup_handlers(self):
-        """Set up the default format handlers"""
+        """Set up the default format handlers."""
         self.add_handler("observation", self._format_observation)
         self.add_handler("query", self._format_query)
         self.add_handler("response", self._format_response)
@@ -116,7 +128,8 @@ class PlayerContextFormatter:
         self.add_handler("tagged_content", self._format_tagged_content)
 
     def add_handler(self, component_name: str, handler_function):
-        """Register a handler function for a specific component type
+        """Register a handler function for a specific component type.
+
         Args:
             component_name: Name of the component (e.g., 'observation', 'query')
             handler_function: Function to handle formatting of that component
@@ -126,32 +139,27 @@ class PlayerContextFormatter:
     def create_context_for(
         self, message_state: MessageState, player: "RoleBasedPlayer"
     ) -> Dict:
-        """Create a formatted context for a specific player from the current message state
+        """Create a formatted context for a specific player from the current message state.
 
         Args:
             message_state: Current message state (instance of MessageState)
             player: Player instance to build context for (instance of RoleBasedPlayer)
+
         Returns:
-            Dict containing formatted context with 'role', 'content', and optional 'image' keys
+            Dict: Dictionary containing formatted context with 'role', 'content', and optional 'image' keys
         """
-        # Extract player-specific configuration
         handler_type = player.handler_type
         allowed_components = (
             player.allowed_components if player.allowed_components else set()
         )
         footer_prompt = player._footer_prompt if player._footer_prompt else None
-        # Filter components based on handler type and allowed components
         filtered_state = self._filter_components(
             message_state, handler_type, allowed_components
         )
-        # Process components using central game configuration
         processed_state = self._process_components(filtered_state)
-        # Format components into a context
         formatted_context = self.assemble(processed_state)
-        # Append footer text if provided
         if footer_prompt and "content" in formatted_context:
             formatted_context["content"] += f"\n\n{footer_prompt}"
-
         return formatted_context
 
     def _filter_components(
@@ -160,13 +168,16 @@ class PlayerContextFormatter:
         handler_type: HANDLER_TYPE,
         allowed_components: Set[str],
     ) -> MessageState:
-        """Filter message state components based on handler type and allowed components
+        """Filter message state components based on handler type and allowed components.
+
         Args:
             message_state: Instance of MessageState
             handler_type: Type of handler ('standard' or 'environment')
             allowed_components: Set of permitted component types
+
         Returns:
-            Filtered MessageState instance
+            MessageState: Filtered MessageState instance
+
         Raises:
             ValueError: If allowed_components contains invalid components or no valid components remain
         """
@@ -187,7 +198,6 @@ class PlayerContextFormatter:
             raise ValueError(
                 f"Invalid components in allowed_components: {invalid_components}. Must be one of: {valid_components}"
             )
-
         permitted_components = (
             handler_rules.get(handler_type, set()) & allowed_components
         )
@@ -200,15 +210,17 @@ class PlayerContextFormatter:
             raise ValueError(
                 f"No permitted components found for {handler_type} handler with allowed components {allowed_components}"
             )
-
         return MessageState(**filtered_components)
 
     def _process_components(self, message_state: MessageState) -> MessageState:
-        """Process each component using registered processors from the external 'processors' registry
+        """Process each component using registered processors from the external 'processors' registry.
+
         Args:
             message_state: Instance of MessageState
+
         Returns:
-            New MessageState instance with processed component values
+            MessageState: New MessageState instance with processed component values
+
         Raises:
             ValueError: If processing a component fails
         """
@@ -228,16 +240,16 @@ class PlayerContextFormatter:
                     )
             else:
                 processed[component_name] = component_value
-
         return MessageState(**processed)
 
     def assemble(self, message_state: MessageState) -> Dict:
-        """Assemble a message context using registered handlers
+        """Assemble a message context using registered handlers.
 
         Args:
             message_state: Instance of MessageState
+
         Returns:
-            Dict with 'role', 'content', and optional 'image' keys
+            Dict: Dictionary with 'role', 'content', and optional 'image' keys
         """
         parts = []
         image_paths = []
@@ -251,19 +263,17 @@ class PlayerContextFormatter:
                 image_paths.extend(formatted_component.get("image", []))
             else:
                 parts.append(f"{component_name.capitalize()}: {str(component_value)}")
-
-        return {
-            "content": "\n".join(parts),
-            "image": image_paths or None,
-        }
+        return {"content": "\n".join(parts), "image": image_paths or None}
 
     def _format_observation(self, observation: Dict) -> Dict:
-        """Format an observation component
+        """Format an observation component.
 
         Args:
             observation: Dictionary containing observation data
+
         Returns:
-            Dict with 'content' (formatted text) and 'image' (list of image paths)
+            Dict: Dictionary with 'content' (formatted text) and 'image' (list of image paths)
+
         Raises:
             ValueError: If observation_type is invalid
         """
@@ -297,40 +307,69 @@ class PlayerContextFormatter:
                 f"Invalid observation_type: {observation_type}. Expected one of [{OBSERVATION_TYPE_values}]"
             )
         content, images = formatters[observation_type](observation)
-
         return {"content": f"## Observation\n{content}", "image": images}
 
     def _format_query(self, query: str) -> Dict:
-        """Format a query component"""
+        """Format a query component.
 
+        Args:
+            query: Query string
+
+        Returns:
+            Dict: Dictionary with 'content' and 'image' keys
+        """
         return {"content": f"## Query\n{query}", "image": []}
 
     def _format_response(self, response: str) -> Dict:
-        """Format a response component"""
+        """Format a response component.
 
+        Args:
+            response: Response string
+
+        Returns:
+            Dict: Dictionary with 'content' and 'image' keys
+        """
         return {"content": f"## Response\n{response}", "image": []}
 
     def _format_plan(self, plan: str) -> Dict:
-        """Format a plan component"""
+        """Format a plan component.
 
+        Args:
+            plan: Plan string
+
+        Returns:
+            Dict: Dictionary with 'content' and 'image' keys
+        """
         return {"content": f"## Plan\n{plan}", "image": []}
 
     def _format_task(self, task: str) -> Dict:
-        """Format a task component"""
+        """Format a task component.
 
+        Args:
+            task: Task string
+
+        Returns:
+            Dict: Dictionary with 'content' and 'image' keys
+        """
         return {"content": f"## Task\n{task}", "image": []}
 
     def _format_tagged_content(self, tagged_content: Dict[str, str]) -> Dict:
-        """Format tagged content"""
+        """Format tagged content.
+
+        Args:
+            tagged_content: Dictionary of tag-content pairs
+
+        Returns:
+            Dict: Dictionary with 'content' and 'image' keys
+        """
         formatted_parts = [
             f"## {tag}\n{content}" for tag, content in tagged_content.items()
         ]
-
         return {"content": "\n\n".join(formatted_parts), "image": []}
 
 
 class PipeStage:
-    """Defines a individual processing stage within a parser pipeline."""
+    """Defines an individual processing stage within a parser pipeline."""
 
     def __init__(self, processor_func, output_field=None, description=""):
         self.processor_func = processor_func
@@ -338,14 +377,18 @@ class PipeStage:
         self.description = description
 
     def execute(self, content, message_state):
-        """Execute the processing step
+        """Execute the processing step.
+
         Args:
             content: The input content to process
             message_state: MessageState instance to update
+
         Returns:
-            The result of the processor function execution
+            Any: The result of the processor function execution
+
+        Raises:
+            Exception: If the processor function fails
         """
-        # Check if this is a bound method (instance method of a class)
         is_bound_method = (
             hasattr(self.processor_func, "__self__")
             and self.processor_func.__self__ is not None
@@ -359,37 +402,55 @@ class PipeStage:
             raise
         if self.output_field and hasattr(message_state, self.output_field):
             message_state.update(**{self.output_field: result})
-
         return result
 
 
 class PipeManager:
-    """Manages and executes parser-specific processing pipelines"""
+    """Manages and executes parser-specific processing pipelines."""
 
     def __init__(self):
         self.parser_pipelines = {}
 
     def register_pipeline(self, parser_id: str, steps: List[PipeStage]):
-        """Register a processing pipeline for a parser"""
+        """Register a processing pipeline for a parser.
+
+        Args:
+            parser_id: Identifier for the parser
+            steps: List of PipeStage instances
+        """
         self.parser_pipelines[parser_id] = steps
 
     def get_pipeline(self, parser_id: str) -> List[PipeStage]:
-        """Get processing pipeline for a parser"""
+        """Get processing pipeline for a parser.
+
+        Args:
+            parser_id: Identifier for the parser
+
+        Returns:
+            List[PipeStage]: List of pipeline stages
+        """
         return self.parser_pipelines.get(parser_id, [])
 
     def execute_pipeline(
         self, parser_id: str, content: Any, message_state
     ) -> Tuple[bool, Any]:
-        """Execute the entire processing pipeline for a parser"""
+        """Execute the entire processing pipeline for a parser.
+
+        Args:
+            parser_id: Identifier for the parser
+            content: Input content to process
+            message_state: MessageState instance to update
+
+        Returns:
+            Tuple[bool, Any]: Success flag and result of pipeline execution
+        """
         if parser_id not in self.parser_pipelines:
             return False, content
-
         current_content = content
         result = None
         for step in self.parser_pipelines[parser_id]:
             result = step.execute(current_content, message_state)
             current_content = result
-
         return True, result
 
 
@@ -402,7 +463,6 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         player_models: List[backends.Model],
     ):
         super().__init__(name, path, experiment, player_models)
-
         self.experiment: str = experiment["name"]
         self.game: ComputerGame = None
         self.game_instance: Dict = None
@@ -413,17 +473,20 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
 
     def _on_setup(self, **game_instance) -> None:
         """Method executed at the start of the default setup method.
+
         Key Actions:
             - Sets up environment and loads initial observation + starts gameplay recording.
-            - Constructs player interaction graph/ network.
-            - Sets up trigger pipeline (specific) "parse func. -> after parse steps"
+            - Constructs player interaction graph/network.
+            - Sets up trigger pipeline (specific) 'parse func. -> after parse steps'
+
         Args:
             game_instance: Keyword arguments of the game_instance
+
+        Returns:
+            None: No return value
         """
         self.game_instance = game_instance
-
         self._initialize_environment()
-
         # TODO have to standardize the method to either say game or env including src/game.py
         game_config = DEFAULT_ENV_CONFIG.copy()
         use_images = (
@@ -437,23 +500,18 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
 
             game_config["temporary_image_manager"] = TemporaryImageManager()
         self.player_context_formatter = PlayerContextFormatter(game_config=game_config)
-
         self._build_graph()
         self._setup_after_parse_pipelines()
 
-        # TODO: for PlayerContextFormatter
-        # - need to get observation_type, a11y_tree
-        # observation_type = env_config.get("observation_type", "a11y_tree")
-        # use_images = ("screenshot" in observation_type or observation_type == "som")
-        # if use_images:
-        #     from src.game import TemporaryImageManager
-        #     env_config["temporary_image_manager"] = TemporaryImageManager()
-
-        # # Initialize context builder with env_config
-        # self.context_builder = ContextBuilder(env_config)
-
     def _initialize_environment(self) -> None:
-        """Initializes game environment with recording capabilities and retrieves the inital state observation"""
+        """Initializes game environment with recording capabilities and retrieves the initial state observation.
+
+        Returns:
+            None: No return value
+
+        Raises:
+            RuntimeError: If environment or recording initialization fails
+        """
         try:
             env_config = DEFAULT_ENV_CONFIG.copy()
             self.game = ComputerGame(
@@ -465,7 +523,6 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             self.message_state.update(observation=observation)
             if not self.game.env.start_recording():
                 raise RuntimeError("Failed to start environment recording")
-
         except Exception as e:
             error_message = (
                 f"Environment initialization failed: {str(e)}"
@@ -475,10 +532,18 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             raise RuntimeError(error_message) from e
 
     def _build_graph(self) -> None:
-        """Builds a dialogic-player network graph from the game instance configuration."""
+        """Builds a dialogic-player network graph from the game instance configuration.
+
+        Returns:
+            None: No return value
+
+        Raises:
+            RuntimeError: If graph building fails
+            ValueError: If player model is not available for role index
+            KeyError: If condition type is invalid
+        """
         try:
             graph_config = self.game_instance.get("graph")
-
             for node in graph_config.get("nodes", []):
                 node_id = node.get("id")
                 node_type = node.get("type")
@@ -505,7 +570,6 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                     self.add_player(
                         player=player, initial_prompt=initial_prompt, node_id=node_id
                     )
-
             for edge in graph_config.get("edges", []):
                 from_node = edge.get("from")
                 to_node = edge.get("to")
@@ -529,17 +593,19 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                         condition_type=condition_type, description=description
                     )
                     self.add_decision_edge(from_node, to_node, condition, description)
-
             anchor_node = graph_config.get("anchor_node")
             if anchor_node:
                 self.set_anchor_node(anchor_node)
             logger.info("Graph building complete")
-
         except Exception as e:
             raise RuntimeError(f"Failed to build interaction graph: {str(e)}") from e
 
     def _setup_after_parse_pipelines(self) -> None:
-        """Initialize processing pipelines for different parser"""
+        """Initialize processing pipelines for different parsers.
+
+        Returns:
+            None: No return value
+        """
         self.pipe_manager.register_pipeline(
             "pyautogui_actions",
             [
@@ -563,31 +629,26 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
 
     def _does_game_proceed(self) -> bool:
         """Determine if the game should continue to the next turn.
+
         Returns:
             bool: False if game is completed or max steps reached, True otherwise
         """
-        # TODO: Need to handle the max_steps (currently not triggerd)
-        # Prev-code `or self.current_turn < self.game.max_steps`
         return self.current_node != "END"
 
     def _on_before_game(self):
         """Executed once at the start, before entering the play loop.
-        Key Actions
+
+        Key Actions:
             - Adds the initial game-context to the anchor player
         """
         super()._on_before_game()
-
-        # Assert that current_node is the anchor_node
         assert self.current_node == self.anchor_node, (
             "Current node must be the anchor node at game start"
         )
-
-        # Get the player for the current node
         current_player = self.get_player_from_node(self.current_node)
         formatted_context = self.player_context_formatter.create_context_for(
             self.message_state, current_player
         )
-        # Set the context for the current player
         if "image" in formatted_context and formatted_context["image"]:
             self.set_context_for(
                 current_player,
@@ -596,17 +657,18 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             )
         else:
             self.set_context_for(current_player, formatted_context["content"])
-
         logger.info(f"Set initial context for player at node {self.current_node}")
 
     def _on_valid_player_response(self, player: Player, parsed_response: str):
         """Method executed after a player response has been parsed and validated.
+
         Key Actions:
             - Updates the message state with the parsed response
             - Sets context for the next node's player using the current message state
+
         Args:
-            player: The Player instance that produced the response.
-            parsed_response: The parsed and valid response of the current player.
+            player: The Player instance that produced the response
+            parsed_response: The parsed and valid response of the current player
         """
         if self.transition.next_node:
             next_player = self.get_player_from_node(self.transition.next_node)
@@ -614,33 +676,31 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                 formatted_context = self.player_context_formatter.create_context_for(
                     self.message_state, next_player
                 )
-            if "image" in formatted_context and formatted_context["image"]:
-                self.set_context_for(
-                    next_player,
-                    formatted_context["content"],
-                    image=formatted_context["image"],
+                if "image" in formatted_context and formatted_context["image"]:
+                    self.set_context_for(
+                        next_player,
+                        formatted_context["content"],
+                        image=formatted_context["image"],
+                    )
+                else:
+                    self.set_context_for(next_player, formatted_context["content"])
+                logger.info(
+                    f"Set context for next player at node {self.transition.next_node}"
                 )
-            else:
-                self.set_context_for(next_player, formatted_context["content"])
-
-            logger.info(
-                f"Set context for next player at node {self.transition.next_node}"
-            )
-
-        pass
 
     def _validate_player_response(self, player: Player, utterance: str) -> bool:
         """Decide if an utterance should be added to the conversation history.
+
         Args:
-            player: The Player instance for which the response is added.
-            utterance: The text content of the message to be added.
+            player: The Player instance for which the response is added
+            utterance: The text content of the message to be added
+
         Returns:
-            True, if the utterance is fine; False, if the response should not be added to the history.
+            bool: True if the utterance is valid, False otherwise
         """
         print("::VALIDAION UTTERANCE::", utterance)
         if utterance is None:
             return False
-
         player_node = self.get_node_from_player(player)
         decision_edges = [
             (to_node, edge_data["condition"])
@@ -682,26 +742,24 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         logger.warning(
             "Validation failed, utterance did not comply with available conditions for connecting edges"
         )
-
         return False
 
     def _parse_response_for_decision_routing(
         self, player: Player, utterance: str
     ) -> Tuple[str, bool, Optional[str], Optional[Any]]:
         """Parse player response and evaluate decision edge conditions.
+
         Key Actions:
             1. Parse the player's utterance for relevant content
             2. Evaluate decision edge conditions based on the parsed content
             3. Determine which decision edge (if any) should be taken
+
         Args:
-            player: The Player instance that produced the response.
-            utterance: The text content of the response.
+            player: The Player instance that produced the response
+            utterance: The text content of the response
+
         Returns:
-            Tuple containing:
-            - Modified utterance (or original if no modification)
-            - Boolean flag for logging
-            - Next node ID from a decision edge, or None if no decision edge condition is met
-            - Extracted content (if any)
+            Tuple[str, bool, Optional[str], Optional[Any]]: Modified utterance, logging flag, next node ID, extracted content
         """
         player_node = self.get_node_from_player(player)
         decision_edges = [
@@ -760,20 +818,22 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                             result if "result" in locals() else None,
                         ),
                     )
-
             except Exception as e:
                 logger.error(
                     f"Error evaluating condition for edge to {to_node}: {str(e)}"
                 )
-
         return utterance, False, None, None
 
     def _execute_actions(
         self, content: str
     ) -> Optional[Dict[str, Union[str, Image.Image, Dict]]]:
-        """Execute either pyautogui or computer13 actions and record observations (upon environment-state change)
+        """Execute either pyautogui or computer13 actions and record observations (upon environment-state change).
+
         Args:
             content: Parser extracted actions typically either pyautogui python-code (as str.), or computer13 actions in JSON (as str.)
+
+        Returns:
+            Optional[Dict]: Observation dictionary or None if execution fails
         """
         print("::EXECUTE ACTION::", content)
         try:
@@ -794,12 +854,9 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                     if done:
                         logger.info("Game termination signal recieved (done=True)")
                         break
-
                 except Exception as e:
                     logger.error(f"Failed to execute action {str(action)}: {str(e)}")
-
             return observation
-
         except Exception as e:
             logger.error(f"Action execution failed: {str(e)}")
             return None

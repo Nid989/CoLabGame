@@ -129,12 +129,10 @@ class EdgeCondition:
         """
         if isinstance(condition_type, str):
             condition_type = ConditionType(condition_type)
-
         if condition_type not in CONDITION_PAIRS:
             raise KeyError(
                 f"No function pair found for condition type {condition_type}"
             )
-
         self.function_pair = CONDITION_PAIRS[condition_type]
         self.description = description
 
@@ -245,18 +243,15 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             raise ValueError(f"Node '{from_node}' does not exist in the graph")
         if to_node not in self.graph:
             raise ValueError(f"Node '{to_node}' does not exist in the graph")
-
         existing_edges = [
             (u, v, data)
             for u, v, data in self.graph.edges(data=True)
             if u == from_node and v == to_node and data.get("type") == EdgeType.STANDARD
         ]
-
         if existing_edges:
             raise ValueError(
                 f"A standard edge already exists from '{from_node}' to '{to_node}'"
             )
-
         self.graph.add_edge(
             from_node,
             to_node,
@@ -288,7 +283,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             raise ValueError(f"Node '{from_node}' does not exist in the graph")
         if to_node not in self.graph:
             raise ValueError(f"Node '{to_node}' does not exist in the graph")
-
         edge_count = sum(1 for edge in self.graph.edges(from_node, to_node, keys=True))
         edge_key = f"decision_{from_node}_{to_node}_{edge_count}"
         self.graph.add_edge(
@@ -314,7 +308,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         """
         if node_id not in self.graph:
             raise ValueError(f"Node '{node_id}' does not exist in the graph")
-
         self.anchor_node = node_id
         module_logger.info(f"Anchor node set to '{node_id}'")
 
@@ -376,7 +369,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         ]
         if not standard_edges:
             raise ValueError("No standard edges found from START node")
-
         self.current_node = standard_edges[0][1]
         self._update_round_tracking("START", self.current_node)
 
@@ -397,7 +389,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         _response, log_action, next_node, _ = self._parse_response_for_decision_routing(
             player, response
         )
-
         if next_node is None:
             for _, to_node, edge_data in self.graph.out_edges(
                 self.current_node, data=True
@@ -405,7 +396,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                 if edge_data.get("type") == EdgeType.STANDARD:
                     next_node = to_node
                     break
-
         if next_node:
             # Handles both cases: (a) self-loops and (b) transitions between nodes
             self._update_round_tracking(self.current_node, next_node)
@@ -479,7 +469,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         """
         if node_id not in self.graph:
             return None
-
         node_data = self.graph.nodes[node_id]
         if node_data.get("type") == NodeType.PLAYER:
             return node_data.get("player")
@@ -511,7 +500,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             dpi: Resolution for the output figure.
         """
         plt.figure(figsize=figsize, dpi=dpi)
-
         if not self.node_positions:
             try:
                 self.node_positions = nx.nx_pydot.pydot_layout(self.graph, prog="dot")
@@ -519,13 +507,11 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                 self.node_positions = nx.spring_layout(
                     self.graph, k=0.5, iterations=100, seed=42
                 )
-
         node_colors = {
             NodeType.START: "#2ECC71",
             NodeType.PLAYER: "#3498DB",
             NodeType.END: "#E74C3C",
         }
-
         for node_type in NodeType:
             nodes = [
                 node
@@ -534,7 +520,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             ]
             if not nodes:
                 continue
-
             nx.draw_networkx_nodes(
                 self.graph,
                 self.node_positions,
@@ -545,7 +530,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                 edgecolors="#2C3E50",
                 linewidths=2,
             )
-
         node_labels = {}
         for node in self.graph.nodes():
             node_type = self.graph.nodes[node].get("type")
@@ -559,7 +543,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                 node_labels[node] = f"{node}\n({role_text})"
             else:
                 node_labels[node] = node
-
         standard_edges = [
             (u, v)
             for u, v, d in self.graph.edges(data=True)
@@ -570,7 +553,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             for u, v, d in self.graph.edges(data=True)
             if d.get("type") == EdgeType.DECISION
         ]
-
         nx.draw_networkx_edges(
             self.graph,
             self.node_positions,
@@ -580,7 +562,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             edge_color="#34495E",
             connectionstyle="arc3,rad=0.1",
         )
-
         nx.draw_networkx_edges(
             self.graph,
             self.node_positions,
@@ -591,7 +572,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             style="dashed",
             connectionstyle="arc3,rad=0.1",
         )
-
         nx.draw_networkx_labels(
             self.graph,
             self.node_positions,
@@ -601,7 +581,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             font_weight="bold",
             font_color="#FFFFFF",
         )
-
         edge_labels_dict = {}
         for (u, v, k), label in self.edge_labels.items():
             if label and len(label) > 20:
@@ -609,7 +588,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                 chunks = []
                 current_chunk = []
                 current_length = 0
-
                 for word in words:
                     if current_length + len(word) > 20:
                         chunks.append(" ".join(current_chunk))
@@ -618,14 +596,10 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                     else:
                         current_chunk.append(word)
                         current_length += len(word) + 1
-
                 if current_chunk:
                     chunks.append(" ".join(current_chunk))
-
                 label = "\n".join(chunks)
-
             edge_labels_dict[(u, v)] = label
-
         nx.draw_networkx_edge_labels(
             self.graph,
             self.node_positions,
@@ -637,7 +611,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             ),
             label_pos=0.4,
         )
-
         if self.anchor_node and self.anchor_node in self.graph:
             anchor_pos = {self.anchor_node: self.node_positions[self.anchor_node]}
             nx.draw_networkx_nodes(
@@ -650,7 +623,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                 edgecolors="#FFD700",
                 linewidths=4,
             )
-
         plt.title(
             f"Interaction Network for {self.game_name}",
             fontsize=16,
@@ -659,7 +631,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         )
         plt.axis("off")
         plt.tight_layout()
-
         legend_elements = [
             plt.Line2D(
                 [0],
@@ -712,7 +683,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                     label="Anchor Node",
                 )
             )
-
         plt.legend(
             handles=legend_elements,
             loc="lower center",
@@ -720,7 +690,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             ncol=3,
             fontsize=10,
         )
-
         if save_path:
             plt.savefig(save_path, bbox_inches="tight", dpi=dpi)
         else:
