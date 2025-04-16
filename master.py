@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, List, Optional, Union, Tuple, Any
+from typing import Dict, List, Optional, Union, Tuple, Any, Set
 from dataclasses import dataclass
 from PIL import Image
 
@@ -14,9 +14,12 @@ from src.game_master import (
 )
 from src.game import ComputerGame, RoleBasedPlayer
 from src.utils.registry.parsers import parsers, get_parser_metadata
+from src.utils.registry.processors import processors
 from src.utils.constants import (
+    HANDLER_TYPE,
     DEFAULT_ENV_CONFIG,
     DEFAULT_HANDLER_TYPE,
+    OBSERVATION_TYPE_values,
 )
 
 logger = logging.getLogger(__name__)
@@ -24,7 +27,17 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class MessageState:
-    """Dynamic state container for message components with reset capability"""
+    """Dynamic container for message components updated during gameplay.
+
+    Fields:
+        observation: Optional dictionary (e.g., {'screenshot': str, 'accessibility_tree': str})
+        query: Optional query string
+        response: Optional response string
+        plan: Optional plan string
+        task: Optional task string
+        actions: Optional list of action strings (currently unused)
+        tagged_content: Optional dictionary of tag-content pairs (e.g., {'note': 'text'})
+    """
 
     observation: Optional[Dict[str, Union[str, Image.Image, Dict]]] = None
     query: Optional[str] = None
@@ -32,22 +45,288 @@ class MessageState:
     plan: Optional[str] = None
     task: Optional[str] = None
     actions: Optional[List[str]] = None
-    additional: Optional[Dict[str, str]] = None  # {tag: content}
+    tagged_content: Optional[Dict[str, str]] = None
 
-    def reset_except_observation(self) -> None:
-        """Reset all fields to None except observation using dynamic field iteration"""
+    def reset(self, preserve: Optional[List[str]] = None):
+        """Reset specified fields to None, preserving others.
+        Args:
+            preserve: List of field names to preserve; defaults to ['observation']
+        """
+        preserve = preserve or ["observation"]
         for field in self.__dataclass_fields__:
-            if field != "observation":
+            if field not in preserve:
                 setattr(self, field, None)
 
-    def update(self, **kwargs) -> None:
-        """Update state fields with new values
+        return None
+
+    def update(self, **kwargs):
+        """Update state fields with new values, validating types.
         Args:
-            **kwargs: Field names and values to update
+            **kwargs: Field names and values to update (e.g., query="new query")
+        Raises:
+            ValueError: If an invalid field or incorrect type is provided
         """
+        valid_fields = self.__dataclass_fields__
         for field, value in kwargs.items():
-            if field in self.__dataclass_fields__:
-                setattr(self, field, value)
+            if field not in valid_fields:
+                raise ValueError(
+                    f"Invalid field '{field}', must be one of {set(valid_fields)}"
+                )
+            if value is not None:
+                if field == "tagged_content" and not all(
+                    isinstance(k, str) and isinstance(v, str) for k, v in value.items()
+                ):
+                    raise ValueError("Tagged content must be Dict[str, str]")
+                elif field == "actions" and not all(isinstance(a, str) for a in value):
+                    raise ValueError("Actions must be List[str]")
+                elif field == "observation" and not isinstance(value, dict):
+                    raise ValueError("Observation must be a dictionary")
+                elif field in {"query", "response", "plan", "task"} and not isinstance(
+                    value, str
+                ):
+                    raise ValueError(f"{field} must be a string")
+            setattr(self, field, value)
+
+        return None
+
+    def is_empty(self) -> bool:
+        """Check if all fields are None"""
+        return all(getattr(self, field) is None for field in self.__dataclass_fields__)
+
+
+class PlayerContextFormatter:
+    """Formats message contexts for players based on message state and player-specific requirements"""
+
+    def __init__(self, game_config: Dict = None):
+        """Initialize the player context formatter
+        Args:
+            game_config: Optional environment configuration dictionary; defaults to DEFAULT_ENV_CONFIG if None
+        """
+        self.format_handlers = {}
+        self.game_config = game_config or DEFAULT_ENV_CONFIG
+        self._setup_handlers()
+
+    def _setup_handlers(self):
+        """Set up the default format handlers"""
+        self.add_handler("observation", self._format_observation)
+        self.add_handler("query", self._format_query)
+        self.add_handler("response", self._format_response)
+        self.add_handler("plan", self._format_plan)
+        self.add_handler("task", self._format_task)
+        self.add_handler("tagged_content", self._format_tagged_content)
+
+    def add_handler(self, component_name: str, handler_function):
+        """Register a handler function for a specific component type
+        Args:
+            component_name: Name of the component (e.g., 'observation', 'query')
+            handler_function: Function to handle formatting of that component
+        """
+        self.format_handlers[component_name] = handler_function
+
+    def create_context_for(
+        self, message_state: MessageState, player: "RoleBasedPlayer"
+    ) -> Dict:
+        """Create a formatted context for a specific player from the current message state
+
+        Args:
+            message_state: Current message state (instance of MessageState)
+            player: Player instance to build context for (instance of RoleBasedPlayer)
+        Returns:
+            Dict containing formatted context with 'role', 'content', and optional 'image' keys
+        """
+        # Extract player-specific configuration
+        handler_type = player.handler_type
+        allowed_components = (
+            player.allowed_components if player.allowed_components else set()
+        )
+        footer_prompt = player._footer_prompt if player._footer_prompt else None
+        # Filter components based on handler type and allowed components
+        filtered_state = self._filter_components(
+            message_state, handler_type, allowed_components
+        )
+        # Process components using central game configuration
+        processed_state = self._process_components(filtered_state)
+        # Format components into a context
+        formatted_context = self.assemble(processed_state)
+        # Append footer text if provided
+        if footer_prompt and "content" in formatted_context:
+            formatted_context["content"] += f"\n\n{footer_prompt}"
+
+        return formatted_context
+
+    def _filter_components(
+        self,
+        message_state: MessageState,
+        handler_type: HANDLER_TYPE,
+        allowed_components: Set[str],
+    ) -> MessageState:
+        """Filter message state components based on handler type and allowed components
+        Args:
+            message_state: Instance of MessageState
+            handler_type: Type of handler ('standard' or 'environment')
+            allowed_components: Set of permitted component types
+        Returns:
+            Filtered MessageState instance
+        Raises:
+            ValueError: If allowed_components contains invalid components or no valid components remain
+        """
+        handler_rules = {
+            "standard": {"query", "response", "plan", "task", "tagged_content"},
+            "environment": {
+                "observation",
+                "query",
+                "response",
+                "plan",
+                "task",
+                "tagged_content",
+            },
+        }
+        valid_components = set(MessageState.__dataclass_fields__)
+        allowed_components = set(allowed_components)
+        if invalid_components := allowed_components - valid_components:
+            raise ValueError(
+                f"Invalid components in allowed_components: {invalid_components}. Must be one of: {valid_components}"
+            )
+
+        permitted_components = (
+            handler_rules.get(handler_type, set()) & allowed_components
+        )
+        filtered_components = {
+            k: v
+            for k, v in message_state.__dict__.items()
+            if k in permitted_components and v is not None
+        }
+        if not filtered_components:
+            raise ValueError(
+                f"No permitted components found for {handler_type} handler with allowed components {allowed_components}"
+            )
+
+        return MessageState(**filtered_components)
+
+    def _process_components(self, message_state: MessageState) -> MessageState:
+        """Process each component using registered processors from the external 'processors' registry
+        Args:
+            message_state: Instance of MessageState
+        Returns:
+            New MessageState instance with processed component values
+        Raises:
+            ValueError: If processing a component fails
+        """
+        processed = {}
+        for component_name, component_value in message_state.__dict__.items():
+            if component_value is None:
+                continue
+            if component_name in processors:
+                try:
+                    processor = processors[component_name]
+                    processed_value = processor(component_value, self)
+                    if processed_value is not None:
+                        processed[component_name] = processed_value
+                except (ValueError, TypeError) as e:
+                    raise ValueError(
+                        f"Failed to process component '{component_name}': {str(e)}"
+                    )
+            else:
+                processed[component_name] = component_value
+
+        return MessageState(**processed)
+
+    def assemble(self, message_state: MessageState) -> Dict:
+        """Assemble a message context using registered handlers
+
+        Args:
+            message_state: Instance of MessageState
+        Returns:
+            Dict with 'role', 'content', and optional 'image' keys
+        """
+        parts = []
+        image_paths = []
+        for component_name, component_value in message_state.__dict__.items():
+            if component_value is None:
+                continue
+            if component_name in self.format_handlers:
+                handler = self.format_handlers[component_name]
+                formatted_component = handler(component_value)
+                parts.append(formatted_component["content"])
+                image_paths.extend(formatted_component.get("image", []))
+            else:
+                parts.append(f"{component_name.capitalize()}: {str(component_value)}")
+
+        return {
+            "content": "\n".join(parts),
+            "image": image_paths or None,
+        }
+
+    def _format_observation(self, observation: Dict) -> Dict:
+        """Format an observation component
+
+        Args:
+            observation: Dictionary containing observation data
+        Returns:
+            Dict with 'content' (formatted text) and 'image' (list of image paths)
+        Raises:
+            ValueError: If observation_type is invalid
+        """
+        formatters = {
+            "screenshot": lambda obs: (
+                "### Screenshot",
+                [obs["screenshot"]]
+                if "screenshot" in obs and isinstance(obs["screenshot"], str)
+                else [],
+            ),
+            "a11y_tree": lambda obs: (
+                f"### Accessibility Tree\n```\n{obs.get('accessibility_tree', '')}\n```",
+                [],
+            ),
+            "screenshot_a11y_tree": lambda obs: (
+                f"### Screenshot\n### Accessibility Tree\n```\n{obs.get('accessibility_tree', '')}\n```",
+                [obs["screenshot"]]
+                if "screenshot" in obs and isinstance(obs["screenshot"], str)
+                else [],
+            ),
+            "som": lambda obs: (
+                f"### Tagged Screenshot\n### Accessibility Tree\n```\n{obs.get('accessibility_tree', '')}\n```",
+                [obs["screenshot"]]
+                if "screenshot" in obs and isinstance(obs["screenshot"], str)
+                else [],
+            ),
+        }
+        observation_type = self.game_config.get("observation_type")
+        if observation_type not in formatters:
+            raise ValueError(
+                f"Invalid observation_type: {observation_type}. Expected one of [{OBSERVATION_TYPE_values}]"
+            )
+        content, images = formatters[observation_type](observation)
+
+        return {"content": f"## Observation\n{content}", "image": images}
+
+    def _format_query(self, query: str) -> Dict:
+        """Format a query component"""
+
+        return {"content": f"## Query\n{query}", "image": []}
+
+    def _format_response(self, response: str) -> Dict:
+        """Format a response component"""
+
+        return {"content": f"## Response\n{response}", "image": []}
+
+    def _format_plan(self, plan: str) -> Dict:
+        """Format a plan component"""
+
+        return {"content": f"## Plan\n{plan}", "image": []}
+
+    def _format_task(self, task: str) -> Dict:
+        """Format a task component"""
+
+        return {"content": f"## Task\n{task}", "image": []}
+
+    def _format_tagged_content(self, tagged_content: Dict[str, str]) -> Dict:
+        """Format tagged content"""
+        formatted_parts = [
+            f"## {tag}\n{content}" for tag, content in tagged_content.items()
+        ]
+
+        return {"content": "\n\n".join(formatted_parts), "image": []}
 
 
 class PipeStage:
@@ -130,6 +409,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         self.terminated: bool = False
         self.message_state = MessageState()
         self.pipe_manager = PipeManager()
+        self.player_context_formatter = None
 
     def _on_setup(self, **game_instance) -> None:
         """Method executed at the start of the default setup method.
@@ -143,8 +423,34 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         self.game_instance = game_instance
 
         self._initialize_environment()
+
+        # TODO have to standardize the method to either say game or env including src/game.py
+        game_config = DEFAULT_ENV_CONFIG.copy()
+        use_images = (
+            True
+            if game_config["observation_type"]
+            in ["screenshot", "screenshot_a11y_tree", "som"]
+            else False
+        )
+        if use_images:
+            from src.game import TemporaryImageManager
+
+            game_config["temporary_image_manager"] = TemporaryImageManager()
+        self.player_context_formatter = PlayerContextFormatter(game_config=game_config)
+
         self._build_graph()
         self._setup_after_parse_pipelines()
+
+        # TODO: for PlayerContextFormatter
+        # - need to get observation_type, a11y_tree
+        # observation_type = env_config.get("observation_type", "a11y_tree")
+        # use_images = ("screenshot" in observation_type or observation_type == "som")
+        # if use_images:
+        #     from src.game import TemporaryImageManager
+        #     env_config["temporary_image_manager"] = TemporaryImageManager()
+
+        # # Initialize context builder with env_config
+        # self.context_builder = ContextBuilder(env_config)
 
     def _initialize_environment(self) -> None:
         """Initializes game environment with recording capabilities and retrieves the inital state observation"""
@@ -188,17 +494,17 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                     role_config = roles[role_index]
                     role_name = role_config.get("name")
                     handler_type = role_config.get("handler_type", DEFAULT_HANDLER_TYPE)
-                    valid_entries = role_config.get("valid_entries", [])
-                    prompt_header = role_config.get("prompt_header")
+                    allowed_components = role_config.get("allowed_components", [])
+                    initial_prompt = role_config.get("initial_prompt")
                     player = RoleBasedPlayer(
                         self.player_models[role_index],
                         role=role_name,
-                        prompt_header=prompt_header,
                         handler_type=handler_type,
-                        valid_entries=valid_entries,
-                        **DEFAULT_ENV_CONFIG,
+                        allowed_components=allowed_components,
                     )
-                    self.add_player(player, node_id)
+                    self.add_player(
+                        player=player, initial_prompt=initial_prompt, node_id=node_id
+                    )
 
             for edge in graph_config.get("edges", []):
                 from_node = edge.get("from")
@@ -260,46 +566,68 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         Returns:
             bool: False if game is completed or max steps reached, True otherwise
         """
-        return not self.terminated and self.current_turn < self.game.max_steps
-
-    def add_message(self, player: Player, utterance: str, role: str):
-        """Overrides parent class method (not used in this implementation)."""
-        pass
-
-    def add_user_message(self, player: Player, utterance: str, image: List[str] = None):
-        """Overrides parent class method (implemented in RoleBasedPlayer)."""
-        pass
-
-    def add_assistant_message(self, player: Player, utterance: str):
-        """Overrides parent class method (implemented in RoleBasedPlayer)."""
-        pass
+        # TODO: Need to handle the max_steps (currently not triggerd)
+        # Prev-code `or self.current_turn < self.game.max_steps`
+        return self.current_node != "END"
 
     def _on_before_game(self):
         """Executed once at the start, before entering the play loop.
         Key Actions
             - Adds the initial game-context to the anchor player
         """
-        anchor_player = self.get_player_from_node(self.anchor_node)
-        anchor_player.add_user_message(**self.message_state.__dict__)
-        logger.info(
-            f"Added the initial game-context for anchor player: {anchor_player.descriptor}"
+        super()._on_before_game()
+
+        # Assert that current_node is the anchor_node
+        assert self.current_node == self.anchor_node, (
+            "Current node must be the anchor node at game start"
         )
 
-    def _on_before_node_transition(self, from_node: str, to_node: str):
-        """Executed right before transitioning from one node to another.
-        Key Actions:
-            - Updates the player at the target node with the current message state.
-        Args:
-            from_node: The node ID that the system is transitioning from.
-            to_node: The node ID that the system is transitioning to.
-        """
-        to_player = self.get_player_from_node(to_node)
-        if not to_player:
-            return
-        to_player.add_user_message(**self.message_state.__dict__)
-        logger.info(
-            f"Added message state to player at node {to_node} (player: {to_player.descriptor})"
+        # Get the player for the current node
+        current_player = self.get_player_from_node(self.current_node)
+        formatted_context = self.player_context_formatter.create_context_for(
+            self.message_state, current_player
         )
+        # Set the context for the current player
+        if "image" in formatted_context and formatted_context["image"]:
+            self.set_context_for(
+                current_player,
+                formatted_context["content"],
+                image=formatted_context["image"],
+            )
+        else:
+            self.set_context_for(current_player, formatted_context["content"])
+
+        logger.info(f"Set initial context for player at node {self.current_node}")
+
+    def _on_valid_player_response(self, player: Player, parsed_response: str):
+        """Method executed after a player response has been parsed and validated.
+        Key Actions:
+            - Updates the message state with the parsed response
+            - Sets context for the next node's player using the current message state
+        Args:
+            player: The Player instance that produced the response.
+            parsed_response: The parsed and valid response of the current player.
+        """
+        if self.transition.next_node:
+            next_player = self.get_player_from_node(self.transition.next_node)
+            if next_player:
+                formatted_context = self.player_context_formatter.create_context_for(
+                    self.message_state, next_player
+                )
+            if "image" in formatted_context and formatted_context["image"]:
+                self.set_context_for(
+                    next_player,
+                    formatted_context["content"],
+                    image=formatted_context["image"],
+                )
+            else:
+                self.set_context_for(next_player, formatted_context["content"])
+
+            logger.info(
+                f"Set context for next player at node {self.transition.next_node}"
+            )
+
+        pass
 
     def _validate_player_response(self, player: Player, utterance: str) -> bool:
         """Decide if an utterance should be added to the conversation history.
@@ -309,6 +637,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         Returns:
             True, if the utterance is fine; False, if the response should not be added to the history.
         """
+        print("::VALIDAION UTTERANCE::", utterance)
         if utterance is None:
             return False
 
@@ -353,6 +682,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         logger.warning(
             "Validation failed, utterance did not comply with available conditions for connecting edges"
         )
+
         return False
 
     def _parse_response_for_decision_routing(
@@ -445,6 +775,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         Args:
             content: Parser extracted actions typically either pyautogui python-code (as str.), or computer13 actions in JSON (as str.)
         """
+        print("::EXECUTE ACTION::", content)
         try:
             if not content:
                 logger.error("No actions to execute")
@@ -455,6 +786,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                     observation, reward, done, info = self.game.env.step(
                         action, self.game.sleep_after_execution
                     )
+                    print(reward, done, info)
                     if observation is None:
                         logger.error("Recieved None observation after game execution")
                         return None
