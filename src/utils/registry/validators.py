@@ -2,13 +2,12 @@ import re
 import json
 import ast
 from enum import Enum
-from typing import Optional, Tuple, Union, Dict, Any, Callable
+from typing import Optional, Tuple, Union, Dict, Any, List, Callable
 
 from ..constants import COMPUTER13_ACTIONS
 from .base import Registry
 
 
-# TODO: synonymize the validation error types across different formats
 class Computer13ValidationErrorTypes(str, Enum):
     MULTIPLE_CODE_BLOCKS = "multiple_code_blocks"
     EMPTY_CODE_BLOCK = "empty_code_block"
@@ -42,6 +41,10 @@ class QueryValidationErrorTypes(str, Enum):
 class ResponseValidationErrorTypes(str, Enum):
     MULTIPLE_CODE_BLOCKS = "multiple_code_blocks"
     EMPTY_CODE_BLOCK = "empty_code_block"
+
+
+class GeneralValidationErrorTypes(str, Enum):
+    UNRECOGNIZED_FORMAT = "unrecognized_format"
 
 
 ValidationErrorType = Union[
@@ -583,3 +586,57 @@ def validate_response(utterance: str) -> Tuple[bool, Optional[ValidationError]]:
         )
 
     return True, True, None
+
+
+def raise_unrecognized_format_error(allowed_components: List[str]) -> ValidationError:
+    """Create a ValidationError for unrecognized format with actual format examples.
+
+    Args:
+        allowed_components: List of allowed format components for the player
+
+    Returns:
+        ValidationError: Error with message showing allowed format structures
+    """
+    format_structures = {
+        "computer13": """EXECUTE
+```json
+{
+    "action_type": "<action_type>",
+    ...parameters
+}
+```""",
+        "pyautogui": """EXECUTE
+```python
+pyautogui.<action>(...parameters)
+```""",
+        "done_or_fail": """STATUS
+```
+DONE
+```
+or
+STATUS
+```
+FAIL
+```""",
+        "query": """QUERY
+```
+<query_text>
+```""",
+        "response": """RESPONSE
+```
+<response_text>
+```""",
+    }
+
+    allowed_formats = [
+        format_structures[component]
+        for component in allowed_components
+        if component in format_structures
+    ]
+    format_list = "\n\n".join(allowed_formats)
+    message = f"Response format is invalid. Your response must follow one of these formats: \n\n{format_list}"
+    return ValidationError(
+        error_type=GeneralValidationErrorTypes.UNRECOGNIZED_FORMAT,
+        message=message,
+        details={"allowed_components": allowed_components},
+    )

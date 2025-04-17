@@ -93,6 +93,34 @@ class MessageState:
         """
         return all(getattr(self, field) is None for field in self.__dataclass_fields__)
 
+    def preview(self) -> str:
+        """Generate a concise preview of MessageState fields and their values.
+
+        Returns:
+            str: Formatted string showing field names and summarized values
+        """
+        previews = []
+        for field in self.__dataclass_fields__:
+            value = getattr(self, field)
+            if value is None:
+                previews.append(f"{field}: None")
+            elif field == "observation" and isinstance(value, dict):
+                keys = list(value.keys())
+                previews.append(f"{field}: Dict with keys {keys}")
+            elif field == "tagged_content" and isinstance(value, dict):
+                tags = list(value.keys())
+                previews.append(f"{field}: {len(tags)} tags - {tags}")
+            elif field == "actions" and isinstance(value, list):
+                previews.append(f"{field}: {len(value)} actions")
+            elif isinstance(value, str):
+                preview_text = value[:50] + "..." if len(value) > 50 else value
+                preview_text = preview_text.replace("\n", " ")
+                previews.append(f"{field}: {preview_text}")
+            else:
+                previews.append(f"{field}: {type(value).__name__}")
+
+        return "\n".join(previews)
+
 
 class PlayerContextFormatter:
     """Formats message contexts for players based on message state and player-specific requirements."""

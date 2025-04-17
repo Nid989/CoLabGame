@@ -395,12 +395,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             player, response
         )
         if next_node is None:
-            for _, to_node, edge_data in self.graph.out_edges(
-                self.current_node, data=True
-            ):
-                if edge_data.get("type") == EdgeType.STANDARD:
-                    next_node = to_node
-                    break
+            next_node = self._get_standard_edges(self.current_node)
         if next_node:
             # Handles both cases: (a) self-loops and (b) transitions between nodes
             self._update_round_tracking(self.current_node, next_node)
@@ -515,11 +510,12 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         """
         if node_id not in self.graph:
             raise ValueError(f"Node '{node_id}' does not exist in the graph")
-        return [
+        decision_edges = [
             (to_node, edge_data["condition"])
             for _, to_node, edge_data in self.graph.out_edges(node_id, data=True)
             if edge_data.get("type") == EdgeType.DECISION and edge_data.get("condition")
         ]
+        return decision_edges
 
     def _get_standard_edges(self, node_id: str) -> List[Tuple[str, Dict]]:
         """Retrieve all standard edges originating from a specified node.

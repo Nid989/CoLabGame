@@ -16,21 +16,22 @@ HANDLER_TYPE_values = ", ".join(get_args(HANDLER_TYPE))
 class LogType(Enum):
     """Defines log categories for internal game master logging."""
 
-    ACTION_INFO = "action_info"  # Successful action extractions
-    ACTION_FAIL = "action_fail"  # Failed actions or errors
-    ACTION_EXEC = "action_exec"  # Successful execution results
-    TURN_PLAN = "turn_plan"  # Planning and thought processes
-    TURN_SKIP = "turn_skip"  # No actions available
-    TURN_FAIL = "turn_fail"  # Failures at the turn level
-    VALIDATION = "validation"  # Validation-related messages
-    GAME_STATE = "game_state"  # Tracking game state transitions
-    SETUP_ERROR = "setup_error"  # Initialization errors
+    VALIDATION_ERROR = "validation_error"
+    # ACTION_INFO = "action_info"  # Successful action extractions
+    # ACTION_FAIL = "action_fail"  # Failed actions or errors
+    # ACTION_EXEC = "action_exec"  # Successful execution results
+    # TURN_PLAN = "turn_plan"  # Planning and thought processes
+    # TURN_SKIP = "turn_skip"  # No actions available
+    # TURN_FAIL = "turn_fail"  # Failures at the turn level
+    # VALIDATION = "validation"  # Validation-related messages
+    # GAME_STATE = "game_state"  # Tracking game state transitions
+    # SETUP_ERROR = "setup_error"  # Initialization errors
 
 
 # Default environment configuration
 DEFAULT_ENV_CONFIG = {
     "headless": False,
-    "observation_type": "screenshot_a11y_tree",
+    "observation_type": "a11y_tree",  # screenshot_a11y_tree
     "action_space": "pyautogui",
     "screen_width": 1920,
     "screen_height": 1080,
@@ -38,6 +39,15 @@ DEFAULT_ENV_CONFIG = {
     "max_trajectory_length": 3,
     "path_to_vm": "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx",
     "sleep_after_execution": 0.0,
+}
+
+# Comprehensive default configuration
+DEFAULT_GAME_CONFIG = {
+    # Environment configs
+    **DEFAULT_ENV_CONFIG,
+    # Other game-specific configs
+    "max_retries": 2,
+    # Additional game-specific configs can be added upon requirement
 }
 
 # Default roles
