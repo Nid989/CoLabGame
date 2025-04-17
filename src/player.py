@@ -90,6 +90,7 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         self._footer_prompt = footer_prompt
         self.handler_type = handler_type
         self.allowed_components = allowed_components or []
+        self.retries = 0
 
     @property
     def role(self) -> str:
