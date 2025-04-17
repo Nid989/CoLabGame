@@ -395,12 +395,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             player, response
         )
         if next_node is None:
-            for _, to_node, edge_data in self.graph.out_edges(
-                self.current_node, data=True
-            ):
-                if edge_data.get("type") == EdgeType.STANDARD:
-                    next_node = to_node
-                    break
+            next_node = self._get_standard_edges(self.current_node)
         if next_node:
             # Handles both cases: (a) self-loops and (b) transitions between nodes
             self._update_round_tracking(self.current_node, next_node)
@@ -499,6 +494,49 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             ):
                 return node_id
         return None
+
+    def _get_decision_edges(self, node_id: str) -> List[Tuple[str, EdgeCondition]]:
+        """Retrieve all decision edges originating from a specified node.
+
+        Args:
+            node_id: ID of the source node.
+
+        Returns:
+            List[Tuple[str, EdgeCondition]]: A list of tuples, each containing the
+                target node ID and the EdgeCondition object associated with the decision edge.
+
+        Raises:
+            ValueError: If the specified node_id does not exist in the graph.
+        """
+        if node_id not in self.graph:
+            raise ValueError(f"Node '{node_id}' does not exist in the graph")
+        decision_edges = [
+            (to_node, edge_data["condition"])
+            for _, to_node, edge_data in self.graph.out_edges(node_id, data=True)
+            if edge_data.get("type") == EdgeType.DECISION and edge_data.get("condition")
+        ]
+        return decision_edges
+
+    def _get_standard_edges(self, node_id: str) -> List[Tuple[str, Dict]]:
+        """Retrieve all standard edges originating from a specified node.
+
+        Args:
+            node_id: ID of the source node.
+
+        Returns:
+            List[Tuple[str, Dict]]: A list of tuples, each containing the target node ID
+                and the edge data dictionary for the standard edge.
+
+        Raises:
+            ValueError: If the specified node_id does not exist in the graph.
+        """
+        if node_id not in self.graph:
+            raise ValueError(f"Node '{node_id}' does not exist in the graph")
+        return [
+            (to_node, edge_data)
+            for _, to_node, edge_data in self.graph.out_edges(node_id, data=True)
+            if edge_data.get("type") == EdgeType.STANDARD
+        ]
 
     def visualize_graph(self, figsize=(12, 10), save_path=None, dpi=100):
         """Visualize the network structure with professional styling.

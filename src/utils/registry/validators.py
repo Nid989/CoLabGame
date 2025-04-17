@@ -2,44 +2,49 @@ import re
 import json
 import ast
 from enum import Enum
-from typing import Optional, Tuple, Union, Dict, Any, Callable
+from typing import Optional, Tuple, Union, Dict, Any, List, Callable
 
 from ..constants import COMPUTER13_ACTIONS
 from .base import Registry
 
 
 class Computer13ValidationErrorTypes(str, Enum):
-    MULTIPLE_CODE_BLOCKS = "multiple json code blocks"
-    EMPTY_CODE_BLOCK = "empty json code block"
-    INVALID_JSON = "invalid json content"
-    MISSING_ACTION_TYPE = "missing action type"
-    INVALID_ACTION_TYPE = "invalid action type"
-    MISSING_REQUIRED_PARAM = "missing required parameter"
-    INVALID_PARAM_TYPE = "invalid parameter type"
-    PARAM_OUT_OF_RANGE = "parameter out of range"
-    UNEXPECTED_PARAM = "unexpected parameter"
+    MULTIPLE_CODE_BLOCKS = "multiple_code_blocks"
+    EMPTY_CODE_BLOCK = "empty_code_block"
+    INVALID_JSON = "invalid_json"
+    MISSING_ACTION_TYPE = "missing_action_type"
+    INVALID_ACTION_TYPE = "invalid_action_type"
+    MISSING_REQUIRED_PARAM = "missing_required_param"
+    INVALID_PARAM_TYPE = "invalid_param_type"
+    PARAM_OUT_OF_RANGE = "param_out_of_range"
+    UNEXPECTED_PARAM = "unexpected_param"
 
 
 class PyAutoGUIValidationErrorTypes(str, Enum):
-    MULTIPLE_CODE_BLOCKS = "multiple python code blocks"
-    EMPTY_CODE_BLOCK = "empty python code block"
-    INVALID_PYTHON = "invalid python syntax"
-    FORBIDDEN_FUNCTION = "forbidden function"
+    MULTIPLE_CODE_BLOCKS = "multiple_code_blocks"
+    EMPTY_CODE_BLOCK = "empty_code_block"
+    INVALID_PYTHON = "invalid_python"
+    FORBIDDEN_FUNCTION = "forbidden_function"
 
 
 class DoneOrFailValidationErrorTypes(str, Enum):
-    MULTIPLE_CODE_BLOCKS = "multiple status code blocks"
-    INVALID_STATUS = "invalid status"
+    MULTIPLE_CODE_BLOCKS = "multiple_code_blocks"
+    EMPTY_CODE_BLOCK = "empty_code_block"
+    INVALID_STATUS = "invalid_status"
 
 
 class QueryValidationErrorTypes(str, Enum):
-    MULTIPLE_CODE_BLOCKS = "multiple query code blocks"
-    EMPTY_CODE_BLOCK = "empty query code block"
+    MULTIPLE_CODE_BLOCKS = "multiple_code_blocks"
+    EMPTY_CODE_BLOCK = "empty_code_block"
 
 
 class ResponseValidationErrorTypes(str, Enum):
-    MULTIPLE_CODE_BLOCKS = "multiple response code blocks"
-    EMPTY_CODE_BLOCK = "empty response code block"
+    MULTIPLE_CODE_BLOCKS = "multiple_code_blocks"
+    EMPTY_CODE_BLOCK = "empty_code_block"
+
+
+class GeneralValidationErrorTypes(str, Enum):
+    UNRECOGNIZED_FORMAT = "unrecognized_format"
 
 
 ValidationErrorType = Union[
@@ -58,87 +63,106 @@ class ValidationError:
         message: str,
         details: Optional[Dict[str, Any]] = None,
     ):
+        """Initialize a ValidationError with error type, message, and optional details.
+
+        Args:
+            error_type (ValidationErrorType): The type of validation error.
+            message (str): A descriptive error message.
+            details (Optional[Dict[str, Any]]): Additional error context (default: None).
+        """
         self.error_type = error_type
         self.message = message
         self.details = details or {}
 
     def get_dict(self) -> Dict[str, Any]:
+        """Convert the ValidationError to a dictionary.
+
+        Returns:
+            Dict[str, Any]: A dictionary with error type, message, and details.
+        """
         return {"type": self.error_type, "message": self.message, **self.details}
 
 
 def is_computer13_format(utterance: str) -> bool:
-    """Check if an utterance is intended for the Computer13 action format.
-    This is a lightweight structural check that determines if the basic format matches,
-    without validating the content details or raising errors.
+    """Check if an utterance matches the Computer13 action format.
+
+    This is a lightweight structural check without detailed content validation.
+
     Args:
-        utterance (str): The utterance to check
+        utterance (str): The utterance to check.
+
     Returns:
-        bool: True if the utterance appears to be intended for Computer13 format, False otherwise
+        bool: True if the utterance matches the Computer13 format, False otherwise.
     """
     if "EXECUTE" not in utterance:
         return False
-
     execute_match = re.search(r"EXECUTE\s*(.*)", utterance, re.DOTALL)
     if not execute_match or not execute_match.group(1).strip():
         return False
-
     execute_content = execute_match.group(1).strip()
-
-    json_block_pattern = re.search(r"```json\s*\n*(.*?)```", execute_content, re.DOTALL)
-    if not json_block_pattern:
-        return False
-
-    return True
+    return bool(re.search(r"```json\s*\n*(.*?)```", execute_content, re.DOTALL))
 
 
 def is_pyautogui_format(utterance: str) -> bool:
-    """Check if an utterance is intended for the PyAutoGUI action format.
+    """Check if an utterance matches the PyAutoGUI action format.
+
+    This is a lightweight structural check without detailed content validation.
+
     Args:
-        utterance (str): The utterance to check
+        utterance (str): The utterance to check.
+
     Returns:
-        bool: True if the utterance appears to be intended for Computer13 format, False otherwise
+        bool: True if the utterance matches the PyAutoGUI format, False otherwise.
     """
     if "EXECUTE" not in utterance:
         return False
-
     execute_match = re.search(r"EXECUTE\s*(.*)", utterance, re.DOTALL)
     if not execute_match or not execute_match.group(1).strip():
         return False
-
     execute_content = execute_match.group(1).strip()
-    code_block_pattern = re.search(
-        r"```(?:python|py)?\s*\n*(.*?)```", execute_content, re.DOTALL
+    return bool(
+        re.search(r"```(?:python|py)?\s*\n*(.*?)```", execute_content, re.DOTALL)
     )
-
-    return bool(code_block_pattern)
 
 
 def is_done_or_fail_format(utterance: str) -> bool:
-    """Check if an utterance contains a valid status keyword.
+    """Check if an utterance matches the STATUS format.
+
+    This is a lightweight structural check without detailed content validation.
+
     Args:
-        utterance (str): The utterance to check
+        utterance (str): The utterance to check.
+
     Returns:
-        bool: True if the utterance matches STATUS format
+        bool: True if the utterance matches the STATUS format, False otherwise.
     """
     return bool(re.search(r"STATUS\s*\n\s*```[^`]*```", utterance, re.DOTALL))
 
 
 def is_query_format(utterance: str) -> bool:
-    """Check if an utterance follows the QUERY block format.
+    """Check if an utterance matches the QUERY format.
+
+    This is a lightweight structural check without detailed content validation.
+
     Args:
-        utterance (str): The utterance to check
+        utterance (str): The utterance to check.
+
     Returns:
-        bool: True if the utterance matches QUERY format
+        bool: True if the utterance matches the QUERY format, False otherwise.
     """
     return bool(re.search(r"QUERY\s*```.*?```", utterance, re.DOTALL))
 
 
 def is_response_format(utterance: str) -> bool:
-    """Check if an utterance follows the RESPONSE block format.
+    """Check if an utterance matches the RESPONSE format.
+
+    This is a lightweight structural check without detailed content validation.
+
     Args:
-        utterance (str): The utterance to check
+        utterance (str): The utterance to check.
+
     Returns:
-        bool: True if the utterance matches RESPONSE format
+        bool: True if the utterance matches the RESPONSE format, False otherwise.
     """
     return bool(re.search(r"RESPONSE\s*```.*?```", utterance, re.DOTALL))
 
@@ -150,19 +174,19 @@ validators = Registry[Callable[[str], Tuple[bool, Optional[ValidationError]]]]()
 def validate_computer13_actions(
     utterance: str,
 ) -> Tuple[bool, Optional[ValidationError]]:
-    """Validates that the utterance strictly follows the Computer13 action format.
-    This is a two-stage validation process:
-        1. First, we check if the utterance is intended for this format using is_computer13_format()
-            If not, we should return early without raising format-specific errors
-        2. If the utterance is intended for this format, we perform detailed validation
-            including structure and content validation against ACTION_SPACE
+    """Validate an utterance against the Computer13 action format.
+
+    Performs a two-stage validation: checks if the utterance matches the format, then validates
+    JSON structure and parameters against the COMPUTER13_ACTIONS specification.
+
     Args:
-        utterance (str): The utterance to validate
+        utterance (str): The utterance to validate.
+
     Returns:
-        Tuple containing:
-        - Boolean indicating if validation was successful
-        - Boolean indicating if the utterance was intended to follow this format
-        - ValidationError object if validation failed, None otherwise
+        Tuple[bool, bool, Optional[ValidationError]]: A tuple containing:
+            - bool: True if validation succeeds, False otherwise.
+            - bool: True if the utterance matches the Computer13 format, False otherwise.
+            - Optional[ValidationError]: Error details if validation fails, None otherwise.
     """
     if not is_computer13_format(utterance):
         return False, False, None
@@ -177,7 +201,8 @@ def validate_computer13_actions(
             True,
             ValidationError(
                 Computer13ValidationErrorTypes.MULTIPLE_CODE_BLOCKS,
-                "Only one ```json ...``` block is allowed.",
+                "Multiple JSON code blocks found. Only one is allowed.",
+                {"count": len(json_blocks)},
             ),
         )
 
@@ -200,7 +225,7 @@ def validate_computer13_actions(
             True,
             ValidationError(
                 Computer13ValidationErrorTypes.INVALID_JSON,
-                "The content inside the json block is not valid JSON.",
+                "The content inside the JSON block is not valid JSON.",
             ),
         )
 
@@ -210,11 +235,10 @@ def validate_computer13_actions(
             True,
             ValidationError(
                 Computer13ValidationErrorTypes.INVALID_JSON,
-                "The json block must contain a JSON object.",
+                "The JSON block must contain a JSON object.",
             ),
         )
 
-    # Validate against COMPUTER13_ACTIONS (available)
     if "action_type" not in obj:
         return (
             False,
@@ -234,77 +258,38 @@ def validate_computer13_actions(
         ),
         None,
     )
-
     if action_spec is None:
         return (
             False,
             True,
             ValidationError(
                 Computer13ValidationErrorTypes.INVALID_ACTION_TYPE,
-                f"Invalid 'action_type': {action_type}",
+                f"Invalid 'action_type': {action_type}.",
             ),
         )
 
     param_specs = action_spec["parameters"]
-
-    # Validate parameters
     for param, spec in param_specs.items():
-        if param not in obj:
-            if not spec["optional"]:
-                return (
-                    False,
-                    True,
-                    ValidationError(
-                        Computer13ValidationErrorTypes.MISSING_REQUIRED_PARAM,
-                        f"Missing required parameter '{param}' for action_type '{action_type}'.",
-                        {"param": param, "action_type": action_type},
-                    ),
-                )
-            continue
-
-        value = obj[param]
-        expected_type = spec["type"]
-
-        # Handle type validation
-        if expected_type is list:
-            if not isinstance(value, list):
-                return (
-                    False,
-                    True,
-                    ValidationError(
-                        Computer13ValidationErrorTypes.INVALID_PARAM_TYPE,
-                        f"Parameter '{param}' must be a list, got {type(value).__name__}.",
-                        {
-                            "param": param,
-                            "expected_type": "list",
-                            "actual_type": type(value).__name__,
-                        },
-                    ),
-                )
-            if spec["range"] is not None:
-                allowed = spec["range"]
-                if not all(isinstance(v, str) and v in allowed for v in value):
-                    return (
-                        False,
-                        True,
-                        ValidationError(
-                            Computer13ValidationErrorTypes.PARAM_OUT_OF_RANGE,
-                            f"All elements in '{param}' must be strings in {allowed}, got {value}.",
-                            {
-                                "param": param,
-                                "allowed_values": allowed,
-                                "actual_value": value,
-                            },
-                        ),
-                    )
-        else:
+        if param not in obj and not spec["optional"]:
+            return (
+                False,
+                True,
+                ValidationError(
+                    Computer13ValidationErrorTypes.MISSING_REQUIRED_PARAM,
+                    f"Missing required parameter '{param}' for '{action_type}'.",
+                    {"param": param, "action_type": action_type},
+                ),
+            )
+        if param in obj:
+            value = obj[param]
+            expected_type = spec["type"]
             if not isinstance(value, expected_type):
                 return (
                     False,
                     True,
                     ValidationError(
                         Computer13ValidationErrorTypes.INVALID_PARAM_TYPE,
-                        f"Parameter '{param}' must be of type {expected_type.__name__}, got {type(value).__name__}.",
+                        f"Parameter '{param}' must be {expected_type.__name__}, got {type(value).__name__}.",
                         {
                             "param": param,
                             "expected_type": expected_type.__name__,
@@ -312,43 +297,40 @@ def validate_computer13_actions(
                         },
                     ),
                 )
+            if spec["range"] is not None:
+                if isinstance(expected_type, (int, float)):
+                    min_val, max_val = spec["range"]
+                    if value < min_val or value > max_val:
+                        return (
+                            False,
+                            True,
+                            ValidationError(
+                                Computer13ValidationErrorTypes.PARAM_OUT_OF_RANGE,
+                                f"Parameter '{param}' must be between {min_val} and {max_val}, got {value}.",
+                                {
+                                    "param": param,
+                                    "range": [min_val, max_val],
+                                    "actual_value": value,
+                                },
+                            ),
+                        )
+                elif isinstance(expected_type, str):
+                    allowed = spec["range"]
+                    if value not in allowed:
+                        return (
+                            False,
+                            True,
+                            ValidationError(
+                                Computer13ValidationErrorTypes.PARAM_OUT_OF_RANGE,
+                                f"Parameter '{param}' must be one of {allowed}, got '{value}'.",
+                                {
+                                    "param": param,
+                                    "allowed_values": allowed,
+                                    "actual_value": value,
+                                },
+                            ),
+                        )
 
-        # Handle range validation
-        if spec["range"] is not None:
-            if isinstance(expected_type, (int, float)):
-                min_val, max_val = spec["range"]
-                if value < min_val or value > max_val:
-                    return (
-                        False,
-                        True,
-                        ValidationError(
-                            Computer13ValidationErrorTypes.PARAM_OUT_OF_RANGE,
-                            f"Parameter '{param}' out of allowed range [{min_val}, {max_val}], got {value}.",
-                            {
-                                "param": param,
-                                "range": [min_val, max_val],
-                                "actual_value": value,
-                            },
-                        ),
-                    )
-            elif isinstance(expected_type, str):
-                allowed = spec["range"]
-                if value not in allowed:
-                    return (
-                        False,
-                        True,
-                        ValidationError(
-                            Computer13ValidationErrorTypes.PARAM_OUT_OF_RANGE,
-                            f"Parameter '{param}' must be one of {allowed}, got '{value}'.",
-                            {
-                                "param": param,
-                                "allowed_values": allowed,
-                                "actual_value": value,
-                            },
-                        ),
-                    )
-
-    # Check for unexpected parameters
     allowed_keys = set(param_specs.keys()) | {"action_type"}
     for key in obj:
         if key not in allowed_keys:
@@ -357,7 +339,7 @@ def validate_computer13_actions(
                 True,
                 ValidationError(
                     Computer13ValidationErrorTypes.UNEXPECTED_PARAM,
-                    f"Unexpected parameter '{key}' for action_type '{action_type}'.",
+                    f"Unexpected parameter '{key}' for '{action_type}'.",
                     {"param": key, "action_type": action_type},
                 ),
             )
@@ -369,14 +351,19 @@ def validate_computer13_actions(
 def validate_pyautogui_actions(
     utterance: str,
 ) -> Tuple[bool, Optional[ValidationError]]:
-    """Validates that the utterance follows the PyAutoGUI action format.
+    """Validate an utterance against the PyAutoGUI action format.
+
+    Performs a two-stage validation: checks if the utterance matches the format, then validates
+    Python syntax and checks for forbidden functions.
+
     Args:
-        utterance (str): The utterance to validate
+        utterance (str): The utterance to validate.
+
     Returns:
-        Tuple containing:
-        - Boolean indicating if validation was successful
-        - Boolean indicating if the utterance was intended to follow this format
-        - ValidationError object if validation failed, None otherwise
+        Tuple[bool, bool, Optional[ValidationError]]: A tuple containing:
+            - bool: True if validation succeeds, False otherwise.
+            - bool: True if the utterance matches the PyAutoGUI format, False otherwise.
+            - Optional[ValidationError]: Error details if validation fails, None otherwise.
     """
     if not is_pyautogui_format(utterance):
         return False, False, None
@@ -387,14 +374,14 @@ def validate_pyautogui_actions(
     code_blocks = re.findall(
         r"```(?:python|py)?\s*\n*(.*?)```", execute_content, re.DOTALL
     )
-
     if len(code_blocks) > 1:
         return (
             False,
             True,
             ValidationError(
                 PyAutoGUIValidationErrorTypes.MULTIPLE_CODE_BLOCKS,
-                "Only one code block is allowed.",
+                "Multiple Python code blocks found. Only one is allowed.",
+                {"count": len(code_blocks)},
             ),
         )
 
@@ -405,81 +392,107 @@ def validate_pyautogui_actions(
             True,
             ValidationError(
                 PyAutoGUIValidationErrorTypes.EMPTY_CODE_BLOCK,
-                "Code block cannot be empty.",
+                "Python code block cannot be empty.",
             ),
         )
 
-    # Validate Python syntax
     try:
-        ast_tree = ast.parse(code_text)
+        ast.parse(code_text)
     except SyntaxError as e:
         return (
             False,
             True,
             ValidationError(
                 PyAutoGUIValidationErrorTypes.INVALID_PYTHON,
-                f"Invalid Python syntax: {str(e)}",
+                f"Invalid Python syntax: {str(e)}.",
             ),
         )
 
-    # Check for forbidden functions
     forbidden_functions = ["locateCenterOnScreen", "screenshot"]
-
+    ast_tree = ast.parse(code_text)
     for node in ast.walk(ast_tree):
-        if isinstance(node, ast.Call):
-            if isinstance(node.func, ast.Attribute) and isinstance(
-                node.func.value, ast.Name
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+        ):
+            if (
+                node.func.value.id == "pyautogui"
+                and node.func.attr in forbidden_functions
             ):
-                if (
-                    node.func.value.id == "pyautogui"
-                    and node.func.attr in forbidden_functions
-                ):
-                    return (
-                        False,
-                        True,
-                        ValidationError(
-                            PyAutoGUIValidationErrorTypes.FORBIDDEN_FUNCTION,
-                            f"Forbidden PyAutoGUI function used: {node.func.attr}",
-                        ),
-                    )
+                return (
+                    False,
+                    True,
+                    ValidationError(
+                        PyAutoGUIValidationErrorTypes.FORBIDDEN_FUNCTION,
+                        f"Forbidden function '{node.func.attr}' used.",
+                    ),
+                )
 
     return True, True, None
 
 
 @validators.register("done_or_fail")
 def validate_done_or_fail(utterance: str) -> Tuple[bool, Optional[ValidationError]]:
-    """Validates that the utterance contains a valid status keyword.
+    """Validate an utterance against the STATUS format.
+
+    Performs a two-stage validation: checks if the utterance matches the format, then validates
+    the status keyword (DONE or FAIL).
+
     Args:
-        utterance (str): The utterance to validate
+        utterance (str): The utterance to validate.
+
     Returns:
-        Tuple containing:
-        - Boolean indicating if validation was successful
-        - Boolean indicating if the utterance was intended to follow this format
-        - ValidationError object if validation failed, None otherwise
+        Tuple[bool, bool, Optional[ValidationError]]: A tuple containing:
+            - bool: True if validation succeeds, False otherwise.
+            - bool: True if the utterance matches the STATUS format, False otherwise.
+            - Optional[ValidationError]: Error details if validation fails, None otherwise.
     """
     if not is_done_or_fail_format(utterance):
         return False, False, None
 
-    blocks = re.findall(r"```([^`]*)```", utterance)
-    # Check if mutliple blocks
-    if len(blocks) > 1:
+    status_sections = re.findall(r"STATUS\s*\n\s*```[^`]*```", utterance, re.DOTALL)
+    if len(status_sections) > 1:
         return (
             False,
+            True,
             ValidationError(
                 DoneOrFailValidationErrorTypes.MULTIPLE_CODE_BLOCKS,
-                f"Found {len(blocks)} code blocks. Only one ```...``` block is allowed after STATUS.",
-                {"block_count": len(blocks)},
+                "Multiple STATUS sections found. Only one is allowed.",
+                {"count": len(status_sections)},
             ),
         )
 
-    block_content = blocks[0].strip()
-    status_keywords = ["DONE", "FAIL"]
-    if block_content not in status_keywords:
+    status_section = status_sections[0]
+    content_match = re.search(r"```([^`]*)```", status_section, re.DOTALL)
+    if not content_match:
         return (
             False,
+            True,
             ValidationError(
                 DoneOrFailValidationErrorTypes.INVALID_STATUS,
-                "Code block must contain exactly one keyword (DONE or FAIL) with no additional content.",
+                "Invalid STATUS section format.",
+            ),
+        )
+
+    block_content = content_match.group(1).strip()
+    if not block_content:
+        return (
+            False,
+            True,
+            ValidationError(
+                DoneOrFailValidationErrorTypes.EMPTY_CODE_BLOCK,
+                "Status code block cannot be empty.",
+            ),
+        )
+
+    if block_content not in ["DONE", "FAIL"]:
+        return (
+            False,
+            True,
+            ValidationError(
+                DoneOrFailValidationErrorTypes.INVALID_STATUS,
+                "Invalid status: must be DONE or FAIL.",
                 {"block_content": block_content},
             ),
         )
@@ -489,19 +502,23 @@ def validate_done_or_fail(utterance: str) -> Tuple[bool, Optional[ValidationErro
 
 @validators.register("query")
 def validate_query(utterance: str) -> Tuple[bool, Optional[ValidationError]]:
-    """Validates that the utterance follows the QUERY block format.
+    """Validate an utterance against the QUERY format.
+
+    Performs a two-stage validation: checks if the utterance matches the format, then validates
+    the presence of non-empty content.
+
     Args:
-        utterance (str): The utterance to validate
+        utterance (str): The utterance to validate.
+
     Returns:
-        Tuple containing:
-        - Boolean indicating if validation was successful
-        - Boolean indicating if the utterance was intended to follow this format
-        - ValidationError object if validation failed, None otherwise
+        Tuple[bool, bool, Optional[ValidationError]]: A tuple containing:
+            - bool: True if validation succeeds, False otherwise.
+            - bool: True if the utterance matches the QUERY format, False otherwise.
+            - Optional[ValidationError]: Error details if validation fails, None otherwise.
     """
     if not is_query_format(utterance):
         return False, False, None
 
-    # Then check for multiple code blocks
     query_blocks = re.findall(r"QUERY\s*```(.*?)```", utterance, re.DOTALL)
     if len(query_blocks) > 1:
         return (
@@ -509,7 +526,7 @@ def validate_query(utterance: str) -> Tuple[bool, Optional[ValidationError]]:
             True,
             ValidationError(
                 QueryValidationErrorTypes.MULTIPLE_CODE_BLOCKS,
-                "Multiple QUERY blocks found. Only one is allowed",
+                "Multiple QUERY sections found. Only one is allowed.",
                 {"count": len(query_blocks)},
             ),
         )
@@ -520,7 +537,7 @@ def validate_query(utterance: str) -> Tuple[bool, Optional[ValidationError]]:
             True,
             ValidationError(
                 QueryValidationErrorTypes.EMPTY_CODE_BLOCK,
-                "QUERY block content cannot be empty",
+                "QUERY code block cannot be empty.",
             ),
         )
 
@@ -529,19 +546,23 @@ def validate_query(utterance: str) -> Tuple[bool, Optional[ValidationError]]:
 
 @validators.register("response")
 def validate_response(utterance: str) -> Tuple[bool, Optional[ValidationError]]:
-    """Validates that the utterance follows the RESPONSE block format.
+    """Validate an utterance against the RESPONSE format.
+
+    Performs a two-stage validation: checks if the utterance matches the format, then validates
+    the presence of non-empty content.
+
     Args:
-        utterance (str): The utterance to validate
+        utterance (str): The utterance to validate.
+
     Returns:
-        Tuple containing:
-        - Boolean indicating if validation was successful
-        - Boolean indicating if the utterance was intended to follow this format
-        - ValidationError object if validation failed, None otherwise
+        Tuple[bool, bool, Optional[ValidationError]]: A tuple containing:
+            - bool: True if validation succeeds, False otherwise.
+            - bool: True if the utterance matches the RESPONSE format, False otherwise.
+            - Optional[ValidationError]: Error details if validation fails, None otherwise.
     """
     if not is_response_format(utterance):
         return False, False, None
 
-    # Then check for multiple code blocks
     response_blocks = re.findall(r"RESPONSE\s*```(.*?)```", utterance, re.DOTALL)
     if len(response_blocks) > 1:
         return (
@@ -549,7 +570,7 @@ def validate_response(utterance: str) -> Tuple[bool, Optional[ValidationError]]:
             True,
             ValidationError(
                 ResponseValidationErrorTypes.MULTIPLE_CODE_BLOCKS,
-                "Multiple RESPONSE blocks found. Only one is allowed",
+                "Multiple RESPONSE sections found. Only one is allowed.",
                 {"count": len(response_blocks)},
             ),
         )
@@ -560,8 +581,62 @@ def validate_response(utterance: str) -> Tuple[bool, Optional[ValidationError]]:
             True,
             ValidationError(
                 ResponseValidationErrorTypes.EMPTY_CODE_BLOCK,
-                "RESPONSE block content cannot be empty",
+                "RESPONSE code block cannot be empty.",
             ),
         )
 
     return True, True, None
+
+
+def raise_unrecognized_format_error(allowed_components: List[str]) -> ValidationError:
+    """Create a ValidationError for unrecognized format with actual format examples.
+
+    Args:
+        allowed_components: List of allowed format components for the player
+
+    Returns:
+        ValidationError: Error with message showing allowed format structures
+    """
+    format_structures = {
+        "computer13": """EXECUTE
+```json
+{
+    "action_type": "<action_type>",
+    ...parameters
+}
+```""",
+        "pyautogui": """EXECUTE
+```python
+pyautogui.<action>(...parameters)
+```""",
+        "done_or_fail": """STATUS
+```
+DONE
+```
+or
+STATUS
+```
+FAIL
+```""",
+        "query": """QUERY
+```
+<query_text>
+```""",
+        "response": """RESPONSE
+```
+<response_text>
+```""",
+    }
+
+    allowed_formats = [
+        format_structures[component]
+        for component in allowed_components
+        if component in format_structures
+    ]
+    format_list = "\n\n".join(allowed_formats)
+    message = f"Response format is invalid. Your response must follow one of these formats: \n\n{format_list}"
+    return ValidationError(
+        error_type=GeneralValidationErrorTypes.UNRECOGNIZED_FORMAT,
+        message=message,
+        details={"allowed_components": allowed_components},
+    )

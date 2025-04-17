@@ -8,17 +8,14 @@ from clemcore.clemgame import Player, GameMaster, GameBenchmark
 from src.master import (
     NetworkDialogueGameMaster,
     EdgeCondition,
-    EdgeType,
     ConditionType,
 )
 from src.environment import Environment, create_osworld_environment
 from src.player import RoleBasedPlayer
 from src.message import MessageState, PlayerContextFormatter, PipeManager, PipeStage
 from src.utils.registry.parsers import parsers, get_parser_metadata
-from src.utils.constants import (
-    DEFAULT_ENV_CONFIG,
-    DEFAULT_HANDLER_TYPE,
-)
+from src.utils.registry.validators import raise_unrecognized_format_error
+from src.utils.constants import DEFAULT_GAME_CONFIG, DEFAULT_HANDLER_TYPE, LogType
 from src.utils.general import TemporaryImageManager
 
 logger = logging.getLogger(__name__)
@@ -40,37 +37,33 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         self.message_state = MessageState()
         self.player_context_formatter = None
         self.pipe_manager = PipeManager()
+        # NOTE: should these attributes be here or within the _on_setup method
+        self.aborted: bool = False
+        self.lost: bool = False
+        self.invalid_response: bool = False
 
     def _on_setup(self, **game_instance) -> None:
         """Method executed at the start of the default setup method.
 
         Key Actions:
+            - Prepares game configuration.
             - Sets up environment and loads initial observation + starts gameplay recording.
             - Constructs player interaction graph/network.
             - Sets up trigger pipeline (specific) 'parse func. -> after parse steps'
 
         Args:
             game_instance: Keyword arguments of the game_instance
-
-        Returns:
-            None: No return value
         """
         self.game_instance = game_instance
-        self.game_config = self._prepare_game_config()
+        self._prepare_game_config()
+        self._initialize_formatter()
         self._initialize_environment()
-        self.player_context_formatter = PlayerContextFormatter(
-            game_config=self.game_config
-        )
         self._build_graph()
         self._setup_after_parse_pipelines()
 
     def _prepare_game_config(self) -> Dict:
-        """Prepare game configuration
-
-        Returns:
-            Dict: Complete game configuration dictionary
-        """
-        game_config = DEFAULT_ENV_CONFIG.copy()
+        """Prepare game configuration dictionary"""
+        game_config = DEFAULT_GAME_CONFIG.copy()
         observation_type = game_config.get("observation_type", "a11y_tree")
         use_images = observation_type in ["screenshot", "screenshot_a11y_tree", "som"]
         require_a11y_tree = observation_type in [
@@ -78,17 +71,21 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             "screenshot_a11y_tree",
             "som",
         ]
-        game_config["use_images"] = use_images
-        game_config["require_a11y_tree"] = require_a11y_tree
+        game_config.update(
+            {"use_images": use_images, "require_a11y_tree": require_a11y_tree}
+        )
         if use_images:
             game_config["temporary_image_manager"] = TemporaryImageManager()
-        return game_config
+        self.game_config = game_config
+
+    def _initialize_formatter(self) -> None:
+        """Initialize the player context formatter with the current game configuration."""
+        self.player_context_formatter = PlayerContextFormatter(
+            game_config=self.game_config
+        )
 
     def _initialize_environment(self) -> None:
         """Initializes game environment with recording capabilities and retrieves the initial state observation.
-
-        Returns:
-            None: No return value
 
         Raises:
             RuntimeError: If environment or recording initialization fails
@@ -108,10 +105,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             raise RuntimeError(error_message) from e
 
     def _build_graph(self) -> None:
-        """Builds a dialogic-player network graph from the game instance configuration.
-
-        Returns:
-            None: No return value
+        """Builds a player-network graph from the game instance configuration.
 
         Raises:
             RuntimeError: If graph building fails
@@ -123,29 +117,26 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             for node in graph_config.get("nodes", []):
                 node_id = node.get("id")
                 node_type = node.get("type")
-                if not node_id or not node_type:
+                if not node_id or not node_type or node_type != "PLAYER":
                     continue
-                if node_type == "PLAYER":
-                    role_index = node.get("role_index", 0)
-                    if role_index >= len(self.player_models):
-                        raise ValueError(
-                            f"Player model not available for role index {role_index}"
-                        )
-                    roles = self.game_instance.get("roles", [])
-                    role_config = roles[role_index]
-                    role_name = role_config.get("name")
-                    handler_type = role_config.get("handler_type", DEFAULT_HANDLER_TYPE)
-                    allowed_components = role_config.get("allowed_components", [])
-                    initial_prompt = role_config.get("initial_prompt")
-                    player = RoleBasedPlayer(
-                        self.player_models[role_index],
-                        role=role_name,
-                        handler_type=handler_type,
-                        allowed_components=allowed_components,
+                role_index = node.get("role_index", 0)
+                if role_index >= len(self.player_models):
+                    raise ValueError(
+                        f"Player model not available for role index {role_index}"
                     )
-                    self.add_player(
-                        player=player, initial_prompt=initial_prompt, node_id=node_id
-                    )
+                roles = self.game_instance.get("roles", [])
+                role_config = roles[role_index]
+                player = RoleBasedPlayer(
+                    self.player_models[role_index],
+                    role=role_config.get("name"),
+                    handler_type=role_config.get("handler_type", DEFAULT_HANDLER_TYPE),
+                    allowed_components=role_config.get("allowed_components", []),
+                )
+                self.add_player(
+                    player=player,
+                    initial_prompt=role_config.get("initial_prompt"),
+                    node_id=node_id,
+                )
             for edge in graph_config.get("edges", []):
                 from_node = edge.get("from")
                 to_node = edge.get("to")
@@ -177,11 +168,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             raise RuntimeError(f"Failed to build interaction graph: {str(e)}") from e
 
     def _setup_after_parse_pipelines(self) -> None:
-        """Initialize processing pipelines for different parsers.
-
-        Returns:
-            None: No return value
-        """
+        """Initialize processing pipelines for different parsers."""
         self.pipe_manager.register_pipeline(
             "pyautogui_actions",
             [
@@ -211,6 +198,24 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         """
         return self.current_node != "END"
 
+    def _set_context_for(
+        self, player: RoleBasedPlayer, formatted_context: Dict
+    ) -> None:
+        """Sets context for a player based on formatted context data.
+
+        Args:
+            player: Player instance to set context for
+            formatted_context: Dictionary containing content and optional image data
+        """
+        if "image" in formatted_context and formatted_context["image"]:
+            self.set_context_for(
+                player,
+                formatted_context["content"],
+                image=formatted_context["image"],
+            )
+        else:
+            self.set_context_for(player, formatted_context["content"])
+
     def _on_before_game(self):
         """Executed once at the start, before entering the play loop.
 
@@ -225,99 +230,61 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         formatted_context = self.player_context_formatter.create_context_for(
             self.message_state, current_player
         )
-        if "image" in formatted_context and formatted_context["image"]:
-            self.set_context_for(
-                current_player,
-                formatted_context["content"],
-                image=formatted_context["image"],
-            )
-        else:
-            self.set_context_for(current_player, formatted_context["content"])
+        self._set_context_for(current_player, formatted_context)
         logger.info(f"Set initial context for player at node {self.current_node}")
 
-    def _on_valid_player_response(self, player: Player, parsed_response: str):
-        """Method executed after a player response has been parsed and validated.
-
-        Key Actions:
-            - Updates the message state with the parsed response
-            - Sets context for the next node's player using the current message state
-
-        Args:
-            player: The Player instance that produced the response
-            parsed_response: The parsed and valid response of the current player
-        """
-        if self.transition.next_node:
-            next_player = self.get_player_from_node(self.transition.next_node)
-            if next_player:
-                formatted_context = self.player_context_formatter.create_context_for(
-                    self.message_state, next_player
-                )
-                if "image" in formatted_context and formatted_context["image"]:
-                    self.set_context_for(
-                        next_player,
-                        formatted_context["content"],
-                        image=formatted_context["image"],
-                    )
-                else:
-                    self.set_context_for(next_player, formatted_context["content"])
-                logger.info(
-                    f"Set context for next player at node {self.transition.next_node}"
-                )
-
     def _validate_player_response(self, player: Player, response: str) -> bool:
-        """Decide if a response should be added to the conversation history.
+        """Decide if player response is valid.
+
+        A valid response enables the invocation of additional methods, such as _parse_response and _on_valid_parse_response.
 
         Args:
-            player: The Player instance for which the response is added
-            response: The text content of the message to be added
+            player: The player that gave the response.
+            response: The response of the current player.
 
         Returns:
-            bool: True if the response is valid, False otherwise
+            bool: True, if the response is fine. Otherwise, False.
         """
-        print("::VALIDAION UTTERANCE::", response)
+
+        def handle_retry(error_msg: str):
+            if player.retries < self.game_config["max_retries"]:
+                player.retries += 1
+                self.message_state.update(tagged_content={"error": error_msg})
+                formatted_context = self.player_context_formatter.create_context_for(
+                    self.message_state, player
+                )
+                self._set_context_for(player, formatted_context)
+
         if response is None:
             return False
         player_node = self.get_node_from_player(player)
-        decision_edges = [
-            (to_node, edge_data["condition"])
-            for _, to_node, edge_data in self.graph.out_edges(player_node, data=True)
-            if edge_data.get("type") == EdgeType.DECISION and edge_data.get("condition")
-        ]
+        decision_edges = self._get_decision_edges(player_node)
         # If no decision edges, check for exactly one standard edge
         if not decision_edges:
-            standard_edges = [
-                (to_node, edge_data)
-                for _, to_node, edge_data in self.graph.out_edges(
-                    player_node, data=True
-                )
-                if edge_data.get("type") == EdgeType.STANDARD
-            ]
-            if len(standard_edges) != 1:
-                logger.warning(
-                    f"Node {player_node} has {len(standard_edges)} standard edges, expected exactly 1"
-                )
-                return False
-            return True
+            return bool(self._get_standard_edges(player_node))
         # Check each decision edge's condition
         for to_node, condition in decision_edges:
-            validation_result = condition.validate(response)
+            result = condition.validate(response)
             # Case 1: Valid and intended format - successful validation
-            if validation_result.is_valid and validation_result.intended_format:
+            if result.is_valid and result.intended_format:
                 return True
             # Case 2: Invalid but intended format - validation failed for intended format
-            elif not validation_result.is_valid and validation_result.intended_format:
-                if validation_result.error:
-                    logger.warning(
-                        f"Validation failed for edge to {to_node}: {validation_result.error.message}"
-                    )
+            elif not result.is_valid and result.intended_format:
+                self.log_to_self(LogType.VALIDATION_ERROR, result.error.get_dict())
+                self.invalid_response = True
+                handle_retry(result.error.message)
                 return False
             # Case 3: Not intended format - continue to next edge
-            elif not validation_result.intended_format:
+            elif not result.intended_format:
                 continue
-        # Finally, resort to a fallback procedure (TODO)
-        logger.warning(
-            "Validation failed, response did not comply with available conditions for connecting edges"
-        )
+
+        # Fallback procedure
+        # TODO: deal with how to handle the observation <-> pyautogui or computer13 substitution.
+        error = raise_unrecognized_format_error(player.allowed_components)
+        self.log_to_self(LogType.VALIDATION_ERROR, error.get_dict())
+        self.invalid_response = True
+        handle_retry(error.message)
+        # TODO: Should we expand how we handle the fallback procedure?
         return False
 
     def _parse_response_for_decision_routing(
@@ -338,24 +305,13 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             Tuple[str, bool, Optional[str], Optional[Any]]: Modified response, logging flag, next node ID, extracted content
         """
         player_node = self.get_node_from_player(player)
-        decision_edges = [
-            (to_node, edge_data["condition"])
-            for _, to_node, edge_data in self.graph.out_edges(player_node, data=True)
-            if edge_data.get("type") == EdgeType.DECISION and edge_data.get("condition")
-        ]
-        print("::DECISION_EDGES::", decision_edges)
+        decision_edges = self._get_decision_edges(player_node)
         if not decision_edges:
             return response, False, None, None
         # Evaluate each decision edge condition
         for to_node, condition in decision_edges:
-            print("::TO_NODE::", to_node, "::CONDITION::", condition)
             try:
                 parse_result = condition.parse(response)
-                print(
-                    "::IS_SUCCESSFUL, EXTRACTED_CONTENT::",
-                    parse_result.is_successful,
-                    parse_result.content,
-                )
                 if parse_result.is_successful and parse_result.content:
                     parser_id = None
                     parse_func_name = condition.function_pair.parse_func.__name__
@@ -411,7 +367,6 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         Returns:
             Optional[Dict]: Observation dictionary or None if execution fails
         """
-        print("::EXECUTE ACTION::", content)
         try:
             if not content:
                 logger.error("No actions to execute")
@@ -422,7 +377,6 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                     observation, reward, done, info = self.env.step(
                         action, self.game_config.get("sleep_after_execution", 0.0)
                     )
-                    print(reward, done, info)
                     if observation is None:
                         logger.error("Recieved None observation after game execution")
                         return None
@@ -436,6 +390,29 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         except Exception as e:
             logger.error(f"Action execution failed: {str(e)}")
             return None
+
+    def _on_valid_player_response(self, player: Player, parsed_response: str):
+        """Method executed after a player response has been parsed and validated.
+
+        Key Actions:
+            - Updates the message state with the parsed response
+            - Sets context for the next node's player using the current message state
+
+        Args:
+            player: The Player instance that produced the response
+            parsed_response: The parsed and valid response of the current player
+        """
+        if self.transition.next_node:
+            next_player = self.get_player_from_node(self.transition.next_node)
+            if next_player:
+                formatted_context = self.player_context_formatter.create_context_for(
+                    self.message_state, next_player
+                )
+                self._set_context_for(next_player, formatted_context)
+                # self.message_state.reset(preserve=["observation"]) # Somehow this does not work.
+                logger.info(
+                    f"Set context for next player at node {self.transition.next_node}"
+                )
 
 
 class ComputerGameBenchmark(GameBenchmark):
