@@ -1,4 +1,4 @@
-# README
+# ComputerGame
 
 ## Clone the OSWorld repo
 1. Clone the os-world repository externally:
