@@ -32,7 +32,7 @@
    ```
 3. Reload VSCode (Ctrl+Shift+P → Reload Window)
 
-## OSWORLD-UBUNTU Setup
+## OSWORLD-Ubuntu Setup
 1. Install VMware Workstation Pro (for systems with Apple chips, use VMware Fusion) and configure the `vmrun` command
 2. See the official instructions: https://timothyxxx.github.io/OSWorld/installation/install_provider/vmware.html
 3. After you finish the setup for your provider, run the following minimal example to interact with the environment and verify that everything is working. The first run will install the  environment (download, unzip, rename, start, snapshot named `init_state`), which may take some time:
