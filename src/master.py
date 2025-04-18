@@ -169,9 +169,11 @@ class NodeTransition:
 
     Attributes:
         next_node: ID of the next node to transition to, if any.
+        total_transitions: Counter for total transitions in current round.
     """
 
     next_node: Optional[str] = None
+    total_transitions: int = 0
 
 
 class NetworkDialogueGameMaster(DialogueGameMaster):
@@ -430,8 +432,8 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
     def _update_round_tracking(self, prev_node: str, next_node: str):
         """Update round tracking state based on node transitions.
 
-        Tracks visited nodes and marks a round complete when returning to the anchor after other nodes,
-        or when transitioning to the END node.
+        Tracks visited nodes, transitions count, and marks a round complete when returning
+        to the anchor after other nodes, or when transitioning to the END node.
 
         Args:
             prev_node: Node being transitioned from.
@@ -440,6 +442,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         if self.anchor_node is None:
             return
         self.current_round_nodes.append(next_node)
+        self.transition.total_transitions += 1
         if next_node != self.anchor_node:
             self.non_anchor_visited = True
         node_data = self.graph.nodes.get(next_node, {})
@@ -447,8 +450,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         is_anchor_return = next_node == self.anchor_node and self.non_anchor_visited
         if is_end_node or is_anchor_return:
             self.round_complete = True
-            round_path = " » ".join(str(node) for node in self.current_round_nodes)
-            self.log_to_self("round-complete", f"Round completed: {round_path}")
 
     def _reset_round_tracking(self):
         """Reset the round tracking state variables.
@@ -456,9 +457,15 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         Resets all round-related tracking variables to their initial states and
         adds the current node to the new round's tracking list if one exists.
         """
+        round_path = " » ".join(str(node) for node in self.current_round_nodes)
+        self.log_to_self(
+            "round-complete",
+            f"Round completed: {round_path} (Total transitions: {self.transition.total_transitions})",
+        )
         self.current_round_nodes = []
         self.non_anchor_visited = False
         self.round_complete = False
+        self.transition.total_transitions = 0
         if self.current_node:
             self.current_round_nodes.append(self.current_node)
 

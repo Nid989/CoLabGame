@@ -139,7 +139,7 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Bing"
+                                    "expected": "Microsoft Bing"
                                 }
                             }
                         }

@@ -43,6 +43,15 @@ class Environment(ABC):
         pass
 
     @abstractmethod
+    def evaluate(self) -> float:
+        """Evaluate the current state of the environment.
+
+        Returns:
+            float: Binary reward signal (0 or 1) indicating success/failure of the current state
+        """
+        pass
+
+    @abstractmethod
     def close(self) -> None:
         """Clean up resources used by the environment."""
         pass
@@ -98,6 +107,7 @@ class Environment(ABC):
         return None
 
 
+# There should be a evaluate method as well--this will evaluate and return a reward 0 or 1.
 class OSWorldComputerEnvironment(Environment):
     """OSWorld Computer Environment implementation of the Environment interface.
 
@@ -166,6 +176,17 @@ class OSWorldComputerEnvironment(Environment):
                 Dict[str, Any]: Additional information.
         """
         return self._env.step(action, sleep_time)
+
+    def evaluate(self) -> float:
+        """Evaluate the current state of the OSWorld environment.
+
+        Returns:
+            float: Binary reward signal (0 or 1) indicating success/failure of the current state
+        """
+        try:
+            return float(self._env.evaluate())
+        except (AttributeError, Exception):
+            return 0.0
 
     def close(self) -> None:
         """Close the OSWorld environment and clean up resources."""

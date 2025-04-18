@@ -21,7 +21,7 @@ from src.utils.general import TemporaryImageManager
 logger = logging.getLogger(__name__)
 
 
-class ComputerGameMaster(NetworkDialogueGameMaster):
+class ComputerGame(NetworkDialogueGameMaster):
     def __init__(
         self,
         name: str,
@@ -37,9 +37,12 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         self.message_state = MessageState()
         self.player_context_formatter = None
         self.pipe_manager = PipeManager()
-        # NOTE: should these attributes be here or within the _on_setup method
         self.aborted: bool = False
-        self.lost: bool = False
+        self.failure: bool = False
+        self.success: bool = False
+        self.request_count: int = 0
+        self.parsed_request_count: int = 0
+        self.violated_request_count: int = 0
         self.invalid_response: bool = False
 
     def _on_setup(self, **game_instance) -> None:
@@ -114,17 +117,17 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         """
         try:
             graph_config = self.game_instance.get("graph")
+            roles = self.game_instance.get("roles", [])
             for node in graph_config.get("nodes", []):
                 node_id = node.get("id")
                 node_type = node.get("type")
-                if not node_id or not node_type or node_type != "PLAYER":
+                if node_type != "PLAYER" or not node_id:
                     continue
                 role_index = node.get("role_index", 0)
-                if role_index >= len(self.player_models):
+                if not (0 <= role_index < len(self.player_models)):
                     raise ValueError(
                         f"Player model not available for role index {role_index}"
                     )
-                roles = self.game_instance.get("roles", [])
                 role_config = roles[role_index]
                 player = RoleBasedPlayer(
                     self.player_models[role_index],
@@ -149,10 +152,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                 elif edge_type == "DECISION":
                     condition_config = edge.get("condition", {})
                     condition_type = condition_config.get("condition_type")
-                    if (
-                        not condition_type
-                        or condition_type not in ConditionType._value2member_map_
-                    ):
+                    if condition_type not in ConditionType._value2member_map_:
                         raise KeyError(
                             f"Invalid condition-type field: {condition_type}"
                         )
@@ -194,9 +194,28 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         """Determine if the game should continue to the next turn.
 
         Returns:
-            bool: False if game is completed or max steps reached, True otherwise
+            bool: False if game is completed or aborted, True otherwise
         """
-        return self.current_node != "END"
+        # NOTE: might want to change the below check?
+        if self.invalid_response and self.aborted:
+            self.failure = True
+            return False
+        max_rounds = self.game_config.get("max_rounds", 5)
+        if self.current_round + 1 >= max_rounds:
+            self.aborted = True
+            self.failure = True
+            self.log_to_self("failure", f"Maximum rounds {max_rounds} reached")
+            return False
+        max_transitions_per_round = self.game_config.get("max_transitions_per_round", 5)
+        if self.transition.total_transitions + 1 >= max_transitions_per_round:
+            self.aborted = True
+            self.log_to_self(
+                "failure",
+                f"Maximum transitions per round {max_transitions_per_round} reached",
+            )
+            return False
+        if self.current_node == "END":
+            return False
 
     def _set_context_for(
         self, player: RoleBasedPlayer, formatted_context: Dict
@@ -254,7 +273,12 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                     self.message_state, player
                 )
                 self._set_context_for(player, formatted_context)
+            else:
+                # player exceeded invalid-response <-> re-prompt attempts thus abort game.
+                self.aborted = True
 
+        self.request_count += 1
+        self.invalid_response = False
         if response is None:
             return False
         player_node = self.get_node_from_player(player)
@@ -272,6 +296,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
             elif not result.is_valid and result.intended_format:
                 self.log_to_self(LogType.VALIDATION_ERROR, result.error.get_dict())
                 self.invalid_response = True
+                self.violated_request_count += 1
                 handle_retry(result.error.message)
                 return False
             # Case 3: Not intended format - continue to next edge
@@ -283,6 +308,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         error = raise_unrecognized_format_error(player.allowed_components)
         self.log_to_self(LogType.VALIDATION_ERROR, error.get_dict())
         self.invalid_response = True
+        self.violated_request_count += 1
         handle_retry(error.message)
         # TODO: Should we expand how we handle the fallback procedure?
         return False
@@ -304,6 +330,7 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         Returns:
             Tuple[str, bool, Optional[str], Optional[Any]]: Modified response, logging flag, next node ID, extracted content
         """
+        self.parsed_request_count += 1
         player_node = self.get_node_from_player(player)
         decision_edges = self._get_decision_edges(player_node)
         if not decision_edges:
@@ -312,48 +339,43 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
         for to_node, condition in decision_edges:
             try:
                 parse_result = condition.parse(response)
-                if parse_result.is_successful and parse_result.content:
-                    parser_id = None
-                    parse_func_name = condition.function_pair.parse_func.__name__
-                    for pid in parsers:
-                        if (
-                            parse_func_name.startswith(f"parse_{pid}")
-                            or pid in parse_func_name
-                        ):
-                            parser_id = pid
-                            break
-                    if parser_id:
-                        metadata = get_parser_metadata(parser_id)
-                        target_field = metadata.get("target_field")
-                        if target_field and hasattr(self.message_state, target_field):
-                            self.message_state.update(
-                                **{target_field: parse_result.content}
-                            )
-                        success, result = self.pipe_manager.execute_pipeline(
-                            parser_id=parser_id,
-                            content=parse_result.content,
-                            message_state=self.message_state,
-                        )
-                        if success:
-                            logger.info(
-                                f"Processing pipeline executed for parser {parser_id}"
-                            )
-                    logger.info(
-                        f"Decision edge condition met: {self.current_node} → {to_node}"
-                    )
-                    return (
-                        response,
-                        True,
-                        to_node,
-                        (
-                            parse_result.content,
-                            result if "result" in locals() else None,
-                        ),
-                    )
-            except Exception as e:
-                logger.error(
-                    f"Error evaluating condition for edge to {to_node}: {str(e)}"
+                if not (parse_result.is_successful and parse_result.content):
+                    continue
+                parse_func_name = condition.function_pair.parse_func.__name__
+                parser_id = next(
+                    (
+                        pid
+                        for pid in parsers
+                        if parse_func_name.startswith(f"parse_{pid}")
+                        or pid in parse_func_name
+                    ),
+                    None,
                 )
+                result = None
+                if parser_id:
+                    metadata = get_parser_metadata(parser_id)
+                    target_field = metadata.get("target_field")
+
+                    if target_field and hasattr(self.message_state, target_field):
+                        self.message_state.update(
+                            **{target_field: parse_result.content}
+                        )
+
+                    success, result = self.pipe_manager.execute_pipeline(
+                        parser_id=parser_id,
+                        content=parse_result.content,
+                        message_state=self.message_state,
+                    )
+                if success:
+                    logger.info(f"Processing pipeline executed for parser {parser_id}")
+
+                logger.info(
+                    f"Decision edge condition met: {self.current_node} → {to_node}"
+                )
+                return response, True, to_node, (parse_result.content, result)
+            except Exception as e:
+                logger.error(f"Error evaluating condition for edge to {to_node}: {e}")
+
         return response, False, None, None
 
     def _execute_actions(
@@ -414,14 +436,22 @@ class ComputerGameMaster(NetworkDialogueGameMaster):
                     f"Set context for next player at node {self.transition.next_node}"
                 )
 
+    def compute_episode_score(self):
+        """
+        Computes the score for the current episode.
+
+        Returns:
+            float: A score of 1.0 for success or 0.0 for failure.
+        """
+        result = self.env.evaluate()
+        return result
+
 
 class ComputerGameBenchmark(GameBenchmark):
     def create_game_master(
         self, experiment: Dict, player_models: List[backends.Model]
     ) -> GameMaster:
-        return ComputerGameMaster(
-            self.game_name, self.game_path, experiment, player_models
-        )
+        return ComputerGame(self.game_name, self.game_path, experiment, player_models)
 
 
 if __name__ == "__main__":
@@ -433,5 +463,11 @@ if __name__ == "__main__":
     experiments = load_json("./in/instances.json")
     experiment_1 = experiments["experiments"][0]
     game_1 = experiment_1["game_instances"][0]
-    master = ComputerGameMaster("computergame", None, experiment_1, ["mock", "mock"])
+    master = ComputerGame("computergame", None, experiment_1, ["mock", "mock"])
     master.setup(**game_1)
+
+# _on_before_round -> something should be logged via log_to_self
+# _does_game_proceed -> add more depenedent variables including aborted, lost etc & log_to_self once proceeding-of-game-stops
+# _validate_player_response -> obviously we log_to_self `the ValidationErros` but something more?
+# _parse_response -> log_to_self successful outcomes.
+# _on_valid_response -> log_to_self not sure think

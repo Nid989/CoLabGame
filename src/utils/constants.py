@@ -47,6 +47,8 @@ DEFAULT_GAME_CONFIG = {
     **DEFAULT_ENV_CONFIG,
     # Other game-specific configs
     "max_retries": 2,
+    "max_rounds": 5,
+    "max_transitions_per_round": 5,
     # Additional game-specific configs can be added upon requirement
 }
 
