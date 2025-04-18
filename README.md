@@ -1,17 +1,30 @@
 # README
 
-## Clone os-world
-Clone the os-world repository externally:
-```bash
-git clone <OS_WORLD_REPO_URL> path_to_somewhere_external/OSWorld
-```
+## Clone the OSWorld repo
+1. Clone the os-world repository externally:
+   
+   ```bash
+   git clone https://github.com/xlang-ai/OSWorld path_to_somewhere_external/
+   cd path_to_somewhere_external/OSxwWorld
+   ```
+3. Install required dependencies:
+   
+   ```bash
+   # Install the dependencies using 'requirements.txt' file.
+   pip install requirements.txt
+   # Alternatively:
+   pip install desktop-env
+   ```
 
 ## (Optional) VSCode Setup
+
 1. Create a `.env` file in the project root:
+
    ```bash
    echo "PYTHONPATH=./src:./path_to_somewhere_external/OSWorld" > .env
    ```
 2. Add to `.vscode/settings.json`:
+
    ```json
    {
      "python.envFile": "${workspaceFolder}/.env"
@@ -20,21 +33,9 @@ git clone <OS_WORLD_REPO_URL> path_to_somewhere_external/OSWorld
 3. Reload VSCode (Ctrl+Shift+P → Reload Window)
 
 ## OSWORLD-UBUNTU Setup
-- Clone the OSWorld repo:
-  ```bash
-  git clone https://github.com/xlang-ai/OSWorld path_to_somewhere_external/
-  cd path_to_somewhere_external/OSxwWorld
-  ```
-- Install required dependencies:
-  ```bash
-  # Install the dependencies using 'requirements.txt' file.
-  pip install requirements.txt
-  # Alternatively:
-  pip install desktop-env
-  ```
-- Install VMware Workstation Pro (for systems with Apple chips, use VMware Fusion) and configure the `vmrun` command
-- See the official instructions: https://timothyxxx.github.io/OSWorld/installation/install_provider/vmware.html
-- After you finish the setup for your provider, run the following minimal example to interact with the environment and verify that everything is working. The first run will install the environment (download, unzip, rename, start, snapshot named `init_state`), which may take some time:
+1. Install VMware Workstation Pro (for systems with Apple chips, use VMware Fusion) and configure the `vmrun` command
+2. See the official instructions: https://timothyxxx.github.io/OSWorld/installation/install_provider/vmware.html
+3. After you finish the setup for your provider, run the following minimal example to interact with the environment and verify that everything is working. The first run will install the  environment (download, unzip, rename, start, snapshot named `init_state`), which may take some time:
 
 ```python
 from desktop_env.desktop_env import DesktopEnv
