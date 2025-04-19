@@ -107,7 +107,6 @@ class Environment(ABC):
         return None
 
 
-# There should be a evaluate method as well--this will evaluate and return a reward 0 or 1.
 class OSWorldComputerEnvironment(Environment):
     """OSWorld Computer Environment implementation of the Environment interface.
 

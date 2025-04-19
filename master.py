@@ -38,11 +38,11 @@ class ComputerGame(NetworkDialogueGameMaster):
         self.player_context_formatter = None
         self.pipe_manager = PipeManager()
         self.aborted: bool = False
-        self.failure: bool = False
+        self.lose: bool = False
         self.success: bool = False
         self.request_count: int = 0
-        self.parsed_request_count: int = 0
-        self.violated_request_count: int = 0
+        self.request_count_parsed: int = 0
+        self.request_count_violated: int = 0
         self.invalid_response: bool = False
 
     def _on_setup(self, **game_instance) -> None:
@@ -198,12 +198,12 @@ class ComputerGame(NetworkDialogueGameMaster):
         """
         # NOTE: might want to change the below check?
         if self.invalid_response and self.aborted:
-            self.failure = True
+            self.lose = True
             return False
         max_rounds = self.game_config.get("max_rounds", 5)
         if self.current_round + 1 >= max_rounds:
             self.aborted = True
-            self.failure = True
+            self.lose = True
             self.log_to_self("failure", f"Maximum rounds {max_rounds} reached")
             return False
         max_transitions_per_round = self.game_config.get("max_transitions_per_round", 5)
@@ -297,7 +297,7 @@ class ComputerGame(NetworkDialogueGameMaster):
             elif not result.is_valid and result.intended_format:
                 self.log_to_self(LogType.VALIDATION_ERROR, result.error.get_dict())
                 self.invalid_response = True
-                self.violated_request_count += 1
+                self.request_count_violated += 1
                 handle_retry(result.error.message)
                 return False
             # Case 3: Not intended format - continue to next edge
@@ -309,7 +309,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         error = raise_unrecognized_format_error(player.allowed_components)
         self.log_to_self(LogType.VALIDATION_ERROR, error.get_dict())
         self.invalid_response = True
-        self.violated_request_count += 1
+        self.request_count_violated += 1
         handle_retry(error.message)
         # TODO: Should we expand how we handle the fallback procedure?
         return False
@@ -331,7 +331,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         Returns:
             Tuple[str, bool, Optional[str], Optional[Any]]: Modified response, logging flag, next node ID, extracted content
         """
-        self.parsed_request_count += 1
+        self.request_count_parsed += 1
         player_node = self.get_node_from_player(player)
         decision_edges = self._get_decision_edges(player_node)
         if not decision_edges:
@@ -472,3 +472,4 @@ if __name__ == "__main__":
 # _validate_player_response -> obviously we log_to_self `the ValidationErros` but something more?
 # _parse_response -> log_to_self successful outcomes.
 # _on_valid_response -> log_to_self not sure think
+# also somehow log_to_self -> GameRecorder.log_event is not working since I cannot see the logs appears in the clembench.log
