@@ -216,6 +216,7 @@ class ComputerGame(NetworkDialogueGameMaster):
             return False
         if self.current_node == "END":
             return False
+        return True
 
     def _set_context_for(
         self, player: RoleBasedPlayer, formatted_context: Dict
@@ -370,7 +371,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                     logger.info(f"Processing pipeline executed for parser {parser_id}")
 
                 logger.info(
-                    f"Decision edge condition met: {self.current_node} → {to_node}"
+                    f"Decision edge condition met: {self.current_node} » {to_node}"
                 )
                 return response, True, to_node, (parse_result.content, result)
             except Exception as e:
@@ -431,7 +432,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                     self.message_state, next_player
                 )
                 self._set_context_for(next_player, formatted_context)
-                # self.message_state.reset(preserve=["observation"]) # Somehow this does not work.
+                self.message_state.reset(preserve=["observation"])
                 logger.info(
                     f"Set context for next player at node {self.transition.next_node}"
                 )
