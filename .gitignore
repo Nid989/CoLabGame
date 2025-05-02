@@ -6,6 +6,10 @@ __pycache__
 .venv/
 remove/
 
+# IDE and environment
+.vscode
+.env
+
 # Project directories
 /results/
 /in/legacy
@@ -28,8 +32,5 @@ vmware_vm_data
 .vmware_vms
 
 # Project specific files
-design_proper_play_function.md
-deprecated.md
-demo_run.py
 key.json
 /in/*.md
