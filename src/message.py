@@ -7,7 +7,6 @@ from src.player import RoleBasedPlayer
 from src.utils.registry.processors import processors
 from src.utils.constants import (
     HANDLER_TYPE,
-    DEFAULT_ENV_CONFIG,
     OBSERVATION_TYPE_values,
 )
 
@@ -129,10 +128,10 @@ class PlayerContextFormatter:
         """Initialize the player context formatter.
 
         Args:
-            game_config: Optional environment configuration dictionary; defaults to DEFAULT_ENV_CONFIG if None
+            game_config: Game specific configuration, contains meta-data enatailing to environment and game.
         """
         self.format_handlers = {}
-        self.game_config = game_config or DEFAULT_ENV_CONFIG
+        self.game_config = game_config
         self._setup_handlers()
 
     def _setup_handlers(self):

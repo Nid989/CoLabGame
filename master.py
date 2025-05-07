@@ -1,10 +1,18 @@
 import json
 import logging
+import numpy as np
 from typing import Dict, List, Optional, Union, Tuple, Any
 from PIL import Image
 
 from clemcore import backends
-from clemcore.clemgame import Player, GameMaster, GameBenchmark
+from clemcore.clemgame import (
+    Player,
+    GameMaster,
+    GameBenchmark,
+    GameScorer,
+    GameSpec,
+    metrics,
+)
 from src.master import (
     NetworkDialogueGameMaster,
     EdgeCondition,
@@ -15,7 +23,7 @@ from src.player import RoleBasedPlayer
 from src.message import MessageState, PlayerContextFormatter, PipeManager, PipeStage
 from src.utils.registry.parsers import parsers, get_parser_metadata
 from src.utils.registry.validators import raise_unrecognized_format_error
-from src.utils.constants import DEFAULT_GAME_CONFIG, DEFAULT_HANDLER_TYPE, LogType
+from src.utils.constants import DEFAULT_HANDLER_TYPE, LogType
 from src.utils.general import TemporaryImageManager
 
 logger = logging.getLogger(__name__)
@@ -30,7 +38,6 @@ class ComputerGame(NetworkDialogueGameMaster):
         player_models: List[backends.Model],
     ):
         super().__init__(name, path, experiment, player_models)
-        self.experiment: str = experiment["name"]
         self.env: Environment = None
         self.game_instance: Dict = None
         self.game_config: Dict = None
@@ -66,7 +73,7 @@ class ComputerGame(NetworkDialogueGameMaster):
 
     def _prepare_game_config(self) -> Dict:
         """Prepare game configuration dictionary"""
-        game_config = DEFAULT_GAME_CONFIG.copy()
+        game_config = self.experiment["config"].copy()
         observation_type = game_config.get("observation_type", "a11y_tree")
         use_images = observation_type in ["screenshot", "screenshot_a11y_tree", "som"]
         require_a11y_tree = observation_type in [
@@ -196,8 +203,8 @@ class ComputerGame(NetworkDialogueGameMaster):
         Returns:
             bool: False if game is completed or aborted, True otherwise
         """
-        # NOTE: might want to change the below check?
-        if self.invalid_response and self.aborted:
+        if self.invalid_response:
+            self.aborted = True
             self.lose = True
             return False
         max_rounds = self.game_config.get("max_rounds", 5)
@@ -297,7 +304,6 @@ class ComputerGame(NetworkDialogueGameMaster):
             elif not result.is_valid and result.intended_format:
                 self.log_to_self(LogType.VALIDATION_ERROR, result.error.get_dict())
                 self.invalid_response = True
-                self.request_count_violated += 1
                 handle_retry(result.error.message)
                 return False
             # Case 3: Not intended format - continue to next edge
@@ -309,7 +315,6 @@ class ComputerGame(NetworkDialogueGameMaster):
         error = raise_unrecognized_format_error(player.allowed_components)
         self.log_to_self(LogType.VALIDATION_ERROR, error.get_dict())
         self.invalid_response = True
-        self.request_count_violated += 1
         handle_retry(error.message)
         # TODO: Should we expand how we handle the fallback procedure?
         return False
@@ -331,7 +336,9 @@ class ComputerGame(NetworkDialogueGameMaster):
         Returns:
             Tuple[str, bool, Optional[str], Optional[Any]]: Modified response, logging flag, next node ID, extracted content
         """
-        self.request_count_parsed += 1
+        self.log_to_self(
+            "parsed_response", player.name
+        )  # Can just track it (e.g., see codenames)
         player_node = self.get_node_from_player(player)
         decision_edges = self._get_decision_edges(player_node)
         if not decision_edges:
@@ -445,14 +452,97 @@ class ComputerGame(NetworkDialogueGameMaster):
             float: A score of 1.0 for success or 0.0 for failure.
         """
         result = self.env.evaluate()
+        self.log_to_self("episode_score", result)
         return result
 
 
+class ComputerGameScorer(GameScorer):
+    def __init__(self, game_name: str, experiment: Dict, game_instance: Dict):
+        super().__init__(game_name, experiment, game_instance)
+
+    def compute_scores(self, episode_interactions: Dict) -> None:
+        """Temporary method to compute scores for Computer Game."""
+
+        aborted = True
+        success = False
+        all_turn_scores = []
+        # Events are logged properly.
+        # I need to iterate over the events and identify the types and their respected values, and correspond them with METRICS available.
+        for turn_idx, turn in enumerate(episode_interactions["turns"]):
+            turn_score_dict = {
+                "request_count": 0,
+                "request_count_parsed": 0,
+                "request_count_violated": 0,
+            }
+
+            for event in turn:
+                action = event["action"]
+                turn_score_dict["request_count"] += 1
+                if action["type"] == "validation_error":
+                    turn_score_dict["request_count_violated"] += 1
+                elif action["type"] == "parsed_response":
+                    turn_score_dict["request_count_parsed"] += 1
+                elif action["type"] == "episode_score":
+                    aborted = False
+                    success = bool(action["content"] == 1.0)
+
+            self.log_turn_score(
+                turn_idx,
+                metrics.METRIC_REQUEST_COUNT_VIOLATED,
+                turn_score_dict["request_count_violated"],
+            )
+            self.log_turn_score(
+                turn_idx,
+                metrics.METRIC_REQUEST_COUNT_PARSED,
+                turn_score_dict["request_count_parsed"],
+            )
+            self.log_turn_score(
+                turn_idx, metrics.METRIC_REQUEST_COUNT, turn_score_dict["request_count"]
+            )
+            all_turn_scores.append(turn_score_dict)
+
+        ep_request_count = 0
+        ep_request_count_violated = 0
+        ep_request_count_parsed = 0
+        for s in all_turn_scores:
+            ep_request_count += s["request_count"]
+            ep_request_count_violated += s["request_count_violated"]
+            ep_request_count_parsed += s["request_count_parsed"]
+
+        self.log_episode_score(metrics.METRIC_REQUEST_COUNT, ep_request_count)
+        self.log_episode_score(
+            metrics.METRIC_REQUEST_COUNT_VIOLATED, ep_request_count_violated
+        )
+        self.log_episode_score(
+            metrics.METRIC_REQUEST_COUNT_PARSED, ep_request_count_parsed
+        )
+
+        if aborted:
+            self.log_episode_score(metrics.METRIC_ABORTED, 1)
+            self.log_episode_score(metrics.METRIC_SUCCESS, 0)
+            self.log_episode_score(metrics.METRIC_LOSE, 0)
+            # Game-specific metrics
+            self.log_episode_score(metrics.BENCH_SCORE, np.nan)
+            self.log_episode_score("Player Score", np.nan)
+        else:
+            self.log_episode_score(metrics.METRIC_ABORTED, 0)
+            self.log_episode_score(metrics.METRIC_SUCCESS, int(success))
+            self.log_episode_score(metrics.METRIC_LOSE, int(not success))
+            self.log_episode_score(metrics.BENCH_SCORE, 100)
+            self.log_episode_score("Player Score", 100)
+
+
 class ComputerGameBenchmark(GameBenchmark):
+    def __init__(self, game_spec: GameSpec):
+        super().__init__(game_spec)
+
     def create_game_master(
         self, experiment: Dict, player_models: List[backends.Model]
     ) -> GameMaster:
         return ComputerGame(self.game_name, self.game_path, experiment, player_models)
+
+    def create_game_scorer(self, experiment: Dict, game_instance: Dict) -> GameScorer:
+        return ComputerGameScorer(self.game_name, experiment, game_instance)
 
 
 if __name__ == "__main__":
@@ -466,10 +556,3 @@ if __name__ == "__main__":
     game_1 = experiment_1["game_instances"][0]
     master = ComputerGame("computergame", None, experiment_1, ["mock", "mock"])
     master.setup(**game_1)
-
-# _on_before_round -> something should be logged via log_to_self
-# _does_game_proceed -> add more depenedent variables including aborted, lost etc & log_to_self once proceeding-of-game-stops
-# _validate_player_response -> obviously we log_to_self `the ValidationErros` but something more?
-# _parse_response -> log_to_self successful outcomes.
-# _on_valid_response -> log_to_self not sure think
-# also somehow log_to_self -> GameRecorder.log_event is not working since I cannot see the logs appears in the clembench.log
