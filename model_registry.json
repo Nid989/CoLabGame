@@ -25,5 +25,38 @@
                 "video": false
             }
         }
+    },
+    {
+        "model_name": "o3-mini-2025-01-31",
+        "model_id": "o3-mini-2025-01-31",
+        "backend": "openai",
+        "release_date": "2025-01-31",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "ar",
+            "bn",
+            "zh",
+            "fr",
+            "de",
+            "hi",
+            "en",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "pt",
+            "es",
+            "sw",
+            "yo"
+        ],
+        "context_size": "200k",
+        "license": {
+            "name": "OpenAI",
+            "url": "https://openai.com/policies/row-terms-of-use/"
+        },
+        "model_config": {
+            "reasoning_model": true
+        }
     }
 ]
