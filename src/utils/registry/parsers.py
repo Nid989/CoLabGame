@@ -9,7 +9,7 @@ from .base import Registry
 def parser_config(target_field: None, description=None):
     """Configure a parser with field mapping and description
     Args:
-        target_field: field to update with parsed content (e.g. master.MessageState.__dataclass_fields__ like query, response, etc.)
+        target_field: field to update with parsed content (e.g. master.MessageState.__dataclass_fields__ like request, response, etc.)
         description: Human-readable description of the parser
     """
 
@@ -177,26 +177,26 @@ def parse_done_or_fail(utterance: str) -> Tuple[bool, Optional[str]]:
     return False, None
 
 
-# QUERY```<content>```
-@parsers.register("query")
-@parser_config(target_field="query")
-def parse_query(utterance: str) -> Tuple[bool, Optional[str]]:
-    """Parse player utterances for QUERY blocks.
+# REQUEST```<content>```
+@parsers.register("request")
+@parser_config(target_field="request")
+def parse_request(utterance: str) -> Tuple[bool, Optional[str]]:
+    """Parse player utterances for REQUEST blocks.
     Args:
         utterance: The text content to parse
     Returns:
         Tuple containing:
-        - Boolean indicating if a QUERY block was found
-        - The content inside the QUERY block, or None if no valid content was found
+        - Boolean indicating if a REQUEST block was found
+        - The content inside the REQUEST block, or None if no valid content was found
     """
-    query_pattern = r"QUERY\s*```(.*?)```"
-    query_matches = re.findall(query_pattern, utterance, re.DOTALL)
+    request_pattern = r"REQUEST\s*```(.*?)```"
+    request_matches = re.findall(request_pattern, utterance, re.DOTALL)
 
-    if not query_matches:
+    if not request_matches:
         return False, None
 
-    query_content = query_matches[0].strip()
-    return bool(query_content), query_content if query_content else None
+    request_content = request_matches[0].strip()
+    return bool(request_content), request_content if request_content else None
 
 
 # RESPONSE```<content>```
@@ -219,3 +219,25 @@ def parse_response(utterance: str) -> Tuple[bool, Optional[str]]:
 
     response_content = response_matches[0].strip()
     return bool(response_content), response_content if response_content else None
+
+
+# TASK```<content>```
+@parsers.register("task")
+@parser_config(target_field="task")
+def parse_task(utterance: str) -> Tuple[bool, Optional[str]]:
+    """Parse player utterances for TASK blocks.
+    Args:
+        utterance: The text content to parse
+    Returns:
+        Tuple containing:
+        - Boolean indicating if a TASK block was found
+        - The content inside the TASK block, or None if no valid content was found
+    """
+    task_pattern = r"TASK\s*```(.*?)```"
+    task_matches = re.findall(task_pattern, utterance, re.DOTALL)
+
+    if not task_matches:
+        return False, None
+
+    task_content = task_matches[0].strip()
+    return bool(task_content), task_content if task_content else None

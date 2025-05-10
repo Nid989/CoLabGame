@@ -19,7 +19,7 @@ class MessageState:
 
     Fields:
         observation: Optional dictionary (e.g., {'screenshot': str, 'accessibility_tree': str})
-        query: Optional query string
+        request: Optional request string
         response: Optional response string
         plan: Optional plan string
         task: Optional task string
@@ -28,10 +28,11 @@ class MessageState:
     """
 
     observation: Optional[Dict[str, Union[str, Image.Image, Dict]]] = None
-    query: Optional[str] = None
-    response: Optional[str] = None
+    goal: Optional[str] = None
     plan: Optional[str] = None
     task: Optional[str] = None
+    request: Optional[str] = None
+    response: Optional[str] = None
     actions: Optional[List[str]] = None
     tagged_content: Optional[Dict[str, str]] = None
 
@@ -54,7 +55,7 @@ class MessageState:
         """Update state fields with new values, validating types.
 
         Args:
-            **kwargs: Field names and values to update (e.g., query='new query')
+            **kwargs: Field names and values to update (e.g., request='new request')
 
         Returns:
             None: No return value
@@ -77,9 +78,13 @@ class MessageState:
                     raise ValueError("Actions must be List[str]")
                 elif field == "observation" and not isinstance(value, dict):
                     raise ValueError("Observation must be a dictionary")
-                elif field in {"query", "response", "plan", "task"} and not isinstance(
-                    value, str
-                ):
+                elif field in {
+                    "goal",
+                    "plan",
+                    "task",
+                    "request",
+                    "response",
+                } and not isinstance(value, str):
                     raise ValueError(f"{field} must be a string")
             setattr(self, field, value)
         return None
@@ -137,24 +142,25 @@ class PlayerContextFormatter:
     def _setup_handlers(self):
         """Set up the default format handlers."""
         self.add_handler("observation", self._format_observation)
-        self.add_handler("query", self._format_query)
-        self.add_handler("response", self._format_response)
+        self.add_handler("goal", self._format_goal)
         self.add_handler("plan", self._format_plan)
         self.add_handler("task", self._format_task)
+        self.add_handler("request", self._format_request)
+        self.add_handler("response", self._format_response)
         self.add_handler("tagged_content", self._format_tagged_content)
 
     def add_handler(self, component_name: str, handler_function):
         """Register a handler function for a specific component type.
 
         Args:
-            component_name: Name of the component (e.g., 'observation', 'query')
+            component_name: Name of the component (e.g., 'observation', 'request')
             handler_function: Function to handle formatting of that component
         """
         self.format_handlers[component_name] = handler_function
 
     def create_context_for(
         self, message_state: MessageState, player: RoleBasedPlayer
-    ) -> Dict:
+    ) -> Optional[Dict]:
         """Create a formatted context for a specific player from the current message state.
 
         Args:
@@ -172,6 +178,8 @@ class PlayerContextFormatter:
         filtered_state = self._filter_components(
             message_state, handler_type, allowed_components
         )
+        if filtered_state.is_empty():
+            return None
         processed_state = self._process_components(filtered_state)
         formatted_context = self.assemble(processed_state)
         if footer_prompt and "content" in formatted_context:
@@ -198,13 +206,20 @@ class PlayerContextFormatter:
             ValueError: If allowed_components contains invalid components or no valid components remain
         """
         handler_rules = {
-            "standard": {"query", "response", "plan", "task", "tagged_content"},
-            "environment": {
-                "observation",
-                "query",
-                "response",
+            "standard": {
+                "goal",
                 "plan",
                 "task",
+                "request",
+                "response",
+                "tagged_content",
+            },
+            "environment": {
+                "observation",
+                "goalplan",
+                "task",
+                "request",
+                "response",
                 "tagged_content",
             },
         }
@@ -222,10 +237,6 @@ class PlayerContextFormatter:
             for k, v in message_state.__dict__.items()
             if k in permitted_components and v is not None
         }
-        if not filtered_components:
-            raise ValueError(
-                f"No permitted components found for {handler_type} handler with allowed components {allowed_components}"
-            )
         return MessageState(**filtered_components)
 
     def _process_components(self, message_state: MessageState) -> MessageState:
@@ -325,27 +336,16 @@ class PlayerContextFormatter:
         content, images = formatters[observation_type](observation)
         return {"content": f"## Observation\n{content}", "image": images}
 
-    def _format_query(self, query: str) -> Dict:
-        """Format a query component.
+    def _format_goal(self, goal: str) -> Dict:
+        """Format a goal component.
 
         Args:
-            query: Query string
+            goal: Goal string
 
         Returns:
             Dict: Dictionary with 'content' and 'image' keys
         """
-        return {"content": f"## Query\n{query}", "image": []}
-
-    def _format_response(self, response: str) -> Dict:
-        """Format a response component.
-
-        Args:
-            response: Response string
-
-        Returns:
-            Dict: Dictionary with 'content' and 'image' keys
-        """
-        return {"content": f"## Response\n{response}", "image": []}
+        return {"content": f"## Goal\n{goal}", "image": []}
 
     def _format_plan(self, plan: str) -> Dict:
         """Format a plan component.
@@ -368,6 +368,28 @@ class PlayerContextFormatter:
             Dict: Dictionary with 'content' and 'image' keys
         """
         return {"content": f"## Task\n{task}", "image": []}
+
+    def _format_request(self, request: str) -> Dict:
+        """Format a request component.
+
+        Args:
+            request: Request string
+
+        Returns:
+            Dict: Dictionary with 'content' and 'image' keys
+        """
+        return {"content": f"## REQUEST\n{request}", "image": []}
+
+    def _format_response(self, response: str) -> Dict:
+        """Format a response component.
+
+        Args:
+            response: Response string
+
+        Returns:
+            Dict: Dictionary with 'content' and 'image' keys
+        """
+        return {"content": f"## Response\n{response}", "image": []}
 
     def _format_tagged_content(self, tagged_content: Dict[str, str]) -> Dict:
         """Format tagged content.

@@ -44,16 +44,16 @@ def process_observation(
     return processed_obs
 
 
-@processors.register("query")
-def process_query(query: str, game_config: Dict) -> str:
-    """Process a query string
+@processors.register("request")
+def process_request(request: str, game_config: Dict) -> str:
+    """Process a request string
     Args:
-        query: Raw query string
+        request: Raw request string
         game_config: Dictionary containing game configuration
     Returns:
-        Processed query string
+        Processed request string
     """
-    return query
+    return request
 
 
 @processors.register("response")

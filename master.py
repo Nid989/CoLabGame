@@ -65,13 +65,23 @@ class ComputerGame(NetworkDialogueGameMaster):
             game_instance: Keyword arguments of the game_instance
         """
         self.game_instance = game_instance
+        self._prepare_game_instance()
         self._prepare_game_config()
         self._initialize_formatter()
         self._initialize_environment()
         self._build_graph()
         self._setup_after_parse_pipelines()
 
-    def _prepare_game_config(self) -> Dict:
+    def _prepare_game_instance(self) -> None:
+        """Prepare the game instance by applying templates and replacing placeholders"""
+        templates = self.experiment["templates"]
+        roles = templates["roles"]
+        graph = templates["graph"]
+        self.game_instance["roles"] = roles
+        self.game_instance["graph"] = graph
+        self.message_state.update(goal=self.game_instance["task_config"]["instruction"])
+
+    def _prepare_game_config(self) -> None:
         """Prepare game configuration dictionary"""
         game_config = self.experiment["config"].copy()
         observation_type = game_config.get("observation_type", "a11y_tree")
@@ -254,10 +264,15 @@ class ComputerGame(NetworkDialogueGameMaster):
             "Current node must be the anchor node at game start"
         )
         current_player = self.get_player_from_node(self.current_node)
-        formatted_context = self.player_context_formatter.create_context_for(
+        context = self.player_context_formatter.create_context_for(
             self.message_state, current_player
         )
-        self._set_context_for(current_player, formatted_context)
+        if context is None:
+            logger.debug(
+                "No context generated for player; skipping inital context setup."
+            )
+            return
+        self._set_context_for(current_player, context)
         logger.info(f"Set initial context for player at node {self.current_node}")
 
     def _validate_player_response(self, player: Player, response: str) -> bool:
@@ -302,7 +317,9 @@ class ComputerGame(NetworkDialogueGameMaster):
                 return True
             # Case 2: Invalid but intended format - validation failed for intended format
             elif not result.is_valid and result.intended_format:
-                self.log_to_self(LogType.VALIDATION_ERROR, result.error.get_dict())
+                self.log_to_self(
+                    LogType.VALIDATION_ERROR.value, result.error.get_dict()
+                )
                 self.invalid_response = True
                 handle_retry(result.error.message)
                 return False
@@ -313,7 +330,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         # Fallback procedure
         # TODO: deal with how to handle the observation <-> pyautogui or computer13 substitution.
         error = raise_unrecognized_format_error(player.allowed_components)
-        self.log_to_self(LogType.VALIDATION_ERROR, error.get_dict())
+        self.log_to_self(LogType.VALIDATION_ERROR.value, error.get_dict())
         self.invalid_response = True
         handle_retry(error.message)
         # TODO: Should we expand how we handle the fallback procedure?
@@ -521,7 +538,6 @@ class ComputerGameScorer(GameScorer):
             self.log_episode_score(metrics.METRIC_ABORTED, 1)
             self.log_episode_score(metrics.METRIC_SUCCESS, 0)
             self.log_episode_score(metrics.METRIC_LOSE, 0)
-            # Game-specific metrics
             self.log_episode_score(metrics.BENCH_SCORE, np.nan)
             self.log_episode_score("Player Score", np.nan)
         else:

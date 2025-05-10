@@ -33,12 +33,17 @@ class DoneOrFailValidationErrorTypes(str, Enum):
     INVALID_STATUS = "invalid_status"
 
 
-class QueryValidationErrorTypes(str, Enum):
+class RequestValidationErrorTypes(str, Enum):
     MULTIPLE_CODE_BLOCKS = "multiple_code_blocks"
     EMPTY_CODE_BLOCK = "empty_code_block"
 
 
 class ResponseValidationErrorTypes(str, Enum):
+    MULTIPLE_CODE_BLOCKS = "multiple_code_blocks"
+    EMPTY_CODE_BLOCK = "empty_code_block"
+
+
+class TaskValidationErrorTypes(str, Enum):
     MULTIPLE_CODE_BLOCKS = "multiple_code_blocks"
     EMPTY_CODE_BLOCK = "empty_code_block"
 
@@ -51,8 +56,9 @@ ValidationErrorType = Union[
     Computer13ValidationErrorTypes,
     PyAutoGUIValidationErrorTypes,
     DoneOrFailValidationErrorTypes,
-    QueryValidationErrorTypes,
+    RequestValidationErrorTypes,
     ResponseValidationErrorTypes,
+    TaskValidationErrorTypes,
 ]
 
 
@@ -139,8 +145,8 @@ def is_done_or_fail_format(utterance: str) -> bool:
     return bool(re.search(r"STATUS\s*\n\s*```[^`]*```", utterance, re.DOTALL))
 
 
-def is_query_format(utterance: str) -> bool:
-    """Check if an utterance matches the QUERY format.
+def is_request_format(utterance: str) -> bool:
+    """Check if an utterance matches the REQUEST format.
 
     This is a lightweight structural check without detailed content validation.
 
@@ -148,9 +154,9 @@ def is_query_format(utterance: str) -> bool:
         utterance (str): The utterance to check.
 
     Returns:
-        bool: True if the utterance matches the QUERY format, False otherwise.
+        bool: True if the utterance matches the REQUEST format, False otherwise.
     """
-    return bool(re.search(r"QUERY\s*```.*?```", utterance, re.DOTALL))
+    return bool(re.search(r"REQUEST\s*```.*?```", utterance, re.DOTALL))
 
 
 def is_response_format(utterance: str) -> bool:
@@ -165,6 +171,20 @@ def is_response_format(utterance: str) -> bool:
         bool: True if the utterance matches the RESPONSE format, False otherwise.
     """
     return bool(re.search(r"RESPONSE\s*```.*?```", utterance, re.DOTALL))
+
+
+def is_task_format(utterance: str) -> bool:
+    """Check if an utterance matches the TASK format.
+
+    This is a lightweight structural check without detailed content validation.
+
+    Args:
+        utterance (str): The utterance to check.
+
+    Returns:
+        bool: True if the utterance matches the TASK format, False otherwise.
+    """
+    return bool(re.search(r"TASK\s*```.*?```", utterance, re.DOTALL))
 
 
 validators = Registry[Callable[[str], Tuple[bool, Optional[ValidationError]]]]()
@@ -500,9 +520,9 @@ def validate_done_or_fail(utterance: str) -> Tuple[bool, Optional[ValidationErro
     return True, True, None
 
 
-@validators.register("query")
-def validate_query(utterance: str) -> Tuple[bool, Optional[ValidationError]]:
-    """Validate an utterance against the QUERY format.
+@validators.register("request")
+def validate_request(utterance: str) -> Tuple[bool, Optional[ValidationError]]:
+    """Validate an utterance against the REQUEST format.
 
     Performs a two-stage validation: checks if the utterance matches the format, then validates
     the presence of non-empty content.
@@ -513,31 +533,31 @@ def validate_query(utterance: str) -> Tuple[bool, Optional[ValidationError]]:
     Returns:
         Tuple[bool, bool, Optional[ValidationError]]: A tuple containing:
             - bool: True if validation succeeds, False otherwise.
-            - bool: True if the utterance matches the QUERY format, False otherwise.
+            - bool: True if the utterance matches the REQUEST format, False otherwise.
             - Optional[ValidationError]: Error details if validation fails, None otherwise.
     """
-    if not is_query_format(utterance):
+    if not is_request_format(utterance):
         return False, False, None
 
-    query_blocks = re.findall(r"QUERY\s*```(.*?)```", utterance, re.DOTALL)
-    if len(query_blocks) > 1:
+    request_blocks = re.findall(r"REQUEST\s*```(.*?)```", utterance, re.DOTALL)
+    if len(request_blocks) > 1:
         return (
             False,
             True,
             ValidationError(
-                QueryValidationErrorTypes.MULTIPLE_CODE_BLOCKS,
-                "Multiple QUERY sections found. Only one is allowed.",
-                {"count": len(query_blocks)},
+                RequestValidationErrorTypes.MULTIPLE_CODE_BLOCKS,
+                "Multiple REQUEST sections found. Only one is allowed.",
+                {"count": len(request_blocks)},
             ),
         )
 
-    if not query_blocks[0].strip():
+    if not request_blocks[0].strip():
         return (
             False,
             True,
             ValidationError(
-                QueryValidationErrorTypes.EMPTY_CODE_BLOCK,
-                "QUERY code block cannot be empty.",
+                RequestValidationErrorTypes.EMPTY_CODE_BLOCK,
+                "REQUEST code block cannot be empty.",
             ),
         )
 
@@ -588,6 +608,50 @@ def validate_response(utterance: str) -> Tuple[bool, Optional[ValidationError]]:
     return True, True, None
 
 
+@validators.register("task")
+def validate_task(utterance: str) -> Tuple[bool, bool, Optional[ValidationError]]:
+    """Validate an utterance against the TASK format.
+
+    Performs a two-stage validation: checks if the utterance matches the format, then validates
+    the presence of non-empty content.
+
+    Args:
+        utterance (str): The utterance to validate.
+
+    Returns:
+        Tuple[bool, bool, Optional[ValidationError]]: A tuple containing:
+            - bool: True if validation succeeds, False otherwise.
+            - bool: True if the utterance matches the TASK format, False otherwise.
+            - Optional[ValidationError]: Error details if validation fails, None otherwise.
+    """
+    if not is_task_format(utterance):
+        return False, False, None
+
+    task_blocks = re.findall(r"TASK\s*```(.*?)```", utterance, re.DOTALL)
+    if len(task_blocks) > 1:
+        return (
+            False,
+            True,
+            ValidationError(
+                TaskValidationErrorTypes.MULTIPLE_CODE_BLOCKS,
+                "Multiple TASK sections found. Only one is allowed.",
+                {"count": len(task_blocks)},
+            ),
+        )
+
+    if not task_blocks[0].strip():
+        return (
+            False,
+            True,
+            ValidationError(
+                TaskValidationErrorTypes.EMPTY_CODE_BLOCK,
+                "TASK code block cannot be empty.",
+            ),
+        )
+
+    return True, True, None
+
+
 def raise_unrecognized_format_error(allowed_components: List[str]) -> ValidationError:
     """Create a ValidationError for unrecognized format with actual format examples.
 
@@ -618,13 +682,17 @@ STATUS
 ```
 FAIL
 ```""",
-        "query": """QUERY
+        "request": """REQUEST
 ```
-<query_text>
+<request_text>
 ```""",
         "response": """RESPONSE
 ```
 <response_text>
+```""",
+        "task": """TASK
+```
+<task_description>
 ```""",
     }
 

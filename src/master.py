@@ -12,15 +12,17 @@ from .utils.registry.parsers import (
     parse_computer13_actions,
     parse_pyautogui_actions,
     parse_done_or_fail,
-    parse_query,
+    parse_request,
     parse_response,
+    parse_task,
 )
 from .utils.registry.validators import (
     validate_computer13_actions,
     validate_pyautogui_actions,
     validate_done_or_fail,
-    validate_query,
+    validate_request,
     validate_response,
+    validate_task,
     ValidationError,
 )
 
@@ -80,8 +82,9 @@ class ConditionType(str, Enum):
     COMPUTER13_ACTIONS = "computer13_actions"
     PYAUTOGUI_ACTIONS = "pyautogui_actions"
     DONE_OR_FAIL = "done_or_fail"
-    QUERY = "query"
+    REQUEST = "request"
     RESPONSE = "response"
+    TASK = "task"
 
 
 class ConditionPair(NamedTuple):
@@ -107,8 +110,9 @@ CONDITION_PAIRS: Dict[ConditionType, ConditionPair] = {
     ConditionType.DONE_OR_FAIL: ConditionPair(
         parse_done_or_fail, validate_done_or_fail
     ),
-    ConditionType.QUERY: ConditionPair(parse_query, validate_query),
+    ConditionType.REQUEST: ConditionPair(parse_request, validate_request),
     ConditionType.RESPONSE: ConditionPair(parse_response, validate_response),
+    ConditionType.TASK: ConditionPair(parse_task, validate_task),
 }
 
 
@@ -561,11 +565,54 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                 self.node_positions = nx.spring_layout(
                     self.graph, k=0.5, iterations=100, seed=42
                 )
+
+        # Professional color palette
         node_colors = {
-            NodeType.START: "#2ECC71",
-            NodeType.PLAYER: "#3498DB",
-            NodeType.END: "#E74C3C",
+            NodeType.START: "#4CAF50",  # Muted green
+            NodeType.PLAYER: "#0288D1",  # Deep blue
+            NodeType.END: "#D81B60",  # Muted magenta
         }
+
+        # Define node size - we'll use this value consistently
+        base_node_size = 3300
+
+        # Edges - Draw edges BEFORE nodes so nodes appear on top
+        standard_edges = [
+            (u, v)
+            for u, v, d in self.graph.edges(data=True)
+            if d.get("type") == EdgeType.STANDARD
+        ]
+        decision_edges = [
+            (u, v)
+            for u, v, d in self.graph.edges(data=True)
+            if d.get("type") == EdgeType.DECISION
+        ]
+
+        nx.draw_networkx_edges(
+            self.graph,
+            self.node_positions,
+            edgelist=standard_edges,
+            arrowsize=25,
+            width=2.5,
+            edge_color="#455A64",
+            connectionstyle="arc3,rad=0.1",
+            arrowstyle="-|>",
+            node_size=base_node_size,
+        )
+        nx.draw_networkx_edges(
+            self.graph,
+            self.node_positions,
+            edgelist=decision_edges,
+            arrowsize=25,
+            width=2,
+            edge_color="#7B1FA2",
+            style="dashed",
+            connectionstyle="arc3,rad=0.1",
+            arrowstyle="-|>",
+            node_size=base_node_size,
+        )
+
+        # Now draw nodes on top of edges
         for node_type in NodeType:
             nodes = [
                 node
@@ -579,11 +626,13 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                 self.node_positions,
                 nodelist=nodes,
                 node_color=node_colors[node_type],
-                node_size=3000,
+                node_size=base_node_size,
                 alpha=0.9,
-                edgecolors="#2C3E50",
+                edgecolors="#37474F",
                 linewidths=2,
             )
+
+        # Node labels
         node_labels = {}
         for node in self.graph.nodes():
             node_type = self.graph.nodes[node].get("type")
@@ -597,35 +646,8 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                 node_labels[node] = f"{node}\n({role_text})"
             else:
                 node_labels[node] = node
-        standard_edges = [
-            (u, v)
-            for u, v, d in self.graph.edges(data=True)
-            if d.get("type") == EdgeType.STANDARD
-        ]
-        decision_edges = [
-            (u, v)
-            for u, v, d in self.graph.edges(data=True)
-            if d.get("type") == EdgeType.DECISION
-        ]
-        nx.draw_networkx_edges(
-            self.graph,
-            self.node_positions,
-            edgelist=standard_edges,
-            arrowsize=25,
-            width=2.5,
-            edge_color="#34495E",
-            connectionstyle="arc3,rad=0.1",
-        )
-        nx.draw_networkx_edges(
-            self.graph,
-            self.node_positions,
-            edgelist=decision_edges,
-            arrowsize=25,
-            width=2,
-            edge_color="#8E44AD",
-            style="dashed",
-            connectionstyle="arc3,rad=0.1",
-        )
+
+        # Node labels drawing
         nx.draw_networkx_labels(
             self.graph,
             self.node_positions,
@@ -635,36 +657,46 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             font_weight="bold",
             font_color="#FFFFFF",
         )
+
+        # Edge labels
         edge_labels_dict = {}
         for (u, v, k), label in self.edge_labels.items():
-            if label and len(label) > 20:
-                words = label.split()
-                chunks = []
-                current_chunk = []
-                current_length = 0
-                for word in words:
-                    if current_length + len(word) > 20:
+            if label:
+                if len(label) > 20:
+                    words = label.split()
+                    chunks = []
+                    current_chunk = []
+                    current_length = 0
+                    for word in words:
+                        if current_length + len(word) > 20:
+                            chunks.append(" ".join(current_chunk))
+                            current_chunk = [word]
+                            current_length = len(word)
+                        else:
+                            current_chunk.append(word)
+                            current_length += len(word) + 1
+                    if current_chunk:
                         chunks.append(" ".join(current_chunk))
-                        current_chunk = [word]
-                        current_length = len(word)
-                    else:
-                        current_chunk.append(word)
-                        current_length += len(word) + 1
-                if current_chunk:
-                    chunks.append(" ".join(current_chunk))
-                label = "\n".join(chunks)
-            edge_labels_dict[(u, v)] = label
+                    label = "\n".join(chunks)
+                edge_labels_dict[(u, v)] = label
+
         nx.draw_networkx_edge_labels(
             self.graph,
             self.node_positions,
             edge_labels=edge_labels_dict,
             font_size=8,
             font_family="sans-serif",
+            font_weight="normal",
             bbox=dict(
-                facecolor="white", edgecolor="none", alpha=0.7, boxstyle="round,pad=0.3"
+                facecolor="white",
+                edgecolor="none",
+                alpha=0.7,
+                boxstyle="round,pad=0.4",
             ),
             label_pos=0.4,
         )
+
+        # Anchor node
         if self.anchor_node and self.anchor_node in self.graph:
             anchor_pos = {self.anchor_node: self.node_positions[self.anchor_node]}
             nx.draw_networkx_nodes(
@@ -672,11 +704,12 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                 anchor_pos,
                 nodelist=[self.anchor_node],
                 node_color="none",
-                node_size=3300,
+                node_size=base_node_size * 1.1,
                 alpha=1.0,
-                edgecolors="#FFD700",
+                edgecolors="#FBC02D",
                 linewidths=4,
             )
+
         plt.title(
             f"Interaction Network for {self.game_name}",
             fontsize=16,
@@ -685,6 +718,8 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         )
         plt.axis("off")
         plt.tight_layout()
+
+        # Legend with increased padding
         legend_elements = [
             plt.Line2D(
                 [0],
@@ -713,11 +748,11 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                 markersize=15,
                 label="End Node",
             ),
-            plt.Line2D([0], [0], color="#34495E", linewidth=2.5, label="Standard Edge"),
+            plt.Line2D([0], [0], color="#455A64", linewidth=2.5, label="Standard Edge"),
             plt.Line2D(
                 [0],
                 [0],
-                color="#8E44AD",
+                color="#7B1FA2",
                 linewidth=2,
                 linestyle="dashed",
                 label="Decision Edge",
@@ -729,7 +764,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                     [0],
                     [0],
                     markerfacecolor="none",
-                    markeredgecolor="#FFD700",
+                    markeredgecolor="#FBC02D",
                     marker="o",
                     linestyle="None",
                     markersize=15,
@@ -737,13 +772,23 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                     label="Anchor Node",
                 )
             )
+
         plt.legend(
             handles=legend_elements,
             loc="lower center",
             bbox_to_anchor=(0.5, -0.15),
             ncol=3,
             fontsize=10,
+            frameon=True,
+            edgecolor="#37474F",
+            facecolor="#FAFAFA",
+            framealpha=0.9,
+            bbox_transform=plt.gcf().transFigure,
+            borderpad=1,
+            labelspacing=1,
+            handletextpad=1,
         )
+
         if save_path:
             plt.savefig(save_path, bbox_inches="tight", dpi=dpi)
         else:
