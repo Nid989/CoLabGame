@@ -1,0 +1,346 @@
+{
+    "experiments": [
+        {
+            "name": "collab: free",
+            "environment_type": "osworld",
+            "templates": {
+                "roles": [
+                    {
+                        "name": "advisor",
+                        "handler_type": "standard",
+                        "initial_prompt": "You are the Advisor, a high-level planning agent responsible for defining tasks and assessing progress. You delegate execution to the Executor agent, which operates in the environment.\n\n## Role & Responsibilities:\n- You **specify the task that needs to be accomplished**, either as a single objective or as sub-tasks if multiple components are involved.\n- You **do not issue step-by-step instructions or operational guidance** on how to perform the task.\n- You may reframe a complex task into logical sub-tasks if needed, but always from a results-oriented, goal-level perspective.\n\n## Capabilities and Constraints:\n- You are **not involved in execution** and do not access or operate the environment directly.\n- The Executor **may ask for clarification or feedback**, to which you respond with:\n  RESPONSE\n  ```\n  <high-level clarification or evaluative feedback>\n  ```\n- To initiate work or pivot scope, you communicate the goal using:\n  TASK\n  ```\n  <task or sub-task to be accomplished>\n  ```\n- Avoid giving procedural advice, implementation steps, or tool-specific guidance.\n- You may assess outcomes, redirect focus, or restate priorities—but only at the task level.\n\n## Interaction Protocol:\n- Start by issuing the GOAL using the `TASK` format.\n- Reframe the goal into sub-tasks if the scope spans multiple applications or logical components.\n- Provide feedback only when prompted by the Executor or when the task needs to be updated.\n\nYou are a goal-setter and decision-maker—not an operator. The Executor relies on your clarity of purpose, not on how-tos.",
+                        "allowed_components": [
+                            "goal",
+                            "request"
+                        ]
+                    },
+                    {
+                        "name": "executor",
+                        "handler_type": "environment",
+                        "initial_prompt": "You are the Executor, a specialized agent with direct access to a **Ubuntu computer environment**. You perform tasks defined by the Advisor. You do **not** know the overall goal and must only act on received instructions.\n\n## Role & Responsibilities:\n- You **perform specific actions** in the environment based on the Advisor’s task directives.\n- You **do not infer or assume** goals beyond what the Advisor specifies.\n- You **respond with a single action format** per message, depending on your current state or needs.\n\n## Capabilities and Constraints:\n- You have **full visibility and control** over the Ubuntu environment (e.g., system commands, accessibility tree data).\n- You use tools such as `pyautogui` with built-in delays (`time.sleep()`) to simulate input and ensure stability.\n- You may **not** use screen-based recognition tools like `pyautogui.locateCenterOnScreen()` or `pyautogui.screenshot()`.\n- All actions must be **independent and complete**; avoid multi-step code relying on previous state unless explicitly structured to do so.\n\n## Interaction Protocol:\nYou must always respond using **one and only one** of the following formats:\n\n- You can execute commands using:\n  EXECUTE\n  ```python\n  <command>\n  ```\n\n- If needed, you may ask a question or request further guidance from the Advisor.\n  REQUEST\n  ```\n  <question>\n  ```\n\n- When the task is successfully completed, respond with:\n  STATUS\n  ```\n  DONE\n  ```\n\n- If the task is not feasible, respond with:\n  STATUS\n  ```\n  FAIL\n  ```\n\n## Workflow Guidelines:\n- Do not initiate any task without a directive from the Advisor.\n- After completing a task:\n   - Ask if it is complete, or\n   - Request the next task.\n- Always remain reactive; never take initiative outside of Advisor’s direction.\n\n## Environmental Awareness:\n- You alone interact with the environment; the Advisor cannot perceive its state.\n- Observations you receive may include:\n  - Terminal output\n  - Accessibility tree data (via AT-SPI)\n  - System feedback from previous actions\n\nYou are an operator—not a planner. Wait for direction, execute precisely, and report clearly.\n\n---\n\nBegin only when the Advisor provides a task.",
+                        "allowed_components": [
+                            "observation",
+                            "task",
+                            "response"
+                        ]
+                    }
+                ],
+                "graph": {
+                    "nodes": [
+                        {
+                            "id": "START",
+                            "type": "START"
+                        },
+                        {
+                            "id": "advisor",
+                            "type": "PLAYER",
+                            "role_index": 0
+                        },
+                        {
+                            "id": "executor",
+                            "type": "PLAYER",
+                            "role_index": 1
+                        },
+                        {
+                            "id": "END",
+                            "type": "END"
+                        }
+                    ],
+                    "edges": [
+                        {
+                            "from": "START",
+                            "to": "advisor",
+                            "type": "STANDARD",
+                            "description": ""
+                        },
+                        {
+                            "from": "advisor",
+                            "to": "executor",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "task"
+                            },
+                            "description": "TASK"
+                        },
+                        {
+                            "from": "advisor",
+                            "to": "executor",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "response"
+                            },
+                            "description": "RESPONSE"
+                        },
+                        {
+                            "from": "executor",
+                            "to": "advisor",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "request"
+                            },
+                            "description": "REQUEST"
+                        },
+                        {
+                            "from": "executor",
+                            "to": "executor",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "pyautogui_actions"
+                            },
+                            "description": "PYAUTOGUI_ACTIONS"
+                        },
+                        {
+                            "from": "executor",
+                            "to": "END",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "done_or_fail"
+                            },
+                            "description": "DONE_OR_FAIL"
+                        }
+                    ],
+                    "anchor_node": "advisor"
+                }
+            },
+            "game_instances": [
+                {
+                    "game_id": "a4cccc32-1bf3-40d7-9bda-015267c21815",
+                    "task_config": {
+                        "id": "a4cccc32-1bf3-40d7-9bda-015267c21815",
+                        "snapshot": "libreoffice_writer",
+                        "instruction": "Open the 'report.docx' file on the Desktop in LibreOffice Writer and add a page break after the first paragraph.",
+                        "source": "Custom",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://docs.google.com/document/d/1P8J7291xNBdm0trluKpZey0eSkR5JjT2/export?format=docx",
+                                            "path": "/home/user/Desktop/report.docx"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "open",
+                                "parameters": {
+                                    "path": "/home/user/Desktop/report.docx"
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "libreoffice_writer"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "activate_window",
+                                    "parameters": {
+                                        "window_name": "report.docx - LibreOffice Writer",
+                                        "strict": true
+                                    }
+                                },
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python",
+                                            "-c",
+                                            "import pyautogui; pyautogui.hotkey('ctrl', 's');"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 1
+                                    }
+                                }
+                            ],
+                            "func": "contains_page_break",
+                            "result": {
+                                "type": "vm_file",
+                                "path": "/home/user/Desktop/report.docx",
+                                "dest": "report.docx"
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "page_break_count": 1
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "c84148c2-c5e3-4327-a203-d5c411338ced",
+                    "task_config": {
+                        "id": "c84148c2-c5e3-4327-a203-d5c411338ced",
+                        "snapshot": "os",
+                        "instruction": "Rename the file 'report.txt' on the Desktop to 'final_report.txt' using the terminal.",
+                        "source": "Custom",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://drive.google.com/uc?export=download&id=1_W_t78vQwby5sXs0WoEDVp8jnNjqOA2m",
+                                            "path": "/home/user/Desktop/report.txt"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python",
+                                        "-c",
+                                        "import pyautogui; import time; pyautogui.hotkey('ctrl', 'alt', 't'); time.sleep(0.5);"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "os"
+                        ],
+                        "evaluator": {
+                            "func": "exact_match",
+                            "result": {
+                                "type": "vm_command_line",
+                                "command": "ls /home/user/Desktop/final_report.txt && echo 'Exists' || echo 'Not Found'",
+                                "shell": true
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "expected": "Exists\n"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "f0357192-afee-485c-a33e-935ace6c54a4",
+                    "task_config": {
+                        "id": "f0357192-afee-485c-a33e-935ace6c54a4",
+                        "snapshot": "libreoffice_calc",
+                        "instruction": "Set LibreOffice Calc to auto-save every 5 minutes.",
+                        "source": "Custom",
+                        "config": [
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "libreoffice",
+                                        "--calc"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/task-004",
+                        "related_apps": [
+                            "libreoffice_calc"
+                        ],
+                        "evaluator": {
+                            "func": "check_auto_saving_time",
+                            "result": {
+                                "type": "vm_file",
+                                "path": "/home/user/.config/libreoffice/4/user/registrymodifications.xcu",
+                                "dest": "registrymodifications.xcu"
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "minutes": 5
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "2cb0531e-414f-437e-80b6-97ee577f02a7",
+                    "task_config": {
+                        "id": "2cb0531e-414f-437e-80b6-97ee577f02a7",
+                        "snapshot": "libreoffice_writer",
+                        "instruction": "Run 'lsblk' in the terminal and append its output to a new LibreOffice Writer document on the Desktop.",
+                        "source": "Custom",
+                        "config": [
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python",
+                                        "-c",
+                                        "import pyautogui; pyautogui.hotkey('ctrl', 'alt', 't'); time.sleep(0.5);"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "libreoffice",
+                                        "--writer"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/task-006",
+                        "related_apps": [
+                            "os",
+                            "libreoffice_writer"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python",
+                                            "-c",
+                                            "import pyautogui; pyautogui.hotkey('ctrl', 's'); time.sleep(0.5);"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 0.5
+                                    }
+                                }
+                            ],
+                            "func": "compare_docx_files",
+                            "result": {
+                                "type": "vm_file",
+                                "path": "/home/user/Desktop/Untitled 1.docx",
+                                "dest": "Untitled 1.docx"
+                            },
+                            "expected": {
+                                "type": "vm_command_line",
+                                "command": "lsblk",
+                                "shell": true
+                            }
+                        }
+                    }
+                }
+            ],
+            "config": {
+                "headless": false,
+                "observation_type": "a11y_tree",
+                "action_space": "pyautogui",
+                "screen_width": 1920,
+                "screen_height": 1080,
+                "path_to_vm": "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx",
+                "sleep_after_execution": 0,
+                "max_retries": 2,
+                "max_rounds": 5,
+                "max_transitions_per_round": 5
+            }
+        }
+    ]
+}

@@ -3,144 +3,151 @@
         {
             "name": "collab: free",
             "environment_type": "osworld",
-            "game_instances": [
-                {
-                    "game_id": "bb5e4c0d-f964-439c-97b6-bdb9747de3f4",
-                    "roles": [
+            "templates": {
+                "roles": [
+                    {
+                        "name": "advisor",
+                        "handler_type": "standard",
+                        "initial_prompt": "You are the Advisor, a high-level planning agent responsible for defining tasks and assessing progress. You delegate execution to the Executor agent, which operates in the environment.\n\n## Role & Responsibilities:\n- You **specify the task that needs to be accomplished**, either as a single objective or as sub-tasks if multiple components are involved.\n- You **do not issue step-by-step instructions or operational guidance** on how to perform the task.\n- You may reframe a complex task into logical sub-tasks if needed, but always from a results-oriented, goal-level perspective.\n\n## Capabilities and Constraints:\n- You are **not involved in execution** and do not access or operate the environment directly.\n- The Executor **may ask for clarification or feedback**, to which you respond with:\n  RESPONSE\n  ```\n  <high-level clarification or evaluative feedback>\n  ```\n- To initiate work or pivot scope, you communicate the goal using:\n  TASK\n  ```\n  <task or sub-task to be accomplished>\n  ```\n- Avoid giving procedural advice, implementation steps, or tool-specific guidance.\n- You may assess outcomes, redirect focus, or restate priorities—but only at the task level.\n\n## Interaction Protocol:\n- Start by issuing the GOAL using the `TASK` format.\n- Reframe the goal into sub-tasks if the scope spans multiple applications or logical components.\n- Provide feedback only when prompted by the Executor or when the task needs to be updated.\n\nYou are a goal-setter and decision-maker—not an operator. The Executor relies on your clarity of purpose, not on how-tos.",
+                        "allowed_components": [
+                            "goal",
+                            "request"
+                        ]
+                    },
+                    {
+                        "name": "executor",
+                        "handler_type": "environment",
+                        "initial_prompt": "You are the Executor, a system automation agent designed to perform tasks based on the given instructions. Your role is to execute commands efficiently to complete the task while following structured response patterns.\n\nYou perform tasks defined by the Advisor. You do not know the overall goal and must only act on received instructions. You are an operator—not a planner. Wait for direction, execute precisely, and report clearly.\n\n## Capabilities and Constraints:\n- You can execute commands using:\n  EXECUTE\n  ```python\n  <command>\n  ```\n- If needed, you may request assistance from the Advisor using:\n  REQUEST\n  ```\n  <question>\n  ```\n  The Advisor's response will be provided as additional input.\n- When the task is successfully completed, respond with:\n  STATUS\n  ```\n  DONE\n  ```\n- If the task is not feasible, respond with:\n  STATUS\n  ```\n  FAIL\n  ```\n- Each message must contain only one type of output—either EXECUTE, REQUEST, DONE, or FAIL, but not multiple in a single message.\n\n## Execution Context:\n- You receive observations from the environment as input. These observations may include system responses, accessibility tree data (based on the AT-SPI library), or output from executed commands.\n- You are required to use pyautogui to perform actions based on the given observations.\n- DO NOT use pyautogui.locateCenterOnScreen() to locate elements, as images of elements are not available.\n- DO NOT use pyautogui.screenshot() to take screenshots.\n- Your actions should be time-efficient. When predicting multiple lines of code, introduce short pauses like time.sleep(0.5) where necessary to ensure stability.\n- Each action must be a complete piece of code with no variable or function dependencies from history.\n- You must determine the necessary screen coordinates yourself based on observations but ensure accuracy.",
+                        "allowed_components": [
+                            "observation",
+                            "task",
+                            "response"
+                        ]
+                    }
+                ],
+                "graph": {
+                    "nodes": [
                         {
-                            "name": "executor",
-                            "handler_type": "environment",
-                            "initial_prompt": "You are the Executor, a system automation agent designed to perform tasks based on the given instructions. Your role is to execute commands efficiently to complete the task while following structured response patterns.\n\n## Capabilities and Constraints:\n- You can execute commands using:\n  EXECUTE\n  ```python\n  <command>\n  ```\n- If needed, you may request assistance from the Advisor using:\n  QUERY\n  ```\n  <question>\n  ```\n  The Advisor's response will be provided as additional input.\n- When the task is successfully completed, respond with:\n  STATUS\n  ```\n  DONE\n  ```\n- If the task is not feasible, respond with:\n  STATUS\n  ```\n  FAIL\n  ```\n- Each message must contain only one type of output—either EXECUTE, QUERY, DONE, or FAIL, but not multiple in a single message.\n- After completing the task, prompt the Advisor to confirm whether the task is truly complete before responding with DONE.\n\n\n## Execution Context:\n- You receive observations from the environment as input. These observations may include system responses, accessibility tree data (based on the AT-SPI library), or output from executed commands.\n- You are required to use `pyautogui` to perform actions based on the given observations.\n- **DO NOT** use `pyautogui.locateCenterOnScreen()` to locate elements, as images of elements are not available.\n- **DO NOT** use `pyautogui.screenshot()` to take screenshots.\n- Your actions should be time-efficient. When predicting multiple lines of code, introduce short pauses like `time.sleep(0.5)` where necessary to ensure stability.\n- Each action must be a complete piece of code with no variable or function dependencies from history.\n- You must determine the necessary screen coordinates yourself based on observations but ensure accuracy.\n\n\n## TASK:\nCan you make Bing the default search engine when performing searches on the internet?",
-                            "allowed_components": [
-                                "observation",
-                                "response"
-                            ]
+                            "id": "START",
+                            "type": "START"
                         },
                         {
-                            "name": "advisor",
-                            "handler_type": "environment",
-                            "initial_prompt": "You are the Advisor, an intelligent assistant responsible for helping the Executor complete tasks by providing guidance and executing commands when necessary.\n\n## Capabilities and Constraints:\n- When the Executor asks a question using:\n  QUERY\n  ```\n  <question>\n  ```\n  Respond with:\n  RESPONSE\n  ```\n  <detailed answer>\n  ```\n- You may also interact with the environment by executing commands when needed:\n  EXECUTE\n  ```python\n  <command>\n  ```\n- Each message must contain only one type of output—either RESPONSE or EXECUTE, but not both.\n- Your responses should be clear, detailed, and grounded in the provided observations.\n- Do not provide unnecessary or speculative answers; base responses strictly on known data.\n- Prioritize accuracy and efficiency when responding.\n\n## Execution Context:\n- You receive observations from the environment, which may include system responses, accessibility tree data (based on the AT-SPI library), or output from executed commands.\n- If an execution command is required, ensure it aligns with the Executor’s needs and the available system state.\n- Avoid unnecessary execution requests and only run commands when they are essential to fulfilling the Executor’s query.\n- You are required to use `pyautogui` for interactions with the system.\n- **DO NOT** use `pyautogui.locateCenterOnScreen()` to find elements, as image-based detection is unavailable.\n- **DO NOT** use `pyautogui.screenshot()` to capture screen images.\n- Ensure time efficiency in command execution. Introduce short pauses like `time.sleep(0.5)` when executing multiple lines of code to ensure stability.\n- Each execution must be independent, without relying on previously defined variables or functions.\n- Specify screen coordinates manually based on observations, ensuring accuracy.\n\nYour responses will be provided to the Executor to assist them in completing their assigned task.",
-                            "allowed_components": [
-                                "observation",
-                                "query"
-                            ]
+                            "id": "advisor",
+                            "type": "PLAYER",
+                            "role_index": 0
+                        },
+                        {
+                            "id": "executor",
+                            "type": "PLAYER",
+                            "role_index": 1
+                        },
+                        {
+                            "id": "END",
+                            "type": "END"
                         }
                     ],
-                    "graph": {
-                        "nodes": [
-                            {
-                                "id": "START",
-                                "type": "START"
+                    "edges": [
+                        {
+                            "from": "START",
+                            "to": "advisor",
+                            "type": "STANDARD",
+                            "description": ""
+                        },
+                        {
+                            "from": "advisor",
+                            "to": "executor",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "task"
                             },
-                            {
-                                "id": "executor",
-                                "type": "PLAYER",
-                                "role_index": 0
+                            "description": "TASK"
+                        },
+                        {
+                            "from": "advisor",
+                            "to": "executor",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "response"
                             },
-                            {
-                                "id": "advisor",
-                                "type": "PLAYER",
-                                "role_index": 1
+                            "description": "RESPONSE"
+                        },
+                        {
+                            "from": "executor",
+                            "to": "advisor",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "request"
                             },
-                            {
-                                "id": "END",
-                                "type": "END"
-                            }
-                        ],
-                        "edges": [
-                            {
-                                "from": "START",
-                                "to": "executor",
-                                "type": "STANDARD",
-                                "description": "START → executor"
+                            "description": "REQUEST"
+                        },
+                        {
+                            "from": "executor",
+                            "to": "executor",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "pyautogui_actions"
                             },
-                            {
-                                "from": "executor",
-                                "to": "advisor",
-                                "type": "DECISION",
-                                "condition": {
-                                    "condition_type": "query"
-                                },
-                                "description": "executor → advisor (query)"
+                            "description": "PYAUTOGUI_ACTIONS"
+                        },
+                        {
+                            "from": "advisor",
+                            "to": "END",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "done_or_fail"
                             },
-                            {
-                                "from": "advisor",
-                                "to": "executor",
-                                "type": "DECISION",
-                                "condition": {
-                                    "condition_type": "response"
-                                },
-                                "description": "advisor → executor (response)"
-                            },
-                            {
-                                "from": "executor",
-                                "to": "executor",
-                                "type": "DECISION",
-                                "condition": {
-                                    "condition_type": "pyautogui_actions"
-                                },
-                                "description": "executor → executor (pyautogui_actions)"
-                            },
-                            {
-                                "from": "advisor",
-                                "to": "advisor",
-                                "type": "DECISION",
-                                "condition": {
-                                    "condition_type": "pyautogui_actions"
-                                },
-                                "description": "advisor → advisor (pyautogui_actions)"
-                            },
-                            {
-                                "from": "executor",
-                                "to": "END",
-                                "type": "DECISION",
-                                "condition": {
-                                    "condition_type": "done_or_fail"
-                                },
-                                "description": "executor → END (done_or_fail)"
-                            }
-                        ],
-                        "anchor_node": "executor"
-                    },
+                            "description": "DONE_OR_FAIL"
+                        }
+                    ],
+                    "anchor_node": "advisor"
+                }
+            },
+            "game_instances": [
+                {
+                    "game_id": "c84148c2-c5e3-4327-a203-d5c411338ced",
                     "task_config": {
-                        "id": "bb5e4c0d-f964-439c-97b6-bdb9747de3f4",
-                        "snapshot": "chrome",
-                        "instruction": "Can you make Bing the main search thingy when I look stuff up on the internet?",
-                        "source": "https://support.google.com/chrome/answer/95426?sjid=16867045591165135686-AP",
+                        "id": "c84148c2-c5e3-4327-a203-d5c411338ced",
+                        "snapshot": "os",
+                        "instruction": "Rename the file 'report.txt' on the Desktop to 'final_report.txt' using the terminal.",
+                        "source": "Custom",
                         "config": [
                             {
-                                "type": "launch",
+                                "type": "download",
                                 "parameters": {
-                                    "command": [
-                                        "google-chrome",
-                                        "--remote-debugging-port=1337"
+                                    "files": [
+                                        {
+                                            "url": "https://drive.google.com/uc?export=download&id=1_W_t78vQwby5sXs0WoEDVp8jnNjqOA2m",
+                                            "path": "/home/user/Desktop/report.txt"
+                                        }
                                     ]
                                 }
                             },
                             {
-                                "type": "launch",
+                                "type": "execute",
                                 "parameters": {
                                     "command": [
-                                        "socat",
-                                        "tcp-listen:9222,fork",
-                                        "tcp:localhost:1337"
+                                        "python",
+                                        "-c",
+                                        "import pyautogui; import time; pyautogui.hotkey('ctrl', 'alt', 't'); time.sleep(0.5);"
                                     ]
                                 }
                             }
                         ],
                         "trajectory": "trajectories/",
                         "related_apps": [
-                            "chrome"
+                            "os"
                         ],
                         "evaluator": {
                             "func": "exact_match",
                             "result": {
-                                "type": "default_search_engine"
+                                "type": "vm_command_line",
+                                "command": "[ -f /home/user/Desktop/final_report.txt ] && echo 'Exists' || echo 'Not Found'",
+                                "shell": true
                             },
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Microsoft Bing"
+                                    "expected": "Exists\n"
                                 }
                             }
                         }
@@ -154,7 +161,7 @@
                 "screen_width": 1920,
                 "screen_height": 1080,
                 "path_to_vm": "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx",
-                "sleep_after_execution": 0.0,
+                "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 5,
                 "max_transitions_per_round": 5
