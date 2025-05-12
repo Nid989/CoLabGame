@@ -1,14 +1,14 @@
 {
     "experiments": [
         {
-            "name": "collab: free",
+            "name": "collab: free (developer tools)",
             "environment_type": "osworld",
             "templates": {
                 "roles": [
                     {
                         "name": "advisor",
                         "handler_type": "standard",
-                        "initial_prompt": "**Advisor Prompt**\n\nYou are the Advisor, a coordinator with high-level knowledge responsible for achieving a provided goal. Your role is to assign tasks to the Executor, a skilled worker capable of completing tasks through knowledge-based execution. The goal will be provided with this prompt. Your responsibilities are:\n\n1. **Assigning the Goal**: Clearly define the goal as a task for the Executor to complete, using the format:\n   RESPONSE\n   ```\n   ...task description...\n   ```\n\n2. **Handling Complex Tasks**: If the goal is complex, divide it into clear sub-tasks from a results-focused perspective. Rephrase or elaborate descriptively to aid the Executor's understanding, without suggesting solutions or specific methods.\n\n3. **Responding to Executor Requests**: Address any questions, clarifications, statements, or updates from the Executor using:\n   RESPONSE\n   ```\n   ...feedback, additional details, or restated priorities...\n   ```\n   Provide feedback or task-related information as needed, but avoid procedural or tool-specific advice.\n\n4. **Evaluating Progress**: Review the Executor's updates. If the goal is achieved, conclude with:\n   STATUS\n   ```\n   DONE\n   ```\n   If the goal cannot be met, conclude with:\n   STATUS\n   ```\n   FAIL\n   ```\n\n5. **Staying Goal-Focused**: Assess outcomes, redirect efforts, or clarify priorities as needed, but only at the task level to keep the Executor aligned with the goal.\n\n**Guidelines**:\n- Use only one communication format (RESPONSE or STATUS) per message\n- Use simple, clear language for tasks and responses.\n- Break complex tasks into logical sub-tasks, focusing on desired outcomes.\n- Avoid operator-specific knowledge, step-by-step instructions, or tool-specific guidance.\n- Ensure all tasks and responses support the goal's objectives.\n\nProceed by assigning the provided goal to the Executor.",
+                        "initial_prompt": "**Advisor Prompt**\n\nYou are the Advisor, a coordinator with high-level knowledge responsible for achieving a provided goal. Your role is to assign tasks to the Executor, a skilled worker capable of completing tasks through knowledge-based execution. The goal will be provided with this prompt. Your responsibilities are:\n\n1. **Assigning the Goal**: Clearly define the goal as a task for the Executor to complete, using the format:\n   RESPONSE\n   ```\n   ...task description...\n   ```\n\n2. **Handling Complex Tasks**: If the goal is complex, divide it into clear sub-tasks from a results-focused perspective. Rephrase or elaborate descriptively to aid the Executor's understanding, without suggesting solutions or specific methods.\n\n3. **Responding to Executor Requests**: Address any questions, clarifications, statements, or updates from the Executor using:\n   RESPONSE\n   ```\n   ...feedback, additional details, or restated priorities...\n   ```\n   Provide feedback or task-related information as needed, but avoid procedural or tool-specific advice.\n\n4. **Evaluating Progress**: Review the Executor's updates. If the goal is achieved, conclude with:\n   STATUS\n   ```\n   DONE\n   ```\n   If the goal cannot be met, conclude with:\n   STATUS\n   ```\n   FAIL\n   ```\n\n5. **Staying Goal-Focused**: Assess outcomes, redirect efforts, or clarify priorities as needed, but only at the task level to keep the Executor aligned with the goal.\n\n**Guidelines**:\n- Each message must use **only one of the two allowed formats**: either RESPONSE or STATUS. Do not mix or use any other format.\n- Use simple, clear language for tasks and responses.\n- Break complex tasks into logical sub-tasks, focusing on desired outcomes.\n- Avoid operator-specific knowledge, step-by-step instructions, or tool-specific guidance.\n- Ensure all tasks and responses support the goal's objectives.\n\nProceed by assigning the provided goal to the Executor.",
                         "allowed_components": [
                             "goal",
                             "request"
@@ -17,7 +17,7 @@
                     {
                         "name": "executor",
                         "handler_type": "environment",
-                        "initial_prompt": "**Executor Prompt**\n\nYou are the Executor, a skilled worker with access to an Ubuntu environment for task execution. Your role is to perform tasks assigned by the Advisor, using your expertise in logic, problem-solving, and technical execution. You receive observations from the environment, which may include system responses, accessibility tree data (based on the AT-SPI library), or output from executed commands. Your responsibilities are:\n\n1. **Executing Tasks**: Perform tasks assigned by the Advisor by interacting with the Ubuntu environment using the format:\n   EXECUTE\n   ```\n   <python code using pyautogui>\n   ```\n   - Use the `pyautogui` Python library for environment interactions.\n   - **Do not** use `pyautogui.locateCenterOnScreen()`, as element images are not available.\n   - **Do not** use `pyautogui.screenshot()` to take screenshots.\n   - Ensure actions are time-efficient, introducing short pauses like `time.sleep(0.5)` when necessary for stability.\n   - Each action must be a complete, standalone piece of code without dependencies on prior variables or functions.\n   - Determine screen coordinates based on observations, ensuring accuracy.\n\n2. **Communicating with the Advisor**: Use the following format to request feedback, seek task clarification, provide updates, or report if a task is infeasible or completed:\n   REQUEST\n   ```\n   ...task-related questions, clarifications, or updates...\n   ```\n   - Never request implementation details or clarifications on how to execute the task.\n   - Focus only on task-specific information provided by the Advisor.\n\n3. **Acting as an Operator**: Focus strictly on executing assigned tasks. Do not assume the overall goal or engage in planning. Operate based solely on the Advisor's instructions.\n\n4. **Using Skills**: Apply your skills in logic, problem-solving, technical execution, and attention to detail to complete tasks efficiently and accurately.\n\n**Guidelines**:\n- Use only one communication format (EXECUTE or REQUEST) per message.\n- Use simple, clear language in communications with the Advisor.\n- Ensure all actions align with the assigned task and provided observations.\n- Maintain precision in environment interactions, using observations to guide actions.\n\nProceed by awaiting tasks from the Advisor and acting on provided observations.",
+                        "initial_prompt": "**Executor Prompt**\n\nYou are the Executor, a skilled worker with access to an Ubuntu environment for task execution. Your role is to perform tasks assigned by the Advisor, using your expertise in logic, problem-solving, and technical execution. You receive observations from the environment, which may include screenshots, system responses, accessibility tree data (based on the AT-SPI library), or output from executed commands. Your responsibilities are:\n\n1. **Executing Tasks**: Perform tasks assigned by the Advisor by interacting with the Ubuntu environment using the format:\n   EXECUTE\n   ```\n   <python code using pyautogui>\n   ```\n   - Use the `pyautogui` Python library for environment interactions.\n   - **Do not** use `pyautogui.locateCenterOnScreen()`, as element images are not available.\n   - **Do not** use `pyautogui.screenshot()` to take screenshots.\n   - Ensure actions are time-efficient, introducing short pauses like `time.sleep(0.5)` when necessary for stability.\n   - Each action must be a complete, standalone piece of code without dependencies on prior variables or functions.\n   - Determine screen coordinates based on observations, ensuring accuracy.\n   - When a task requires `sudo` access, you may use the computer's password: `'password'`.\n\n2. **Communicating with the Advisor**: Use the following format to request feedback, seek task clarification, provide updates, or report if a task is infeasible or completed:\n   REQUEST\n   ```\n   ...task-related questions, clarifications, or updates...\n   ```\n   - Never request implementation details or clarifications on how to execute the task.\n   - Focus only on task-specific information provided by the Advisor.\n\n3. **Acting as an Operator**: Focus strictly on executing assigned tasks. Do not assume the overall goal or engage in planning. Operate based solely on the Advisor's instructions.\n\n4. **Using Skills**: Apply your skills in logic, problem-solving, technical execution, and attention to detail to complete tasks efficiently and accurately.\n\n**Guidelines**:\n- Each message must use **only one of the two allowed formats**: either EXECUTE or REQUEST. Do not mix or use any other format.\n- Use only one communication format (EXECUTE or REQUEST) per message.\n- Use simple, clear language in communications with the Advisor.\n- Ensure all actions align with the assigned task and provided observations.\n- Maintain precision in environment interactions, using observations to guide actions.\n\nProceed by awaiting tasks from the Advisor and acting on provided observations.",
                         "allowed_components": [
                             "observation",
                             "response"
@@ -103,6 +103,136 @@
             },
             "game_instances": [
                 {
+                    "game_id": "060cd5fb-b06a-45e6-8883-1320ccaeaeb4",
+                    "task_config": {
+                        "id": "060cd5fb-b06a-45e6-8883-1320ccaeaeb4",
+                        "snapshot": "os",
+                        "instruction": "Set up a development environment for Python programming, including the ability to create virtual environments.",
+                        "source": "Custom",
+                        "config": [
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python",
+                                        "-c",
+                                        "import pyautogui; import time; pyautogui.click(960, 540); time.sleep(0.5);"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "os"
+                        ],
+                        "evaluator": {
+                            "func": "exact_match",
+                            "result": {
+                                "type": "vm_command_line",
+                                "command": "dpkg -s python3 > /dev/null && dpkg -s python3-pip > /dev/null && dpkg -s python3-venv > /dev/null && echo 'All installed'",
+                                "shell": true
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "expected": "All installed"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "c4c1e2ad-a5ec-44df-9ad4-67c958563e52",
+                    "task_config": {
+                        "id": "c4c1e2ad-a5ec-44df-9ad4-67c958563e52",
+                        "snapshot": "os",
+                        "instruction": "Create a new user account named 'developer' and add it to both the 'sudo' and 'mlops' groups. If prompted to set a password, choose any valid password of your choice. You may skip optional user information fields such as Full Name, Room Number, etc.",
+                        "source": "Custom",
+                        "config": [
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python",
+                                        "-c",
+                                        "import pyautogui; import time; pyautogui.click(960, 540); time.sleep(0.5);"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "os"
+                        ],
+                        "evaluator": {
+                            "func": "check_include_exclude",
+                            "result": {
+                                "type": "vm_command_line",
+                                "command": "id developer | grep 'sudo' && id developer | grep 'docker' && echo 'User in groups'",
+                                "shell": true
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "include": [
+                                        "User in groups"
+                                    ],
+                                    "exclude": []
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "3acb6e00-cee7-4a67-934b-42c80c41f17b",
+                    "task_config": {
+                        "id": "3acb6e00-cee7-4a67-934b-42c80c41f17b",
+                        "snapshot": "os",
+                        "instruction": "Organize the files in my Downloads folder by moving all image files (jpg, png, gif) to a subfolder named 'Images'.",
+                        "source": "Custom",
+                        "config": [
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": "mkdir -p ~/Downloads && touch ~/Downloads/photo1.jpg ~/Downloads/photo2.png ~/Downloads/document.txt",
+                                    "shell": true
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python",
+                                        "-c",
+                                        "import pyautogui; import time; pyautogui.click(960, 540); time.sleep(0.5);"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "os"
+                        ],
+                        "evaluator": {
+                            "func": "check_include_exclude",
+                            "result": {
+                                "type": "vm_command_line",
+                                "command": "test -f ~/Downloads/Images/photo1.jpg && test -f ~/Downloads/Images/photo2.png && test -f ~/Downloads/document.txt && echo 'Files organized'",
+                                "shell": true
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "include": [
+                                        "Files organized"
+                                    ],
+                                    "exclude": []
+                                }
+                            }
+                        }
+                    }
+                },
+                {
                     "game_id": "c84148c2-c5e3-4327-a203-d5c411338ced",
                     "task_config": {
                         "id": "c84148c2-c5e3-4327-a203-d5c411338ced",
@@ -140,13 +270,489 @@
                             "func": "exact_match",
                             "result": {
                                 "type": "vm_command_line",
-                                "command": "[ -f /home/user/Desktop/final_report.txt ] && echo 'Exists' || echo 'Not Found'",
+                                "command": "[ -f /home/user/Desktop/final_report.txt ] && echo -n 'Exists' || echo -n 'Not Found'",
                                 "shell": true
                             },
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Exists\n"
+                                    "expected": "Exists"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "c7999658-d0a0-4043-8a06-1fff2681faed",
+                    "task_config": {
+                        "id": "c7999658-d0a0-4043-8a06-1fff2681faed",
+                        "snapshot": "os",
+                        "instruction": "Clean the APT cache to free up disk space.",
+                        "source": "Custom",
+                        "config": [
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python",
+                                        "-c",
+                                        "import pyautogui; import time; pyautogui.click(960, 540); time.sleep(0.5);"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "os"
+                        ],
+                        "evaluator": {
+                            "func": "check_include_exclude",
+                            "result": {
+                                "type": "vm_command_line",
+                                "command": "[ -z \"$(ls /var/cache/apt/archives/*.deb 2>/dev/null)\" ] && echo 'Cache cleaned' || echo 'Cache not cleaned'",
+                                "shell": true
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "include": [
+                                        "Cache cleaned"
+                                    ],
+                                    "exclude": []
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "0fae63a5-de71-4b8b-96bf-14a738686a6a",
+                    "task_config": {
+                        "id": "0fae63a5-de71-4b8b-96bf-14a738686a6a",
+                        "snapshot": "os",
+                        "instruction": "Change the desktop theme to a dark theme.",
+                        "source": "Custom",
+                        "config": [
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python",
+                                        "-c",
+                                        "import pyautogui; import time; pyautogui.click(960, 540); time.sleep(0.5);"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "os"
+                        ],
+                        "evaluator": {
+                            "func": "exact_match",
+                            "result": {
+                                "type": "vm_command_line",
+                                "command": "gsettings get org.gnome.desktop.interface gtk-theme",
+                                "shell": true
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "expected": "'Yaru-dark'\n"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "64b07675-7cc1-4072-ac72-6d253120acdb",
+                    "task_config": {
+                        "id": "64b07675-7cc1-4072-ac72-6d253120acdb",
+                        "snapshot": "os",
+                        "instruction": "Update the desktop wallpaper to use the image at '/home/user/wallpaper.jpg'.",
+                        "source": "Custom",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://drive.google.com/uc?export=download&id=1w_HHWs2A_SmfOoIzSfY3Q-ZtVEoIH55h",
+                                            "path": "/home/user/wallpaper.jpg"
+                                        }
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "os"
+                        ],
+                        "evaluator": {
+                            "func": "exact_match",
+                            "result": {
+                                "type": "vm_command_line",
+                                "command": "gsettings get org.gnome.desktop.background picture-uri",
+                                "shell": true
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "expected": "'file:///home/user/wallpaper.jpg'\n"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "7f84019e-cf96-4244-9dbd-0ae4d8f04df7",
+                    "task_config": {
+                        "id": "7f84019e-cf96-4244-9dbd-0ae4d8f04df7",
+                        "snapshot": "os",
+                        "instruction": "Place a shortcut on the desktop to quickly launch the terminal.",
+                        "source": "Custom",
+                        "config": [],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "os"
+                        ],
+                        "evaluator": {
+                            "func": "is_shortcut_on_desktop",
+                            "result": {
+                                "type": "get_shortcuts_on_desktop"
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "type": "name",
+                                    "name": "Terminal"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "2a00eaaa-9286-4d57-8c68-79493b9af885",
+                    "task_config": {
+                        "id": "2a00eaaa-9286-4d57-8c68-79493b9af885",
+                        "snapshot": "os",
+                        "instruction": "Set up a cron job to run a backup script daily at midnight.",
+                        "source": "Custom",
+                        "config": [
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": "touch /home/user/backup.sh && chmod +x /home/user/backup.sh",
+                                    "shell": true
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python",
+                                        "-c",
+                                        "import pyautogui; import time; pyautogui.click(960, 540); time.sleep(0.5);"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "os"
+                        ],
+                        "evaluator": {
+                            "func": "check_include_exclude",
+                            "result": {
+                                "type": "vm_command_line",
+                                "command": "crontab -l | grep '0 0 * * * /home/user/backup.sh' && echo 'Cron set'",
+                                "shell": true
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "include": [
+                                        "Cron set"
+                                    ],
+                                    "exclude": []
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "a133df0f-001c-4748-9f55-c52941893b0a",
+                    "task_config": {
+                        "id": "a133df0f-001c-4748-9f55-c52941893b0a",
+                        "snapshot": "os",
+                        "instruction": "Ensure the SSH service starts automatically when the system boots.",
+                        "source": "Custom",
+                        "config": [],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "os"
+                        ],
+                        "evaluator": {
+                            "func": "exact_match",
+                            "result": {
+                                "type": "vm_command_line",
+                                "command": "systemctl is-enabled ssh",
+                                "shell": true
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "expected": "enabled\n"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "edbdf308-3444-46fa-ad7e-2653abe4c4c7",
+                    "task_config": {
+                        "id": "edbdf308-3444-46fa-ad7e-2653abe4c4c7",
+                        "snapshot": "os",
+                        "instruction": "Install the 'htop' utility for monitoring system processes.",
+                        "source": "Custom",
+                        "config": [],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "os"
+                        ],
+                        "evaluator": {
+                            "func": "exact_match",
+                            "result": {
+                                "type": "vm_command_line",
+                                "command": "which htop",
+                                "shell": true
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "expected": "/usr/bin/htop\n"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "d4ae4f63-a527-4ad9-a283-9b5e8c2a4d20",
+                    "task_config": {
+                        "id": "d4ae4f63-a527-4ad9-a283-9b5e8c2a4d20",
+                        "snapshot": "os",
+                        "instruction": "Change the default shell for user 'bob' to Zsh.",
+                        "source": "Custom",
+                        "config": [
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": "sudo adduser --disabled-password --gecos '' bob && sudo apt-get install -y zsh",
+                                    "shell": true
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "os"
+                        ],
+                        "evaluator": {
+                            "func": "exact_match",
+                            "result": {
+                                "type": "vm_command_line",
+                                "command": "getent passwd bob | cut -d: -f7",
+                                "shell": true
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "expected": "/bin/zsh\n"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "config": {
+                "headless": false,
+                "observation_type": "a11y_tree",
+                "action_space": "pyautogui",
+                "screen_width": 1920,
+                "screen_height": 1080,
+                "path_to_vm": "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx",
+                "sleep_after_execution": 0,
+                "max_retries": 2,
+                "max_rounds": 5,
+                "max_transitions_per_round": 5
+            }
+        },
+        {
+            "name": "collab: free (office & communication)",
+            "environment_type": "osworld",
+            "templates": {
+                "roles": [
+                    {
+                        "name": "advisor",
+                        "handler_type": "standard",
+                        "initial_prompt": "**Advisor Prompt**\n\nYou are the Advisor, a coordinator with high-level knowledge responsible for achieving a provided goal. Your role is to assign tasks to the Executor, a skilled worker capable of completing tasks through knowledge-based execution. The goal will be provided with this prompt. Your responsibilities are:\n\n1. **Assigning the Goal**: Clearly define the goal as a task for the Executor to complete, using the format:\n   RESPONSE\n   ```\n   ...task description...\n   ```\n\n2. **Handling Complex Tasks**: If the goal is complex, divide it into clear sub-tasks from a results-focused perspective. Rephrase or elaborate descriptively to aid the Executor's understanding, without suggesting solutions or specific methods.\n\n3. **Responding to Executor Requests**: Address any questions, clarifications, statements, or updates from the Executor using:\n   RESPONSE\n   ```\n   ...feedback, additional details, or restated priorities...\n   ```\n   Provide feedback or task-related information as needed, but avoid procedural or tool-specific advice.\n\n4. **Evaluating Progress**: Review the Executor's updates. If the goal is achieved, conclude with:\n   STATUS\n   ```\n   DONE\n   ```\n   If the goal cannot be met, conclude with:\n   STATUS\n   ```\n   FAIL\n   ```\n\n5. **Staying Goal-Focused**: Assess outcomes, redirect efforts, or clarify priorities as needed, but only at the task level to keep the Executor aligned with the goal.\n\n**Guidelines**:\n- Each message must use **only one of the two allowed formats**: either RESPONSE or STATUS. Do not mix or use any other format.\n- Use simple, clear language for tasks and responses.\n- Break complex tasks into logical sub-tasks, focusing on desired outcomes.\n- Avoid operator-specific knowledge, step-by-step instructions, or tool-specific guidance.\n- Ensure all tasks and responses support the goal's objectives.\n\nProceed by assigning the provided goal to the Executor.",
+                        "allowed_components": [
+                            "goal",
+                            "request"
+                        ]
+                    },
+                    {
+                        "name": "executor",
+                        "handler_type": "environment",
+                        "initial_prompt": "**Executor Prompt**\n\nYou are the Executor, a skilled worker with access to an Ubuntu environment for task execution. Your role is to perform tasks assigned by the Advisor, using your expertise in logic, problem-solving, and technical execution. You receive observations from the environment, which may include screenshots, system responses, accessibility tree data (based on the AT-SPI library), or output from executed commands. Your responsibilities are:\n\n1. **Executing Tasks**: Perform tasks assigned by the Advisor by interacting with the Ubuntu environment using the format:\n   EXECUTE\n   ```\n   <python code using pyautogui>\n   ```\n   - Use the `pyautogui` Python library for environment interactions.\n   - **Do not** use `pyautogui.locateCenterOnScreen()`, as element images are not available.\n   - **Do not** use `pyautogui.screenshot()` to take screenshots.\n   - Ensure actions are time-efficient, introducing short pauses like `time.sleep(0.5)` when necessary for stability.\n   - Each action must be a complete, standalone piece of code without dependencies on prior variables or functions.\n   - Determine screen coordinates based on observations, ensuring accuracy.\n   - When a task requires `sudo` access, you may use the computer's password: `'password'`.\n\n2. **Communicating with the Advisor**: Use the following format to request feedback, seek task clarification, provide updates, or report if a task is infeasible or completed:\n   REQUEST\n   ```\n   ...task-related questions, clarifications, or updates...\n   ```\n   - Never request implementation details or clarifications on how to execute the task.\n   - Focus only on task-specific information provided by the Advisor.\n\n3. **Acting as an Operator**: Focus strictly on executing assigned tasks. Do not assume the overall goal or engage in planning. Operate based solely on the Advisor's instructions.\n\n4. **Using Skills**: Apply your skills in logic, problem-solving, technical execution, and attention to detail to complete tasks efficiently and accurately.\n\n**Guidelines**:\n- Each message must use **only one of the two allowed formats**: either EXECUTE or REQUEST. Do not mix or use any other format.\n- Use only one communication format (EXECUTE or REQUEST) per message.\n- Use simple, clear language in communications with the Advisor.\n- Ensure all actions align with the assigned task and provided observations.\n- Maintain precision in environment interactions, using observations to guide actions.\n\nProceed by awaiting tasks from the Advisor and acting on provided observations.",
+                        "allowed_components": [
+                            "observation",
+                            "response"
+                        ]
+                    }
+                ],
+                "graph": {
+                    "nodes": [
+                        {
+                            "id": "START",
+                            "type": "START"
+                        },
+                        {
+                            "id": "advisor",
+                            "type": "PLAYER",
+                            "role_index": 0
+                        },
+                        {
+                            "id": "executor",
+                            "type": "PLAYER",
+                            "role_index": 1
+                        },
+                        {
+                            "id": "END",
+                            "type": "END"
+                        }
+                    ],
+                    "edges": [
+                        {
+                            "from": "START",
+                            "to": "advisor",
+                            "type": "STANDARD",
+                            "description": ""
+                        },
+                        {
+                            "from": "advisor",
+                            "to": "executor",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "task"
+                            },
+                            "description": "TASK"
+                        },
+                        {
+                            "from": "advisor",
+                            "to": "executor",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "response"
+                            },
+                            "description": "RESPONSE"
+                        },
+                        {
+                            "from": "executor",
+                            "to": "advisor",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "request"
+                            },
+                            "description": "REQUEST"
+                        },
+                        {
+                            "from": "executor",
+                            "to": "executor",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "pyautogui_actions"
+                            },
+                            "description": "PYAUTOGUI_ACTIONS"
+                        },
+                        {
+                            "from": "advisor",
+                            "to": "END",
+                            "type": "DECISION",
+                            "condition": {
+                                "condition_type": "done_or_fail"
+                            },
+                            "description": "DONE_OR_FAIL"
+                        }
+                    ],
+                    "anchor_node": "advisor"
+                }
+            },
+            "game_instances": [
+                {
+                    "game_id": "a4cccc32-1bf3-40d7-9bda-015267c21815",
+                    "task_config": {
+                        "id": "a4cccc32-1bf3-40d7-9bda-015267c21815",
+                        "snapshot": "libreoffice_writer",
+                        "instruction": "Add a page break after the first paragraph in that report document on the desktop.",
+                        "source": "Custom",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://docs.google.com/document/d/1P8J7291xNBdm0trluKpZey0eSkR5JjT2/export?format=docx",
+                                            "path": "/home/user/Desktop/report.docx"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "open",
+                                "parameters": {
+                                    "path": "/home/user/Desktop/report.docx"
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "libreoffice_writer"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "activate_window",
+                                    "parameters": {
+                                        "window_name": "report.docx - LibreOffice Writer",
+                                        "strict": true
+                                    }
+                                },
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python",
+                                            "-c",
+                                            "import pyautogui; pyautogui.hotkey('ctrl', 's');"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 1
+                                    }
+                                }
+                            ],
+                            "func": "contains_page_break",
+                            "result": {
+                                "type": "vm_file",
+                                "path": "/home/user/Desktop/report.docx",
+                                "dest": "report.docx"
+                            },
+                            "expected": {
+                                "type": "rule",
+                                "rules": {
+                                    "page_break_count": 1
                                 }
                             }
                         }
