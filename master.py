@@ -7,7 +7,6 @@ from PIL import Image
 
 from clemcore import backends
 from clemcore.clemgame import (
-    Player,
     GameMaster,
     GameBenchmark,
     GameScorer,
@@ -17,7 +16,7 @@ from clemcore.clemgame import (
     GameError,
     RuleViolationError,
 )
-from src.master import NetworkDialogueGameMaster, EdgeCondition, NodeTransition
+from src.master import NetworkDialogueGameMaster, EdgeCondition
 from src.environment import Environment, EnvironmentFactory
 from src.player import RoleBasedPlayer
 from src.message import MessageType, MessageState, PlayerContextFormatter
@@ -87,6 +86,7 @@ class ComputerGame(NetworkDialogueGameMaster):
             game_instance: Keyword arguments of the game_instance
         """
         self.game_instance = game_instance
+        self.environment_type = self.experiment["environment_type"].lower()
         self._prepare_game_instance()
         self._prepare_game_config()
         self._initialize_formatter()
@@ -132,12 +132,12 @@ class ComputerGame(NetworkDialogueGameMaster):
             RuntimeError: If environment or recording initialization fails
         """
         try:
-            env_name = self.game_config.pop("env_name", "osworld").lower()
             self.env = EnvironmentFactory.create_environment(
-                env_name, **self.game_config
+                self.environment_type, **self.game_config
             )
             observation = self.env.reset(task_config=self.game_instance["task_config"])
             self.message_state.update(observation=observation)
+            print(self.message_state.preview())
             if not self.env.start_recording():
                 raise RuntimeError("Failed to start environment recording")
         except Exception as e:
@@ -230,7 +230,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                 f"Maximum transitions per round {max_transitions_per_round} reached",
             )
             return False
-        if self.current_node == "END":
+        if self._current_node == "END":
             self.game_config["temporary_image_manager"].cleanup()
             return False
         return True
@@ -260,20 +260,19 @@ class ComputerGame(NetworkDialogueGameMaster):
             - Adds the initial game-context to the anchor player
         """
         super()._on_before_game()
-        assert self.current_node == self.anchor_node, (
+        assert self._current_node == self.anchor_node, (
             "Current node must be the anchor node at game start"
         )
-        current_player = self.get_player_from_node(self.current_node)
         context = self.player_context_formatter.create_context_for(
-            self.message_state, current_player
+            self.message_state, self._current_player
         )
         if context is None:
             logger.debug(
                 "No context generated for player; skipping inital context setup."
             )
             return
-        self._set_context_for(current_player, context)
-        logger.info(f"Set initial context for player at node {self.current_node}")
+        self._set_context_for(self._current_player, context)
+        logger.info(f"Set initial context for player at node {self._current_node}")
 
     def _on_after_game(self):
         """Executed once at the end, after exiting the play loop.
@@ -289,7 +288,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         ):
             self.game_config["temporary_image_manager"].cleanup()
 
-    def _parse_response(self, player: Any, response: str) -> str:
+    def _parse_response(self, player: RoleBasedPlayer, response: str) -> str:
         """
         Chains the parsing, validation, and content processing steps to produce a parsed response.
         Focuses solely on parsing logic using class methods, returning a JSON serializable string.
@@ -349,7 +348,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                         self.handle_json_content(
                             x[1]["content"],
                             x[0],
-                            self.game_config["environment_type"],
+                            self.environment_type,
                             self.game_config["action_space"],
                         ),
                         x[0],
@@ -612,56 +611,41 @@ class ComputerGame(NetworkDialogueGameMaster):
             raise GameError(reason="No observation recorded after executing actions")
         return observation
 
-    def _on_valid_player_response(self, player: Player, parsed_response: str):
-        """Method executed after a player response has been parsed and validated.
-
-        Key Actions:
-            - Updates the message state with the parsed response
-            - Sets context for the next node's player using the current message state
+    def _advance_game(self, player: RoleBasedPlayer, parsed_response: str):
+        """Advance the game state based on the player's response.
+        Processes the response to determine node transitions and handle messages.
 
         Args:
-            player: The Player instance that produced the response
-            parsed_response: The parsed and valid response of the current player
-        """
-        if self.transition.next_node:
-            next_player = self.get_player_from_node(self.transition.next_node)
-            if next_player:
-                formatted_context = self.player_context_formatter.create_context_for(
-                    self.message_state, next_player
-                )
-                self._set_context_for(next_player, formatted_context)
-                self.message_state.reset(preserve=["observation"])
-                logger.info(
-                    f"Set context for next player at node {self.transition.next_node}"
-                )
-
-    def _advance_game(self, parsed_response: str):
-        """Advance the game state based on the parsed response.
-        Args:
+            player: The RoleBasedPlayer instance providing the response.
             parsed_response: JSON string containing the parsed message with keys like
-                            "type", "from", "to", and "content".
+                             'type', 'from', 'to', and 'content'.
+
         Raises:
             GameError: If the message type is unknown or action execution fails.
-            RuleViolationError: If no valid transition is found or if the message type does not match the edge condition.
+            RuleViolationError: If no valid transition is found or if the message type does not
+                                match the edge condition.
         """
-        # Decode the JSON string into a dictionary
+        # Step 1: Parse the JSON response
         data = json.loads(parsed_response)
-
-        # Extract required fields
         message_type = MessageType[data["type"]]
-        # from_node = data["from"]  # Changed to node representation
         content = data["content"]
 
-        # Handle player transition with decision edge validation first
-        current_node = self.current_node
+        # Step 2: Validate transition from current node
+        current_node = self._current_node
+        print("current_node", current_node)
         next_node = None
 
-        # Extract decision edges for the current node
+        # First, check decision edges for a valid transition
         decision_edges = self._get_decision_edges(current_node)
         if decision_edges:
             if "to" in data:
                 target_node = data["to"]
                 for to_node, condition in decision_edges:
+                    print("to_node", to_node)
+                    print("target_node", target_node)
+                    print("message_type.name", message_type.name)
+                    print("condition.message_type", condition.message_type)
+                    print("condition", condition.validate(message_type.name))
                     if to_node == target_node and condition.validate(message_type.name):
                         next_node = target_node
                         break
@@ -670,6 +654,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                         f"No valid transition found to target node {target_node} with message type {message_type.name}"
                     )
             else:
+                # Check for self-loop or staying at current node
                 for to_node, condition in decision_edges:
                     if to_node == current_node and condition.validate(
                         message_type.name
@@ -681,9 +666,8 @@ class ComputerGame(NetworkDialogueGameMaster):
                         f"No valid self-loop transition found for message type {message_type.name} at node {current_node}"
                     )
 
-        # TODO: this should be investigated, cause response directly corresponds to a `decision_edge`.
+        # If no decision edge is found, fallback to standard edges
         if next_node is None:
-            # Fall back to standard edges if no valid decision edge is found
             standard_edges = self._get_standard_edges(current_node)
             if standard_edges:
                 next_node = standard_edges[0][
@@ -694,21 +678,20 @@ class ComputerGame(NetworkDialogueGameMaster):
                     f"No valid transition (decision or standard) found for message type {message_type.name} from node {current_node}"
                 )
 
-        # Update transition and node after validation
-        self.transition = NodeTransition(next_node=next_node)
+        # Step 3: Update game state with the validated transition
         self._update_round_tracking(current_node, next_node)
-        self.current_node = next_node
+        self.transition.next_node = next_node
         logger.info(
             f"Transitioned from {current_node} to {next_node} based on message type {message_type.name}"
         )
 
-        # Process based on message-type only after successful validation
+        # Step 4: Process message content based on type
         if message_type == MessageType.EXECUTE:
             observation = self._execute_actions(content)
             self.message_state.update(observation=observation)
         elif message_type == MessageType.STATUS:
             # Content is a list with one string, e.g., ["DONE"] or ["FAIL"]
-            # TODO: should observation be recorded after executing the STATUS flag & updated within the self.message_state!
+            # TODO: Investigate if observation should be recorded after STATUS execution
             _ = self._execute_actions(content)
         elif message_type == MessageType.REQUEST:
             self.message_state.update(request=content)
@@ -716,6 +699,21 @@ class ComputerGame(NetworkDialogueGameMaster):
             self.message_state.update(response=content)
         else:
             raise GameError(reason=f"Unknown message type: {message_type}")
+
+        print(self.message_state.preview())
+
+        # Step 5: Prepare context for the next player if transition occurred
+        if self.transition.next_node:
+            next_player = self.get_player_from_node(self.transition.next_node)
+            if next_player:
+                formatted_context = self.player_context_formatter.create_context_for(
+                    self.message_state, next_player
+                )
+                self._set_context_for(next_player, formatted_context)
+                self.message_state.reset(preserve=["observation"])
+                logger.info(
+                    f"Set context for next player at node {self.transition.next_node}"
+                )
 
     def compute_episode_score(self):
         """

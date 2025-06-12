@@ -80,7 +80,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         self.graph = nx.MultiDiGraph()
         self.graph.add_node("START", type=NodeType.START)
         self.graph.add_node("END", type=NodeType.END)
-        self.current_node = "START"
+        self._current_node = "START"
         self.node_positions = None
         self.edge_labels = {}
         self.anchor_node = None
@@ -88,6 +88,10 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         self.non_anchor_visited = False
         self.round_complete = False
         self.transition = NodeTransition()
+
+    @property
+    def current_node(self):
+        return self._current_node
 
     def add_player_to_graph(
         self,
@@ -199,9 +203,14 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         Returns:
             bool: True if transition to a different node is required.
         """
+
+        print("_should_pass_turn - transition", self.transition)
+        print("_should_pass_turn - current_node", self._current_node)
+        print("_should_pass_turn - next_node", self.transition.next_node)
+
         return (
             self.transition.next_node is not None
-            and self.transition.next_node != self.current_node
+            and self.transition.next_node != self._current_node
         )
 
     def _next_player(self) -> RoleBasedPlayer:
@@ -214,12 +223,12 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         if next_node and next_node in self.graph:
             node_data = self.graph.nodes[next_node]
             if node_data["type"] == NodeType.END:
-                self.current_node = next_node
+                self._current_node = next_node
                 # _next_player expects to return a Player instance.
                 # eventhough we transit to the END node, which is a non-Player node.
                 return self._current_player
             elif node_data["type"] == NodeType.PLAYER:
-                self.current_node = next_node
+                self._current_node = next_node
                 return node_data["player"]
         return self._current_player
 
@@ -254,10 +263,14 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             for _, to_node, edge_data in self.graph.out_edges("START", data=True)
             if edge_data.get("type") == EdgeType.STANDARD
         ]
+        print("standard_edges", standard_edges)
         if not standard_edges:
             raise ValueError("No standard edges found from START node")
-        self.current_node = standard_edges[0][1]
-        self._update_round_tracking("START", self.current_node)
+        self._current_node = standard_edges[0][1]
+        print("_on_before_game - current_node", self._current_node)
+        self._current_player = self.get_player_from_node(self._current_node)
+        print("_on_before_game - current_player", self._current_player)
+        self._update_round_tracking("START", self._current_node)
 
     def _update_round_tracking(self, prev_node: str, next_node: str):
         """Update round tracking state based on node transitions.
@@ -296,8 +309,8 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         self.non_anchor_visited = False
         self.round_complete = False
         self.transition.total_transitions = 0
-        if self.current_node:
-            self.current_round_nodes.append(self.current_node)
+        if self._current_node:
+            self.current_round_nodes.append(self._current_node)
 
     def get_player_from_node(self, node_id: str) -> Optional[RoleBasedPlayer]:
         """Get player associated with a node ID.
