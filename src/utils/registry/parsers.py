@@ -1,15 +1,21 @@
-import json
-import re
+import ast
 from typing import Callable, Optional, Tuple, Dict, Any, List
 
 from .base import Registry
+from ..constants import COMPUTER13_ACTIONS
+from clemcore.clemgame import ParseError, RuleViolationError
+
+# Registry for parsers, keyed by (message_type, environment_type, action_space)
+# None for action_space means the parser applies to all action spaces for that environment/message type
+parsers = Registry[Callable[[Any, str, Optional[str]], Tuple[bool, Optional[Any]]]]()
 
 
 # Function to store metadata about parsers
-def parser_config(target_field: None, description=None):
-    """Configure a parser with field mapping and description
+def parser_config(target_field: Optional[str], description: Optional[str] = None):
+    """
+    Configure a parser with field mapping and description
     Args:
-        target_field: field to update with parsed content (e.g. master.MessageState.__dataclass_fields__ like request, response, etc.)
+        target_field: Field to update with parsed content (e.g., 'actions', 'request', etc.)
         description: Human-readable description of the parser
     """
 
@@ -21,10 +27,11 @@ def parser_config(target_field: None, description=None):
     return decorator
 
 
-def get_parser_metadata(parser_id: str) -> Dict[str, Any]:
-    """Get metadata for a parser
+def get_parser_metadata(parser_id: Tuple[str, str, Optional[str]]) -> Dict[str, Any]:
+    """
+    Get metadata for a parser
     Args:
-        parser_id: The identifier of the parser
+        parser_id: Tuple of (message_type, environment_type, action_space)
     Returns:
         Dict containing parser metadata (target_field, description)
     """
@@ -37,207 +44,286 @@ def get_parser_metadata(parser_id: str) -> Dict[str, Any]:
         metadata["target_field"] = parser_func.target_field
     if hasattr(parser_func, "description"):
         metadata["description"] = parser_func.description
-
     return metadata
 
 
-parsers = Registry[Callable[[str], Tuple[bool, Optional[str]]]]()
-
-
-# EXECUTE```python\n<content>```
-@parsers.register("pyautogui_actions")
-@parser_config(target_field="actions")
-def parse_pyautogui_actions(utterance: str) -> Tuple[bool, Optional[List[str]]]:
-    """Parse pyautogui code-actions from player utterances.
-    Args:
-        utterance: The text content to parse
-    Returns:
-        Tuple containing:
-        - Boolean indicating if parsing was successful (code blocks or commands found)
-        - List of extracted code actions, or None if no valid content was found
+def process_content(
+    content: Any,
+    message_type: str,
+    environment_type: str,
+    action_space: Optional[str] = None,
+) -> Tuple[bool, Optional[Any] | Exception]:
     """
-    execute_pattern = r"EXECUTE\s*(.*?)(?=EXECUTE|\Z)"
-    execute_matches = re.findall(execute_pattern, utterance, re.DOTALL)
-
-    if not execute_matches:
-        return False, None
-
-    utterance = execute_matches[0]
-    normalized_utterance = "\n".join(
-        [line.strip() for line in utterance.split(";") if line.strip()]
-    )
-
-    code_block_pattern = r"```(?:\w+\s+)?(.*?)```"
-    code_matches = re.findall(code_block_pattern, normalized_utterance, re.DOTALL)
-
-    if not code_matches:
-        return False, None
-
-    parsed_content = [code_block.strip() for code_block in code_matches]
-
-    return bool(parsed_content), parsed_content if parsed_content else None
-
-
-# EXECUTE```json\n<content>```
-@parsers.register("computer13_actions")
-@parser_config(target_field="actions")
-def parse_computer13_actions(utterance: str) -> Tuple[bool, Optional[List[dict]]]:
-    """Parse computer13 json-actions from player utterances.
+    Process content based on message type, environment, and action space
     Args:
-        utterance: The text content to parse
+        content: The content to process (str for pyautogui/REQUEST/RESPONSE/STATUS/TASK, List[Dict] for computer13)
+        message_type: The message type (e.g., 'EXECUTE', 'REQUEST', 'RESPONSE', 'STATUS', 'TASK')
+        environment_type: The environment type (e.g., 'osworld')
+        action_space: The action space (e.g., 'pyautogui', 'computer13') or None
     Returns:
-        Tuple containing:
-        - Boolean indicating if parsing was successful
-        - List of parsed action dictionaries, or None if no valid content was found
+        Tuple of (success: bool, parsed_content: Optional[Any] | Exception)
     """
-    execute_pattern = r"EXECUTE\s*(.*?)(?=EXECUTE|\Z)"
-    execute_matches = re.findall(execute_pattern, utterance, re.DOTALL)
-
-    if not execute_matches:
-        return False, None
-
-    utterance = execute_matches[0]
-    json_blocks = re.findall(r"```(?:json\s+)?(.*?)```", utterance, re.DOTALL)
-
-    if json_blocks:
-        parsed_actions = []
-        for json_text in json_blocks:
-            try:
-                action_dict = json.loads(json_text)
-                parsed_actions.append(action_dict)
-            except json.JSONDecodeError:
-                continue
-
-        if parsed_actions:
-            return True, parsed_actions
+    parser_key = (message_type, environment_type, action_space)
 
     try:
-        action_dict = json.loads(utterance)
-        return True, [action_dict]
-    except json.JSONDecodeError:
-        return False, None
+        parser = parsers[parser_key]
+    except KeyError:
+        parser_key = (message_type, environment_type, None)
+        try:
+            parser = parsers[parser_key]
+        except KeyError:
+            return False, ParseError(
+                reason=f"No parser registered for message_type={message_type}, environment_type={environment_type}, action_space={action_space}"
+            )
+
+    return parser(content, environment_type, action_space)
 
 
-# TODO: revisit this later; it doesn't align with the current parsing approach.
-@parsers.register("som_pyautogui_actions")
-def parse_som_pyautogui_actions(utterance: str) -> Tuple[bool, Optional[str]]:
-    """Parse pyautogui code-actions with screen object model (SOM) tags from player utterances.
-    Usage:
-        Should be used when 'action_space' is set to 'pyautogui'
-        \ & 'observation_space' is set to 'SOM'
-    Args:
-        utterance: The text content to parse
-    Returns:
-        Tuple containing:
-        - Boolean indicating if parsing was successful
-        - Extracted code with SOM tags, or None if no valid content was found
+# Parser functions
+@parsers.register(("EXECUTE", "osworld", "pyautogui"))
+@parser_config(
+    target_field="actions",
+    description="Parse and validate pyautogui actions for osworld environment",
+)
+def parse_osworld_pyautogui(
+    content: str, environment_type: str, action_space: Optional[str]
+) -> Tuple[bool, Optional[List[str]] | Exception]:
     """
-    # TODO: GameMaster should be provided but it somehow raise circular dependency error.
-    gm = None  #
-    masks = getattr(gm, "masks", [])
-    if not masks:
-        return False, None
-
-    tag_vars = "\n".join(
-        f"tag_{i + 1}=({int(x + w // 2)}, {int(y + h // 2)})"
-        for i, (x, y, w, h) in enumerate(masks)
-    )
-
-    is_valid, extracted_code = parse_pyautogui_actions(utterance)
-
-    if not is_valid:
-        return False, None
-
-    result = f"{tag_vars}\n{extracted_code}"
-    return True, result
-
-
-@parsers.register("done_or_fail")
-@parser_config(target_field="actions")
-def parse_done_or_fail(utterance: str) -> Tuple[bool, Optional[str]]:
-    """Parse player utterances for status keywords (DONE, FAIL)
+    Parse and validate pyautogui code actions
     Args:
-        utterance: The text content to parse
+        content: The content string containing pyautogui code
+        environment_type: The environment type (expected to be 'osworld')
+        action_space: The action space (expected to be 'pyautogui')
     Returns:
-        Tuple containing:
-        - Boolean indicating if any status keyword was found
-        - The matched keyword, or None if no keyword was found
+        Tuple of (success: bool, actions: Optional[List[str]] | Exception)
     """
-    status_pattern = r"STATUS\s*```(.*?)```"
-    status_matches = re.findall(status_pattern, utterance, re.DOTALL)
+    if environment_type != "osworld" or action_space != "pyautogui":
+        return False, ParseError(
+            reason=f"Invalid context: expected environment_type='osworld', action_space='pyautogui', got {environment_type}, {action_space}"
+        )
 
-    if not status_matches:
-        return False, None
+    if not isinstance(content, str) or not content.strip():
+        return False, ParseError(
+            reason="PyAutoGUI content must be a non-empty string", response=content
+        )
 
-    block_content = status_matches[0].strip()
-    status_keywords = ["DONE", "FAIL"]
-    if block_content in status_keywords:
-        return True, [block_content]
+    try:
+        ast.parse(content)
+    except SyntaxError as e:
+        return False, ParseError(
+            reason=f"Invalid Python syntax: {str(e)}", response=content
+        )
 
-    return False, None
+    forbidden_functions = ["locateCenterOnScreen", "screenshot"]
+    ast_tree = ast.parse(content)
+    for node in ast.walk(ast_tree):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "pyautogui"
+            and node.func.attr in forbidden_functions
+        ):
+            # Changed from GameError to RuleViolationError
+            return False, RuleViolationError(
+                reason=f"Forbidden function '{node.func.attr}' used", response=content
+            )
+
+    return True, [content.strip()]
 
 
-# REQUEST```<content>```
-@parsers.register("request")
-@parser_config(target_field="request")
-def parse_request(utterance: str) -> Tuple[bool, Optional[str]]:
-    """Parse player utterances for REQUEST blocks.
+@parsers.register(("EXECUTE", "osworld", "computer13"))
+@parser_config(
+    target_field="actions",
+    description="Parse and validate computer13 actions for osworld environment",
+)
+def parse_osworld_computer13(
+    content: List[Dict[str, Any]], environment_type: str, action_space: Optional[str]
+) -> Tuple[bool, Optional[List[Dict]] | Exception]:
+    """
+    Parse and validate computer13 actions as a list of dictionaries
     Args:
-        utterance: The text content to parse
+        content: The content as a list of action dictionaries
+        environment_type: The environment type (expected to be 'osworld')
+        action_space: The action space (expected to be 'computer13')
     Returns:
-        Tuple containing:
-        - Boolean indicating if a REQUEST block was found
-        - The content inside the REQUEST block, or None if no valid content was found
+        Tuple of (success: bool, actions: Optional[List[Dict]] | Exception)
     """
-    request_pattern = r"REQUEST\s*```(.*?)```"
-    request_matches = re.findall(request_pattern, utterance, re.DOTALL)
+    if environment_type != "osworld" or action_space != "computer13":
+        return False, ParseError(
+            reason=f"Invalid context: expected environment_type='osworld', action_space='computer13', got {environment_type}, {action_space}"
+        )
 
-    if not request_matches:
-        return False, None
+    if (
+        not isinstance(content, list)
+        or not content
+        or not all(isinstance(item, dict) for item in content)
+    ):
+        return False, ParseError(
+            reason="Computer13 content must be a non-empty list of dictionaries",
+            response=str(content),
+        )
 
-    request_content = request_matches[0].strip()
-    return bool(request_content), request_content if request_content else None
+    for obj in content:
+        if "action_type" not in obj:
+            # Changed from GameError to RuleViolationError
+            return False, RuleViolationError(
+                reason="Missing 'action_type' in action", response=str(obj)
+            )
+
+        action_type = obj["action_type"]
+        action_spec = next(
+            (
+                action
+                for action in COMPUTER13_ACTIONS
+                if action["action_type"] == action_type
+            ),
+            None,
+        )
+        if action_spec is None:
+            # Changed from GameError to RuleViolationError
+            return False, RuleViolationError(
+                reason=f"Invalid 'action_type': {action_type}", response=str(obj)
+            )
+
+        param_specs = action_spec["parameters"]
+        for param, spec in param_specs.items():
+            if param not in obj and not spec["optional"]:
+                # Changed from GameError to RuleViolationError
+                return False, RuleViolationError(
+                    reason=f"Missing required parameter '{param}' for '{action_type}'",
+                    response=str(obj),
+                )
+            if param in obj:
+                value = obj[param]
+                expected_type = spec["type"]
+                if not isinstance(value, expected_type):
+                    # Changed from GameError to RuleViolationError
+                    return False, RuleViolationError(
+                        reason=f"Parameter '{param}' must be {expected_type.__name__}, got {type(value).__name__}",
+                        response=str(obj),
+                    )
+                if spec["range"] is not None:
+                    if isinstance(expected_type, (int, float)):
+                        min_val, max_val = spec["range"]
+                        if value < min_val or value > max_val:
+                            # Changed from GameError to RuleViolationError
+                            return False, RuleViolationError(
+                                reason=f"Parameter '{param}' must be between {min_val} and {max_val}, got {value}",
+                                response=str(obj),
+                            )
+                    elif isinstance(expected_type, str):
+                        allowed = spec["range"]
+                        if value not in allowed:
+                            # Changed from GameError to RuleViolationError
+                            return False, RuleViolationError(
+                                reason=f"Parameter '{param}' must be one of {allowed}, got '{value}'",
+                                response=str(obj),
+                            )
+
+        allowed_keys = set(param_specs.keys()) | {"action_type"}
+        for key in obj:
+            if key not in allowed_keys:
+                # Changed from GameError to RuleViolationError
+                return False, RuleViolationError(
+                    reason=f"Unexpected parameter '{key}' for '{action_type}'",
+                    response=str(obj),
+                )
+
+    return True, content
 
 
-# RESPONSE```<content>```
-@parsers.register("response")
-@parser_config(target_field="response")
-def parse_response(utterance: str) -> Tuple[bool, Optional[str]]:
-    """Parse player utterances for RESPONSE blocks.
+@parsers.register(("STATUS", "osworld", None))
+@parser_config(
+    target_field="actions",
+    description="Parse and validate STATUS (DONE or FAIL) for osworld environment",
+)
+def parse_osworld_status(
+    content: str, environment_type: str, action_space: Optional[str]
+) -> Tuple[bool, Optional[List[str]] | Exception]:
+    """
+    Parse and validate STATUS content (DONE or FAIL)
     Args:
-        utterance: The text content to parse
+        content: The content string (should be 'DONE' or 'FAIL')
+        environment_type: The environment type (expected to be 'osworld')
+        action_space: The action space (ignored for STATUS)
     Returns:
-        Tuple containing:
-        - Boolean indicating if a RESPONSE block was found
-        - The content inside the RESPONSE block, or None if no valid content was found
+        Tuple of (success: bool, status: Optional[List[str]] | Exception)
     """
-    response_pattern = r"RESPONSE\s*```(.*?)```"
-    response_matches = re.findall(response_pattern, utterance, re.DOTALL)
+    if environment_type != "osworld":
+        return False, ParseError(
+            reason=f"Invalid context: expected environment_type='osworld', got {environment_type}"
+        )
 
-    if not response_matches:
-        return False, None
+    if not isinstance(content, str) or not content.strip():
+        return False, ParseError(
+            reason="STATUS content must be a non-empty string", response=content
+        )
 
-    response_content = response_matches[0].strip()
-    return bool(response_content), response_content if response_content else None
+    status = content.strip()
+    if status not in ["DONE", "FAIL"]:
+        return False, ParseError(
+            reason="Invalid status: must be DONE or FAIL", response=status
+        )
+
+    return True, [status]
 
 
-# TASK```<content>```
-@parsers.register("task")
-@parser_config(target_field="task")
-def parse_task(utterance: str) -> Tuple[bool, Optional[str]]:
-    """Parse player utterances for TASK blocks.
+@parsers.register(("REQUEST", "osworld", None))
+@parser_config(
+    target_field="request",
+    description="Parse and validate REQUEST content for osworld environment",
+)
+def parse_osworld_request(
+    content: str, environment_type: str, action_space: Optional[str]
+) -> Tuple[bool, Optional[str] | Exception]:
+    """
+    Parse and validate REQUEST content
     Args:
-        utterance: The text content to parse
+        content: The content string
+        environment_type: The environment type (expected to be 'osworld')
+        action_space: The action space (ignored for REQUEST)
     Returns:
-        Tuple containing:
-        - Boolean indicating if a TASK block was found
-        - The content inside the TASK block, or None if no valid content was found
+        Tuple of (success: bool, request: Optional[str] | Exception)
     """
-    task_pattern = r"TASK\s*```(.*?)```"
-    task_matches = re.findall(task_pattern, utterance, re.DOTALL)
+    if environment_type != "osworld":
+        return False, ParseError(
+            reason=f"Invalid context: expected environment_type='osworld', got {environment_type}"
+        )
 
-    if not task_matches:
-        return False, None
+    if not isinstance(content, str) or not content.strip():
+        return False, ParseError(
+            reason="REQUEST content must be a non-empty string", response=content
+        )
 
-    task_content = task_matches[0].strip()
-    return bool(task_content), task_content if task_content else None
+    return True, content.strip()
+
+
+@parsers.register(("RESPONSE", "osworld", None))
+@parser_config(
+    target_field="response",
+    description="Parse and validate RESPONSE content for osworld environment",
+)
+def parse_osworld_response(
+    content: str, environment_type: str, action_space: Optional[str]
+) -> Tuple[bool, Optional[str] | Exception]:
+    """
+    Parse and validate RESPONSE content
+    Args:
+        content: The content string
+        environment_type: The environment type (expected to be 'osworld')
+        action_space: The action space (ignored for RESPONSE)
+    Returns:
+        Tuple of (success: bool, response: Optional[str] | Exception)
+    """
+    if environment_type != "osworld":
+        return False, ParseError(
+            reason=f"Invalid context: expected environment_type='osworld', got {environment_type}"
+        )
+
+    if not isinstance(content, str) or not content.strip():
+        return False, ParseError(
+            reason="RESPONSE content must be a non-empty string", response=content
+        )
+
+    return True, content.strip()

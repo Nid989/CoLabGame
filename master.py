@@ -1,4 +1,5 @@
 import json
+import re
 import logging
 import numpy as np
 from typing import Dict, List, Optional, Union, Tuple, Any
@@ -12,21 +13,43 @@ from clemcore.clemgame import (
     GameScorer,
     GameSpec,
     metrics,
+    ParseError,
+    GameError,
+    RuleViolationError,
 )
-from src.master import (
-    NetworkDialogueGameMaster,
-    EdgeCondition,
-    ConditionType,
-)
+from src.master import NetworkDialogueGameMaster, EdgeCondition, NodeTransition
 from src.environment import Environment, EnvironmentFactory
 from src.player import RoleBasedPlayer
-from src.message import MessageState, PlayerContextFormatter, PipeManager, PipeStage
-from src.utils.registry.parsers import parsers, get_parser_metadata
-from src.utils.registry.validators import raise_unrecognized_format_error
-from src.utils.constants import DEFAULT_HANDLER_TYPE, LogType
+from src.message import MessageType, MessageState, PlayerContextFormatter
+from src.utils.registry.parsers import parsers, get_parser_metadata, process_content
+from src.utils.constants import DEFAULT_HANDLER_TYPE
 from src.utils.general import TemporaryImageManager
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
+
+
+# Result monad implementation for chaining operations
+@dataclass
+class Ok:
+    value: Any
+
+    def __or__(self, func):
+        try:
+            return func(self.value)
+        except Exception as e:
+            return Error(e)
+
+
+@dataclass
+class Error:
+    error: Exception
+
+    def __or__(self, func):
+        return self  # Short-circuit on error
+
+
+Result = Union[Ok, Error]
 
 
 class ComputerGame(NetworkDialogueGameMaster):
@@ -43,7 +66,6 @@ class ComputerGame(NetworkDialogueGameMaster):
         self.game_config: Dict = None
         self.message_state = MessageState()
         self.player_context_formatter = None
-        self.pipe_manager = PipeManager()
         self.aborted: bool = False
         self.lose: bool = False
         self.success: bool = False
@@ -70,7 +92,6 @@ class ComputerGame(NetworkDialogueGameMaster):
         self._initialize_formatter()
         self._initialize_environment()
         self._build_graph()
-        self._setup_after_parse_pipelines()
 
     def _prepare_game_instance(self) -> None:
         """Prepare the game instance by applying templates and replacing placeholders"""
@@ -83,7 +104,7 @@ class ComputerGame(NetworkDialogueGameMaster):
 
     def _prepare_game_config(self) -> None:
         """Prepare game configuration dictionary"""
-        game_config = self.experiment["game_config"].copy()
+        game_config = self.experiment["config"].copy()
         observation_type = game_config.get("observation_type", "a11y_tree")
         use_images = observation_type in ["screenshot", "screenshot_a11y_tree", "som"]
         require_a11y_tree = observation_type in [
@@ -171,13 +192,11 @@ class ComputerGame(NetworkDialogueGameMaster):
                     self.add_standard_edge(from_node, to_node, description)
                 elif edge_type == "DECISION":
                     condition_config = edge.get("condition", {})
-                    condition_type = condition_config.get("condition_type")
-                    if condition_type not in ConditionType._value2member_map_:
-                        raise KeyError(
-                            f"Invalid condition-type field: {condition_type}"
-                        )
+                    message_type = condition_config.get("type")
+                    if message_type not in MessageType.__members__:
+                        raise KeyError(f"Invalid message-type field: {message_type}")
                     condition = EdgeCondition(
-                        condition_type=condition_type, description=description
+                        message_type=message_type, description=description
                     )
                     self.add_decision_edge(from_node, to_node, condition, description)
             anchor_node = graph_config.get("anchor_node")
@@ -186,29 +205,6 @@ class ComputerGame(NetworkDialogueGameMaster):
             logger.info("Graph building complete")
         except Exception as e:
             raise RuntimeError(f"Failed to build interaction graph: {str(e)}") from e
-
-    def _setup_after_parse_pipelines(self) -> None:
-        """Initialize processing pipelines for different parsers."""
-        self.pipe_manager.register_pipeline(
-            "pyautogui_actions",
-            [
-                PipeStage(
-                    self._execute_actions,
-                    output_field="observation",
-                    description="applies player actions to environment, producing state-based observations.",
-                )
-            ],
-        )
-        self.pipe_manager.register_pipeline(
-            "done_or_fail",
-            [
-                PipeStage(
-                    self._execute_actions,
-                    output_field="observation",
-                    description="applies player actions (either done or fail) to environment, producing final-state-based observation",
-                )
-            ],
-        )
 
     def _does_game_proceed(self) -> bool:
         """Determine if the game should continue to the next turn.
@@ -279,171 +275,342 @@ class ComputerGame(NetworkDialogueGameMaster):
         self._set_context_for(current_player, context)
         logger.info(f"Set initial context for player at node {self.current_node}")
 
-    def _validate_player_response(self, player: Player, response: str) -> bool:
-        """Decide if player response is valid.
+    def _on_after_game(self):
+        """Executed once at the end, after exiting the play loop.
 
-        A valid response enables the invocation of additional methods, such as _parse_response and _on_valid_parse_response.
+        Hook: Modify this method for game-specific functionality.
 
+        This method is useful to process and log/record overall game results.
+        """
+        self.log_to_self("game_end", "Game completed")
+        if (
+            hasattr(self, "game_config")
+            and "temporary_image_manager" in self.game_config
+        ):
+            self.game_config["temporary_image_manager"].cleanup()
+
+    def _parse_response(self, player: Any, response: str) -> str:
+        """
+        Chains the parsing, validation, and content processing steps to produce a parsed response.
+        Focuses solely on parsing logic using class methods, returning a JSON serializable string.
         Args:
-            player: The player that gave the response.
-            response: The response of the current player.
-
+            player: Ignored Player object (part of class method signature).
+            response: Input string containing JSON within code blocks.
         Returns:
-            bool: True, if the response is fine. Otherwise, False.
+            str: JSON string with validated fields (type, from, to, content).
+        Raises:
+            ParseError: If parsing or validation fails (e.g., invalid JSON, missing fields, invalid message type).
+            GameError: If action content is invalid (e.g., invalid action parameters).
         """
 
-        def handle_retry(error_msg: str):
-            if player.retries < self.game_config["max_retries"]:
-                player.retries += 1
-                self.message_state.update(tagged_content={"error": error_msg})
-                formatted_context = self.player_context_formatter.create_context_for(
-                    self.message_state, player
-                )
-                self._set_context_for(player, formatted_context)
-            else:
-                # player exceeded invalid-response <-> re-prompt attempts thus abort game.
-                self.aborted = True
+        def construct_response(
+            content: Any, message_type: MessageType, data: Dict[Any, Any]
+        ) -> Result:
+            """
+            Constructs the final JSON response from parsed content, message type, and original data.
+            Args:
+                content: The processed content (e.g., List[str], List[Dict], or str).
+                message_type: The validated MessageType.
+                data: The original parsed JSON dictionary.
+            Returns:
+                Result: Ok(str) with the JSON response.
+            """
+            parsed_response_dict = {
+                "type": message_type.name,
+                "from": data.get("from", ""),
+            }
+            if message_type in MessageType.requires_to() and "to" in data:
+                parsed_response_dict["to"] = data.get("to", "")
+            parsed_response_dict["content"] = (
+                content  # Preserves List[str], List[Dict], or str
+            )
+            parsed_response = json.dumps(parsed_response_dict)
+            return Ok(parsed_response)
 
-        self.request_count += 1
-        self.invalid_response = False
-        if response is None:
-            return False
-        player_node = self.get_node_from_player(player)
-        decision_edges = self._get_decision_edges(player_node)
-        # If no decision edges, check for exactly one standard edge
-        if not decision_edges:
-            return bool(self._get_standard_edges(player_node))
-        # Check each decision edge's condition
-        for to_node, condition in decision_edges:
-            result = condition.validate(response)
-            # Case 1: Valid and intended format - successful validation
-            if result.is_valid and result.intended_format:
-                return True
-            # Case 2: Invalid but intended format - validation failed for intended format
-            elif not result.is_valid and result.intended_format:
-                self.log_to_self(
-                    LogType.VALIDATION_ERROR.value, result.error.get_dict()
-                )
-                self.invalid_response = True
-                handle_retry(result.error.message)
-                return False
-            # Case 3: Not intended format - continue to next edge
-            elif not result.intended_format:
-                continue
-
-        # Fallback procedure
-        # TODO: deal with how to handle the observation <-> pyautogui or computer13 substitution.
-        error = raise_unrecognized_format_error(player.allowed_components)
-        self.log_to_self(LogType.VALIDATION_ERROR.value, error.get_dict())
-        self.invalid_response = True
-        handle_retry(error.message)
-        # TODO: Should we expand how we handle the fallback procedure?
-        return False
-
-    def _parse_response_for_decision_routing(
-        self, player: Player, response: str
-    ) -> Tuple[str, bool, Optional[str], Optional[Any]]:
-        """Parse player response and evaluate decision edge conditions.
-
-        Key Actions:
-            1. Parse the player's response for relevant content
-            2. Evaluate decision edge conditions based on the parsed content
-            3. Determine which decision edge (if any) should be taken
-
-        Args:
-            player: The Player instance that produced the response
-            response: The text content of the response
-
-        Returns:
-            Tuple[str, bool, Optional[str], Optional[Any]]: Modified response, logging flag, next node ID, extracted content
-        """
-        self.log_to_self(
-            "parsed_response", player.name
-        )  # Can just track it (e.g., see codenames)
-        player_node = self.get_node_from_player(player)
-        decision_edges = self._get_decision_edges(player_node)
-        if not decision_edges:
-            return response, False, None, None
-        # Evaluate each decision edge condition
-        for to_node, condition in decision_edges:
-            try:
-                parse_result = condition.parse(response)
-                if not (parse_result.is_successful and parse_result.content):
-                    continue
-                parse_func_name = condition.function_pair.parse_func.__name__
-                parser_id = next(
+        # Chain the operations using Result monad
+        # TODO: the `handle_json_content` method is quite inefficient, as it provide `action_space` everytime, when it is not needed.
+        result = (
+            Ok(response)
+            | (
+                lambda x: Ok(self.extract_json_codeblock(x))
+                if isinstance(x, str)
+                else Error(ParseError(reason="Expected string input", response=str(x)))
+            )
+            | (
+                lambda x: Ok(x[1]) if x[0] else Error(x[1])
+            )  # Ok(Dict) or Error(ParseError)
+            | (lambda x: Ok((self.check_json_message(x), x)))
+            | (
+                lambda x: Ok((x[0][1], x[1])) if x[0][0] else Error(x[0][1])
+            )  # Ok((MessageType, Dict)) or Error(ParseError)
+            | (
+                lambda x: Ok(
                     (
-                        pid
-                        for pid in parsers
-                        if parse_func_name.startswith(f"parse_{pid}")
-                        or pid in parse_func_name
-                    ),
-                    None,
-                )
-                result = None
-                if parser_id:
-                    metadata = get_parser_metadata(parser_id)
-                    target_field = metadata.get("target_field")
-
-                    if target_field and hasattr(self.message_state, target_field):
-                        self.message_state.update(
-                            **{target_field: parse_result.content}
-                        )
-
-                    success, result = self.pipe_manager.execute_pipeline(
-                        parser_id=parser_id,
-                        content=parse_result.content,
-                        message_state=self.message_state,
+                        self.handle_json_content(
+                            x[1]["content"],
+                            x[0],
+                            self.game_config["environment_type"],
+                            self.game_config["action_space"],
+                        ),
+                        x[0],
+                        x[1],
                     )
-                if success:
-                    logger.info(f"Processing pipeline executed for parser {parser_id}")
-
-                logger.info(
-                    f"Decision edge condition met: {self.current_node} » {to_node}"
                 )
-                return response, True, to_node, (parse_result.content, result)
-            except Exception as e:
-                logger.error(f"Error evaluating condition for edge to {to_node}: {e}")
+            )
+            | (
+                lambda x: Ok((x[0][1], x[1], x[2])) if x[0][0] else Error(x[0][1])
+            )  # Ok((content, MessageType, Dict)) or Error(ParseError/GameError)
+            | (lambda x: construct_response(x[0], x[1], x[2]))  # Ok(str)
+        )
 
-        return response, False, None, None
+        # Extract final result and raise errors
+        if isinstance(result, Ok):
+            return result.value
+        else:
+            # TODO: Implement custom error handling for exceptions from extract_json_codeblock, check_json_message, or handle_json_content
+            raise result.error
 
-    def _execute_actions(
-        self, content: str
-    ) -> Optional[Dict[str, Union[str, Image.Image, Dict]]]:
-        """Execute either pyautogui or computer13 actions and record observations (upon environment-state change).
-
+    def extract_json_codeblock(
+        self, text: str
+    ) -> Tuple[bool, Optional[Dict[Any, Any]] | Exception]:
+        """
+        Extracts and parses JSON content from a string containing code blocks, only allowing no language identifier or 'json'.
         Args:
-            content: Parser extracted actions typically either pyautogui python-code (as str.), or computer13 actions in JSON (as str.)
-
+            text: Input string containing JSON within triple-backtick code blocks.
         Returns:
-            Optional[Dict]: Observation dictionary or None if execution fails
+            Tuple[bool, Optional[Dict[Any, Any]] | Exception]: (success, result or error)
         """
         try:
-            if not content:
-                logger.error("No actions to execute")
-                return None
-            observation = None
-            for action in content:
-                try:
-                    observation, reward, done, info = self.env.step(
-                        action, self.game_config.get("sleep_after_execution", 0.0)
-                    )
-                    if observation is None:
-                        logger.error("Recieved None observation after game execution")
-                        return None
-                    self.current_observation = observation
-                    if done:
-                        logger.info("Game termination signal recieved (done=True)")
-                        break
-                except Exception as e:
-                    logger.error(f"Failed to execute action {str(action)}: {str(e)}")
-            return observation
-        except Exception as e:
-            logger.error(f"Action execution failed: {str(e)}")
-            return None
+            pattern = r"```(?:json)?\s*([\s\S]*?)\s*```"
+            match = re.search(pattern, text)
 
-    # There has to be some way?
-    # Right now I am saving the parsed content (specifically `action`, `request`, etc) which is than getting processed accordingly.
+            if not match:
+                invalid_pattern = r"```[a-zA-Z]+\s*([\s\S]*?)\s*```"
+                if re.search(invalid_pattern, text):
+                    return False, ParseError(
+                        reason="Code block found with invalid language identifier (only 'json' or no identifier allowed)",
+                        response=text,
+                    )
+                return False, ParseError(
+                    reason="No code block found in the input text", response=text
+                )
+
+            json_content = match.group(1).strip()
+
+            if not json_content:
+                return False, ParseError(reason="Empty code block found", response=text)
+
+            result = json.loads(json_content)
+
+            if not isinstance(result, dict):
+                return False, ParseError(
+                    reason="Parsed content is not a JSON object", response=json_content
+                )
+
+            logger.info("Successfully parsed JSON from code block")
+            return True, result
+
+        except json.JSONDecodeError as e:
+            return False, ParseError(
+                reason=f"Invalid JSON format: {str(e)}", response=text
+            )
+
+    def check_json_message(
+        self, data: Dict[Any, Any]
+    ) -> Tuple[bool, Optional[MessageType] | Exception]:
+        """
+        Validates the JSON message structure and returns the MessageType.
+        Args:
+            data: Parsed JSON dictionary to validate.
+        Returns:
+            Tuple[bool, Optional[MessageType] | Exception]: (success, result or error)
+        """
+        try:
+            required_keys = {"type", "from", "content"}
+            missing_keys = required_keys - set(data.keys())
+            if missing_keys:
+                return False, ParseError(
+                    reason=f"Missing required keys: {missing_keys}", response=str(data)
+                )
+
+            try:
+                message_type = MessageType[data["type"]]
+            except KeyError:
+                valid_types = ", ".join(mt.name for mt in MessageType)
+                return False, ParseError(
+                    reason=f"Invalid message type: {data['type']}. Must be one of {valid_types}",
+                    response=str(data),
+                )
+
+            if message_type in MessageType.requires_to():
+                if "to" not in data:
+                    return False, ParseError(
+                        reason=f"'to' field is required for {message_type.name} messages",
+                        response=str(data),
+                    )
+                if not isinstance(data["to"], str):
+                    return False, ParseError(
+                        reason="Invalid type for 'to' field: must be a string",
+                        response=str(data),
+                    )
+            elif message_type in MessageType.prohibits_to():
+                if "to" in data:
+                    return False, ParseError(
+                        reason=f"'to' field must not be present for {message_type.name} messages",
+                        response=str(data),
+                    )
+
+            if not isinstance(data["from"], str):
+                return False, ParseError(
+                    reason="Invalid type for 'from' field: must be a string",
+                    response=str(data),
+                )
+
+            # TODO: Add player ID validation for 'from' field
+            # Example: validate_player_id(json_data["from"])
+
+            # Validate 'to' field if present (basic string check)
+            if "to" in data:
+                # TODO: Add player ID validation for 'to' field
+                # Example: validate_player_id(json_data["to"])
+                pass
+
+            # Basic content type validation
+            if (
+                message_type == MessageType.EXECUTE
+                and self.game_config.get("action_space") == "computer13"
+            ):
+                if not isinstance(data["content"], list) or not all(
+                    isinstance(item, dict) for item in data["content"]
+                ):
+                    return False, ParseError(
+                        reason="Invalid 'content' field for computer13: must be a list of dictionaries",
+                        response=str(data),
+                    )
+            elif message_type in {
+                MessageType.EXECUTE,
+                MessageType.REQUEST,
+                MessageType.RESPONSE,
+                MessageType.STATUS,
+                MessageType.TASK,
+            }:
+                if not isinstance(data["content"], str):
+                    return False, ParseError(
+                        reason=f"Invalid 'content' field for {message_type.name}: must be a string",
+                        response=str(data),
+                    )
+
+            logger.info("JSON message validated successfully")
+            return True, message_type
+
+        except Exception as e:
+            logger.error(f"Validation failed: {str(e)}")
+            return False, ParseError(
+                reason=f"Unexpected error during validation: {str(e)}",
+                response=str(data),
+            )
+
+    def handle_json_content(
+        self,
+        data: Any,
+        message_type: str | MessageType,
+        environment_type: str,
+        action_space: Optional[str],
+    ) -> Tuple[bool, Optional[Any] | Exception]:
+        """
+        Processes the content field based on message type, environment type, and action space.
+        Args:
+            data: The content to process (str for pyautogui/REQUEST/RESPONSE/STATUS/TASK, List[Dict] for computer13).
+            message_type: The message type (string or MessageType enum, e.g., 'EXECUTE' or MessageType.EXECUTE).
+            environment_type: The environment type (e.g., 'osworld').
+            action_space: The action space (e.g., 'computer13') for EXECUTE messages.
+        Returns:
+            Tuple[bool, Optional[Any] | Exception]: (success, result or error)
+        """
+        try:
+            # Convert message_type to string for registry
+            message_type_str = (
+                message_type.name
+                if isinstance(message_type, MessageType)
+                else message_type
+            )
+
+            # Call registry to process content
+            success, result = process_content(
+                data, message_type_str, environment_type, action_space
+            )
+
+            if not success:
+                if isinstance(result, GameError):
+                    return False, result  # Propagate GameError from parsers
+                return False, ParseError(reason=str(result), response=str(data))
+
+            if result is None:
+                return False, ParseError(
+                    reason=f"Failed to parse content for {message_type_str} in {environment_type} with action_space {action_space}",
+                    response=str(data),
+                )
+
+            # Get target field from parser metadata
+            parser_key = (message_type_str, environment_type, action_space)
+            if parser_key not in parsers:
+                parser_key = (message_type_str, environment_type, None)
+
+            metadata = get_parser_metadata(parser_key)
+            target_field = metadata.get("target_field")
+
+            if target_field:
+                # TODO: Update the game state with result
+                # Example: setattr(game_state, target_field, result)
+                logger.info(f"Processed content for {target_field}: {result}")
+            else:
+                logger.warning(f"No target field defined for parser {parser_key}")
+
+            return True, result
+
+        except Exception as e:
+            logger.error(f"Unexpected error during content processing: {str(e)}")
+            return False, ParseError(
+                reason=f"Unexpected error during content processing: {str(e)}",
+                response=str(data),
+            )
+
+    def _execute_actions(
+        self, actions: List[Union[str, Dict]]
+    ) -> Dict[str, Union[str, Image.Image, Dict]]:
+        """Execute either pyautogui or computer13 actions and record observations.
+        Args:
+            actions: List of actions (pyautogui code strings or computer13 action dictionaries)
+        Returns:
+            Dict: Observation dictionary from the environment after executing actions
+        Raises:
+            GameError: If action execution fails or no observation is recorded
+        """
+        if not actions:
+            raise GameError(reason="No actions to execute")
+
+        observation = None
+        for action in actions:
+            try:
+                # Assume self.env.step returns (observation, reward, done, info)
+                observation, reward, done, info = self.env.step(
+                    action, self.game_config.get("sleep_after_execution", 0.0)
+                )
+                if observation is None:
+                    raise GameError(
+                        reason="Received None observation after action execution"
+                    )
+                if done:
+                    logger.info("Game termination signal received (done=True)")
+                    break
+            except Exception as e:
+                raise GameError(
+                    reason=f"Failed to execute action {str(action)}: {str(e)}"
+                )
+
+        if observation is None:
+            raise GameError(reason="No observation recorded after executing actions")
+        return observation
 
     def _on_valid_player_response(self, player: Player, parsed_response: str):
         """Method executed after a player response has been parsed and validated.
@@ -468,6 +635,88 @@ class ComputerGame(NetworkDialogueGameMaster):
                     f"Set context for next player at node {self.transition.next_node}"
                 )
 
+    def _advance_game(self, parsed_response: str):
+        """Advance the game state based on the parsed response.
+        Args:
+            parsed_response: JSON string containing the parsed message with keys like
+                            "type", "from", "to", and "content".
+        Raises:
+            GameError: If the message type is unknown or action execution fails.
+            RuleViolationError: If no valid transition is found or if the message type does not match the edge condition.
+        """
+        # Decode the JSON string into a dictionary
+        data = json.loads(parsed_response)
+
+        # Extract required fields
+        message_type = MessageType[data["type"]]
+        # from_node = data["from"]  # Changed to node representation
+        content = data["content"]
+
+        # Handle player transition with decision edge validation first
+        current_node = self.current_node
+        next_node = None
+
+        # Extract decision edges for the current node
+        decision_edges = self._get_decision_edges(current_node)
+        if decision_edges:
+            if "to" in data:
+                target_node = data["to"]
+                for to_node, condition in decision_edges:
+                    if to_node == target_node and condition.validate(message_type.name):
+                        next_node = target_node
+                        break
+                if next_node is None:
+                    raise RuleViolationError(
+                        f"No valid transition found to target node {target_node} with message type {message_type.name}"
+                    )
+            else:
+                for to_node, condition in decision_edges:
+                    if to_node == current_node and condition.validate(
+                        message_type.name
+                    ):
+                        next_node = current_node
+                        break
+                if next_node is None:
+                    raise RuleViolationError(
+                        f"No valid self-loop transition found for message type {message_type.name} at node {current_node}"
+                    )
+
+        # TODO: this should be investigated, cause response directly corresponds to a `decision_edge`.
+        if next_node is None:
+            # Fall back to standard edges if no valid decision edge is found
+            standard_edges = self._get_standard_edges(current_node)
+            if standard_edges:
+                next_node = standard_edges[0][
+                    0
+                ]  # Take the first standard edge target node
+            else:
+                raise RuleViolationError(
+                    f"No valid transition (decision or standard) found for message type {message_type.name} from node {current_node}"
+                )
+
+        # Update transition and node after validation
+        self.transition = NodeTransition(next_node=next_node)
+        self._update_round_tracking(current_node, next_node)
+        self.current_node = next_node
+        logger.info(
+            f"Transitioned from {current_node} to {next_node} based on message type {message_type.name}"
+        )
+
+        # Process based on message-type only after successful validation
+        if message_type == MessageType.EXECUTE:
+            observation = self._execute_actions(content)
+            self.message_state.update(observation=observation)
+        elif message_type == MessageType.STATUS:
+            # Content is a list with one string, e.g., ["DONE"] or ["FAIL"]
+            # TODO: should observation be recorded after executing the STATUS flag & updated within the self.message_state!
+            _ = self._execute_actions(content)
+        elif message_type == MessageType.REQUEST:
+            self.message_state.update(request=content)
+        elif message_type == MessageType.RESPONSE:
+            self.message_state.update(response=content)
+        else:
+            raise GameError(reason=f"Unknown message type: {message_type}")
+
     def compute_episode_score(self):
         """
         Computes the score for the current episode.
@@ -478,6 +727,18 @@ class ComputerGame(NetworkDialogueGameMaster):
         result = self.env.evaluate()
         self.log_to_self("episode_score", result)
         return result
+
+    def _on_parse_error(self, error: ParseError):
+        """Hook to implement consequences for parsing errors e.g. prepare re-prompting or set game state to abort."""
+        self.log_to_self("parse_error", str(error))
+        self.invalid_response = True
+        self.request_count_violated += 1
+
+    def _on_game_error(self, error: GameError):
+        """Hook to implement consequences for game errors e.g. prepare re-prompting or set game state to failure."""
+        self.log_to_self("game_error", str(error))
+        self.invalid_response = True
+        self.request_count_violated += 1
 
 
 class ComputerGameScorer(GameScorer):

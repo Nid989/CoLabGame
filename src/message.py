@@ -1,5 +1,6 @@
 import logging
-from typing import Dict, List, Optional, Union, Tuple, Any, Set
+from enum import Enum, auto
+from typing import Dict, List, Optional, Union, Set
 from dataclasses import dataclass
 from PIL import Image
 
@@ -13,17 +14,37 @@ from src.utils.constants import (
 logger = logging.getLogger(__name__)
 
 
+class MessageType(Enum):
+    """Enum for valid message types with configuration for 'to' field requirements."""
+
+    EXECUTE = auto()
+    REQUEST = auto()
+    RESPONSE = auto()
+    STATUS = auto()
+    TASK = auto()
+
+    @classmethod
+    def requires_to(cls) -> Set["MessageType"]:
+        """Returns the set of message types that require a 'to' field."""
+        return {cls.REQUEST, cls.RESPONSE}
+
+    @classmethod
+    def prohibits_to(cls) -> Set["MessageType"]:
+        """Returns the set of message types that prohibit a 'to' field."""
+        return {cls.EXECUTE, cls.STATUS, cls.TASK}
+
+
 @dataclass
 class MessageState:
     """Dynamic container for message components updated during gameplay.
 
     Fields:
         observation: Optional dictionary (e.g., {'screenshot': str, 'accessibility_tree': str})
-        request: Optional request string
-        response: Optional response string
+        goal: Optional goal string
         plan: Optional plan string
         task: Optional task string
-        actions: Optional list of action strings (currently unused)
+        request: Optional request string
+        response: Optional response string
         tagged_content: Optional dictionary of tag-content pairs (e.g., {'note': 'text'})
     """
 
@@ -33,7 +54,6 @@ class MessageState:
     task: Optional[str] = None
     request: Optional[str] = None
     response: Optional[str] = None
-    actions: Optional[List[str]] = None
     tagged_content: Optional[Dict[str, str]] = None
 
     def reset(self, preserve: Optional[List[str]] = None):
@@ -74,8 +94,6 @@ class MessageState:
                     isinstance(k, str) and isinstance(v, str) for k, v in value.items()
                 ):
                     raise ValueError("Tagged content must be Dict[str, str]")
-                elif field == "actions" and not all(isinstance(a, str) for a in value):
-                    raise ValueError("Actions must be List[str]")
                 elif field == "observation" and not isinstance(value, dict):
                     raise ValueError("Observation must be a dictionary")
                 elif field in {
@@ -114,15 +132,12 @@ class MessageState:
             elif field == "tagged_content" and isinstance(value, dict):
                 tags = list(value.keys())
                 previews.append(f"{field}: {len(tags)} tags - {tags}")
-            elif field == "actions" and isinstance(value, list):
-                previews.append(f"{field}: {len(value)} actions")
             elif isinstance(value, str):
                 preview_text = value[:50] + "..." if len(value) > 50 else value
                 preview_text = preview_text.replace("\n", " ")
                 previews.append(f"{field}: {preview_text}")
             else:
                 previews.append(f"{field}: {type(value).__name__}")
-
         return "\n".join(previews)
 
 
@@ -442,52 +457,3 @@ class PipeStage:
         if self.output_field and hasattr(message_state, self.output_field):
             message_state.update(**{self.output_field: result})
         return result
-
-
-class PipeManager:
-    """Manages and executes parser-specific processing pipelines."""
-
-    def __init__(self):
-        self.parser_pipelines = {}
-
-    def register_pipeline(self, parser_id: str, steps: List[PipeStage]):
-        """Register a processing pipeline for a parser.
-
-        Args:
-            parser_id: Identifier for the parser
-            steps: List of PipeStage instances
-        """
-        self.parser_pipelines[parser_id] = steps
-
-    def get_pipeline(self, parser_id: str) -> List[PipeStage]:
-        """Get processing pipeline for a parser.
-
-        Args:
-            parser_id: Identifier for the parser
-
-        Returns:
-            List[PipeStage]: List of pipeline stages
-        """
-        return self.parser_pipelines.get(parser_id, [])
-
-    def execute_pipeline(
-        self, parser_id: str, content: Any, message_state
-    ) -> Tuple[bool, Any]:
-        """Execute the entire processing pipeline for a parser.
-
-        Args:
-            parser_id: Identifier for the parser
-            content: Input content to process
-            message_state: MessageState instance to update
-
-        Returns:
-            Tuple[bool, Any]: Success flag and result of pipeline execution
-        """
-        if parser_id not in self.parser_pipelines:
-            return False, content
-        current_content = content
-        result = None
-        for step in self.parser_pipelines[parser_id]:
-            result = step.execute(current_content, message_state)
-            current_content = result
-        return True, result

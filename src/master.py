@@ -1,30 +1,13 @@
 import logging
 from enum import Enum, auto
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Union, Optional, Tuple, NamedTuple
+from typing import Dict, List, Union, Optional, Tuple
 import matplotlib.pyplot as plt
 import networkx as nx
 
 from clemcore import backends
 from clemcore.clemgame import DialogueGameMaster
 from .player import RoleBasedPlayer
-from .utils.registry.parsers import (
-    parse_computer13_actions,
-    parse_pyautogui_actions,
-    parse_done_or_fail,
-    parse_request,
-    parse_response,
-    parse_task,
-)
-from .utils.registry.validators import (
-    validate_computer13_actions,
-    validate_pyautogui_actions,
-    validate_done_or_fail,
-    validate_request,
-    validate_response,
-    validate_task,
-    ValidationError,
-)
 
 module_logger = logging.getLogger(__name__)
 
@@ -48,136 +31,29 @@ class EdgeType(Enum):
     )  # Conditional connection, traversed only if condition evaluates to True
 
 
-@dataclass
-class ParseResult:
-    """Container for parsing results.
-
-    Attributes:
-        is_successful: Whether the parsing operation succeeded.
-        content: The extracted content from parsing, None if parsing failed.
-    """
-
-    is_successful: bool
-    content: Optional[Any] = None
-
-
-@dataclass
-class ValidationResult:
-    """Container for validation results.
-
-    Attributes:
-        is_valid: Whether the response passed all validation checks.
-        intended_format: Whether the response was intended to follow this format.
-        error: Validation error details if validation failed.
-    """
-
-    is_valid: bool
-    intended_format: bool
-    error: Optional[ValidationError] = None
-
-
-class ConditionType(str, Enum):
-    """Enum for pre-defined types of edge conditions."""
-
-    COMPUTER13_ACTIONS = "computer13_actions"
-    PYAUTOGUI_ACTIONS = "pyautogui_actions"
-    DONE_OR_FAIL = "done_or_fail"
-    REQUEST = "request"
-    RESPONSE = "response"
-    TASK = "task"
-
-
-class ConditionPair(NamedTuple):
-    """Pair of parse and validate functions for a condition.
-
-    Attributes:
-        parse_func: Function to parse the response.
-        validate_func: Function to validate the response.
-    """
-
-    parse_func: Callable
-    validate_func: Callable
-
-
-# Pre-defined pairs of parse and validate functions
-CONDITION_PAIRS: Dict[ConditionType, ConditionPair] = {
-    ConditionType.COMPUTER13_ACTIONS: ConditionPair(
-        parse_computer13_actions, validate_computer13_actions
-    ),
-    ConditionType.PYAUTOGUI_ACTIONS: ConditionPair(
-        parse_pyautogui_actions, validate_pyautogui_actions
-    ),
-    ConditionType.DONE_OR_FAIL: ConditionPair(
-        parse_done_or_fail, validate_done_or_fail
-    ),
-    ConditionType.REQUEST: ConditionPair(parse_request, validate_request),
-    ConditionType.RESPONSE: ConditionPair(parse_response, validate_response),
-    ConditionType.TASK: ConditionPair(parse_task, validate_task),
-}
-
-
 class EdgeCondition:
-    """Condition for transitioning between nodes in the network with paired parsing and validation."""
+    """Condition for transitioning between nodes in the network based on MessageType."""
 
-    def __init__(
-        self, condition_type: Union[ConditionType, str], description: str = ""
-    ):
-        """Initialize an edge condition with paired parser and validator.
+    def __init__(self, message_type: str, description: str = ""):
+        """Initialize an edge condition with a MessageType.
 
         Args:
-            condition_type: Type of condition that determines which function pair to use.
+            message_type: The MessageType that determines the condition for transition.
             description: Human-readable description of the condition.
-
-        Raises:
-            KeyError: If no function pair is found for the condition type.
         """
-        if isinstance(condition_type, str):
-            condition_type = ConditionType(condition_type)
-        if condition_type not in CONDITION_PAIRS:
-            raise KeyError(
-                f"No function pair found for condition type {condition_type}"
-            )
-        self.function_pair = CONDITION_PAIRS[condition_type]
+        self.message_type = message_type
         self.description = description
 
-    def parse(self, response: str) -> ParseResult:
-        """Parse the response using the paired parse function.
+    def validate(self, message_type: str) -> bool:
+        """Validate if the provided MessageType matches the condition type.
 
         Args:
-            response: The text content to parse.
+            message_type: The MessageType to validate against the condition.
 
         Returns:
-            ParseResult containing match status and parsed content.
+            bool: True if the MessageType matches the condition type, False otherwise.
         """
-        is_successful, content = self.function_pair.parse_func(response)
-        return ParseResult(is_successful=is_successful, content=content)
-
-    def validate(self, response: str) -> ValidationResult:
-        """Validate the response using the paired validate function.
-
-        Args:
-            response: The text content to validate.
-
-        Returns:
-            ValidationResult containing validation status and any error.
-        """
-        is_valid, intended_format, error = self.function_pair.validate_func(response)
-        return ValidationResult(
-            is_valid=is_valid, intended_format=intended_format, error=error
-        )
-
-
-@dataclass
-class NodeTransition:
-    """Temporary storage for node transition data.
-
-    Attributes:
-        next_node: ID of the next node to transition to, if any.
-        total_transitions: Counter for total transitions in current round.
-    """
-
-    next_node: Optional[str] = None
-    total_transitions: int = 0
+        return self.message_type == message_type
 
 
 class NetworkDialogueGameMaster(DialogueGameMaster):
@@ -341,11 +217,11 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
                 self.current_node = next_node
                 # _next_player expects to return a Player instance.
                 # eventhough we transit to the END node, which is a non-Player node.
-                return self.current_player
+                return self._current_player
             elif node_data["type"] == NodeType.PLAYER:
                 self.current_node = next_node
                 return node_data["player"]
-        return self.current_player
+        return self._current_player
 
     def _start_next_round(self) -> bool:
         """Check if a new round should start based on anchor node.
@@ -382,56 +258,6 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             raise ValueError("No standard edges found from START node")
         self.current_node = standard_edges[0][1]
         self._update_round_tracking("START", self.current_node)
-
-    def _parse_response(self, player: RoleBasedPlayer, response: str) -> str:
-        """Parse current-player response and determine the next node transition.
-
-        This method processes the response using decision routing, falling back to standard edges if needed,
-        and updates round tracking when node transitions occur.
-
-        Args:
-            player: Player instance that produced the response. (usually self.current_player)
-            response: The response of the player.
-
-        Returns:
-            str: The parsed response.
-        """
-        self.transition = NodeTransition()
-        _response, log_action, next_node, _ = self._parse_response_for_decision_routing(
-            player, response
-        )
-        if next_node is None:
-            next_node = self._get_standard_edges(self.current_node)
-        if next_node:
-            # Handles both cases: (a) self-loops and (b) transitions between nodes
-            self._update_round_tracking(self.current_node, next_node)
-            self.transition.next_node = next_node
-        if _response != response and log_action:
-            self.log_to_self("parse", f"Parsed response: {_response}")
-        return _response
-
-    def _parse_response_for_decision_routing(
-        self, player: RoleBasedPlayer, response: str
-    ) -> Tuple[str, bool, Optional[str], Optional[str]]:
-        """Parse a response and evaluate decision edge conditions.
-
-        This hook method is intended for subclass override to implement game-specific logic.
-
-        Args:
-            player: The player who produced the response.
-            response: The text content of the response.
-
-        Returns:
-            Tuple containing:
-                - Modified response (or original if unchanged).
-                - Boolean indicating whether to log the parsing.
-                - Next node ID if a decision edge is taken, None otherwise.
-                - Extracted content, if any.
-
-        Notes:
-            Default implementation returns the response unchanged with no transition.
-        """
-        return response, True, None, None
 
     def _update_round_tracking(self, prev_node: str, next_node: str):
         """Update round tracking state based on node transitions.
@@ -548,6 +374,12 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             for _, to_node, edge_data in self.graph.out_edges(node_id, data=True)
             if edge_data.get("type") == EdgeType.STANDARD
         ]
+
+    def compute_turn_score(self):
+        """This method is included here because the inherited class DialogueGameMaster
+        mentions it as an abstract method and assigns to a dict "turn_score", so for
+        the purpose of continuation I am adding this."""
+        return None
 
     def visualize_graph(self, figsize=(12, 10), save_path=None, dpi=100):
         """Visualize the network structure with professional styling.
@@ -801,3 +633,16 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             positions: Dictionary mapping node IDs to (x, y) positions.
         """
         self.node_positions = positions
+
+
+@dataclass
+class NodeTransition:
+    """Temporary storage for node transition data.
+
+    Attributes:
+        next_node: ID of the next node to transition to, if any.
+        total_transitions: Counter for total transitions in current round.
+    """
+
+    next_node: Optional[str] = None
+    total_transitions: int = 0
