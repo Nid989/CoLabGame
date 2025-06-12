@@ -251,11 +251,11 @@ class EnvironmentFactory:
     """Factory for creating environment instances based on environment type."""
 
     @staticmethod
-    def create_environment(env_type: str, **config) -> Environment:
+    def create_environment(env_name: str, **config) -> Environment:
         """Create an environment instance based on the specified type.
 
         Args:
-            env_type (str): Type of environment to create.
+            env_type (str): Type of environment to create (e.g., 'osworld', 'browser_use', 'androidworld', 'minecraft').
             **config: Configuration for the environment.
 
         Returns:
@@ -264,11 +264,18 @@ class EnvironmentFactory:
         Raises:
             ValueError: If the specified environment type is not supported.
         """
-        if env_type.lower() == "osworld":
-            return OSWorldComputerEnvironment(**config)
-        # Add more environment types as needed
+        env_name = env_name.lower()
+
+        if env_name == "osworld":
+            return create_osworld_environment(**config)
+        elif env_name == "browser_use":
+            raise NotImplementedError("Browser-Use environment not yet implemented")
+        elif env_name == "androidworld":
+            raise NotImplementedError("AndroidWorld environment not yet implemented")
+        elif env_name == "minecraft":
+            raise NotImplementedError("Minecraft environment not yet implemented")
         else:
-            raise ValueError(f"Unsupported environment type: {env_type}")
+            raise ValueError(f"Unsupported environment type: {env_name}")
 
 
 def create_osworld_environment(
@@ -281,7 +288,7 @@ def create_osworld_environment(
     require_a11y_tree: bool = None,
     **kwargs,
 ) -> Environment:
-    """Create an environment instance with the specified configuration.
+    """Create an OSWorld environment instance with the specified configuration.
 
     Args:
         path_to_vm: Path to virtual machine file
@@ -294,7 +301,7 @@ def create_osworld_environment(
         **kwargs: Additional arguments passed to environment
 
     Returns:
-        Environment: Configured environment instance
+        Environment: Configured OSWorldComputerEnvironment instance
     """
 
     if not require_a11y_tree:
@@ -303,8 +310,7 @@ def create_osworld_environment(
             "screenshot_a11y_tree",
             "som",
         ]
-    return EnvironmentFactory.create_environment(
-        "osworld",
+    return OSWorldComputerEnvironment(
         path_to_vm=path_to_vm,
         action_space=action_space,
         screen_size=(screen_width, screen_height),

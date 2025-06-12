@@ -213,7 +213,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         self.round_complete = False
         self.transition = NodeTransition()
 
-    def add_player(
+    def add_player_to_graph(
         self,
         player: RoleBasedPlayer,
         initial_prompt: Union[str, Dict] = None,

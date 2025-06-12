@@ -18,7 +18,7 @@ from src.master import (
     EdgeCondition,
     ConditionType,
 )
-from src.environment import Environment, create_osworld_environment
+from src.environment import Environment, EnvironmentFactory
 from src.player import RoleBasedPlayer
 from src.message import MessageState, PlayerContextFormatter, PipeManager, PipeStage
 from src.utils.registry.parsers import parsers, get_parser_metadata
@@ -83,7 +83,7 @@ class ComputerGame(NetworkDialogueGameMaster):
 
     def _prepare_game_config(self) -> None:
         """Prepare game configuration dictionary"""
-        game_config = self.experiment["config"].copy()
+        game_config = self.experiment["game_config"].copy()
         observation_type = game_config.get("observation_type", "a11y_tree")
         use_images = observation_type in ["screenshot", "screenshot_a11y_tree", "som"]
         require_a11y_tree = observation_type in [
@@ -111,7 +111,10 @@ class ComputerGame(NetworkDialogueGameMaster):
             RuntimeError: If environment or recording initialization fails
         """
         try:
-            self.env = create_osworld_environment(**self.game_config)
+            env_name = self.game_config.pop("env_name", "osworld").lower()
+            self.env = EnvironmentFactory.create_environment(
+                env_name, **self.game_config
+            )
             observation = self.env.reset(task_config=self.game_instance["task_config"])
             self.message_state.update(observation=observation)
             if not self.env.start_recording():
@@ -152,7 +155,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                     handler_type=role_config.get("handler_type", DEFAULT_HANDLER_TYPE),
                     allowed_components=role_config.get("allowed_components", []),
                 )
-                self.add_player(
+                self.add_player_to_graph(
                     player=player,
                     initial_prompt=role_config.get("initial_prompt"),
                     node_id=node_id,
@@ -232,6 +235,7 @@ class ComputerGame(NetworkDialogueGameMaster):
             )
             return False
         if self.current_node == "END":
+            self.game_config["temporary_image_manager"].cleanup()
             return False
         return True
 
@@ -437,6 +441,9 @@ class ComputerGame(NetworkDialogueGameMaster):
         except Exception as e:
             logger.error(f"Action execution failed: {str(e)}")
             return None
+
+    # There has to be some way?
+    # Right now I am saving the parsed content (specifically `action`, `request`, etc) which is than getting processed accordingly.
 
     def _on_valid_player_response(self, player: Player, parsed_response: str):
         """Method executed after a player response has been parsed and validated.

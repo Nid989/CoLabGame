@@ -14,6 +14,8 @@ class TemporaryImageManager:
         self.temp_dir = tempfile.mkdtemp()
         # Cache to store mapping of image content to file paths
         self.image_cache = {}
+        # Control whether to preserve images during cleanup
+        self.preserve_images = True
         atexit.register(self.cleanup)
 
     def save_image(self, image_binary: bytes) -> str:
@@ -41,7 +43,18 @@ class TemporaryImageManager:
         return tmp_file.name
 
     def cleanup(self):
-        """Removes the temporary directory and all files in it."""
+        """Removes the temporary directory and all files in it.
+        If preserve_images is True, copies all images to a 'saved_images' subdirectory before deletion.
+        """
         if os.path.exists(self.temp_dir):
+            if self.preserve_images:
+                current_dir = os.getcwd()
+                saved_images_dir = os.path.join(current_dir, "saved_images")
+                os.makedirs(saved_images_dir, exist_ok=True)
+                for image_hash, image_path in self.image_cache.items():
+                    if os.path.exists(image_path):
+                        filename = os.path.basename(image_path)
+                        destination = os.path.join(saved_images_dir, filename)
+                        shutil.copy2(image_path, destination)
             shutil.rmtree(self.temp_dir)
         self.image_cache.clear()

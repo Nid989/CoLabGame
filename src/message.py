@@ -216,7 +216,8 @@ class PlayerContextFormatter:
             },
             "environment": {
                 "observation",
-                "goalplan",
+                "goal",
+                "plan",
                 "task",
                 "request",
                 "response",
