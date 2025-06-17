@@ -137,7 +137,6 @@ class ComputerGame(NetworkDialogueGameMaster):
             )
             observation = self.env.reset(task_config=self.game_instance["task_config"])
             self.message_state.update(observation=observation)
-            print(self.message_state.preview())
             if not self.env.start_recording():
                 raise RuntimeError("Failed to start environment recording")
         except Exception as e:
@@ -165,13 +164,9 @@ class ComputerGame(NetworkDialogueGameMaster):
                 if node_type != "PLAYER" or not node_id:
                     continue
                 role_index = node.get("role_index", 0)
-                if not (0 <= role_index < len(self.player_models)):
-                    raise ValueError(
-                        f"Player model not available for role index {role_index}"
-                    )
                 role_config = roles[role_index]
                 player = RoleBasedPlayer(
-                    self.player_models[role_index],
+                    self.player_models[0],
                     role=role_config.get("name"),
                     handler_type=role_config.get("handler_type", DEFAULT_HANDLER_TYPE),
                     allowed_components=role_config.get("allowed_components", []),
@@ -632,7 +627,6 @@ class ComputerGame(NetworkDialogueGameMaster):
 
         # Step 2: Validate transition from current node
         current_node = self._current_node
-        print("current_node", current_node)
         next_node = None
 
         # First, check decision edges for a valid transition
@@ -641,11 +635,6 @@ class ComputerGame(NetworkDialogueGameMaster):
             if "to" in data:
                 target_node = data["to"]
                 for to_node, condition in decision_edges:
-                    print("to_node", to_node)
-                    print("target_node", target_node)
-                    print("message_type.name", message_type.name)
-                    print("condition.message_type", condition.message_type)
-                    print("condition", condition.validate(message_type.name))
                     if to_node == target_node and condition.validate(message_type.name):
                         next_node = target_node
                         break
@@ -699,8 +688,6 @@ class ComputerGame(NetworkDialogueGameMaster):
             self.message_state.update(response=content)
         else:
             raise GameError(reason=f"Unknown message type: {message_type}")
-
-        print(self.message_state.preview())
 
         # Step 5: Prepare context for the next player if transition occurred
         if self.transition.next_node:

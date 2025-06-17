@@ -4,7 +4,7 @@
         "game_path": "./",
         "description": "A game where an agent interacts with a computer environment",
         "main_game": "computergame",
-        "players": "two",
+        "players": "one",
         "image": "none",
         "languages": [
             "en"
