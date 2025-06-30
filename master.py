@@ -212,21 +212,21 @@ class ComputerGame(NetworkDialogueGameMaster):
             self.lose = True
             return False
         max_rounds = self.game_config.get("max_rounds", 5)
-        if self.current_round + 1 >= max_rounds:
+        if self.current_round + 1 > max_rounds:
             self.aborted = True
             self.lose = True
             self.log_to_self("failure", f"Maximum rounds {max_rounds} reached")
             return False
         max_transitions_per_round = self.game_config.get("max_transitions_per_round", 5)
-        if self.transition.total_transitions + 1 >= max_transitions_per_round:
+        if self.transition.total_transitions + 1 > max_transitions_per_round:
             self.aborted = True
+            self.lose = True
             self.log_to_self(
                 "failure",
                 f"Maximum transitions per round {max_transitions_per_round} reached",
             )
             return False
         if self._current_node == "END":
-            self.game_config["temporary_image_manager"].cleanup()
             return False
         return True
 
@@ -629,43 +629,48 @@ class ComputerGame(NetworkDialogueGameMaster):
         current_node = self._current_node
         next_node = None
 
-        # First, check decision edges for a valid transition
-        decision_edges = self._get_decision_edges(current_node)
-        if decision_edges:
-            if "to" in data:
-                target_node = data["to"]
-                for to_node, condition in decision_edges:
-                    if to_node == target_node and condition.validate(message_type.name):
-                        next_node = target_node
-                        break
-                if next_node is None:
-                    raise RuleViolationError(
-                        f"No valid transition found to target node {target_node} with message type {message_type.name}"
-                    )
-            else:
-                # Check for self-loop or staying at current node
-                for to_node, condition in decision_edges:
-                    if to_node == current_node and condition.validate(
-                        message_type.name
-                    ):
-                        next_node = current_node
-                        break
-                if next_node is None:
-                    raise RuleViolationError(
-                        f"No valid self-loop transition found for message type {message_type.name} at node {current_node}"
-                    )
+        if message_type == MessageType.STATUS:
+            next_node = "END"
+        else:
+            # First, check decision edges for a valid transition
+            decision_edges = self._get_decision_edges(current_node)
+            if decision_edges:
+                if "to" in data:
+                    target_node = data["to"]
+                    for to_node, condition in decision_edges:
+                        if to_node == target_node and condition.validate(
+                            message_type.name
+                        ):
+                            next_node = target_node
+                            break
+                    if next_node is None:
+                        raise RuleViolationError(
+                            f"No valid transition found to target node {target_node} with message type {message_type.name}"
+                        )
+                else:
+                    # Check for self-loop or staying at current node
+                    for to_node, condition in decision_edges:
+                        if to_node == current_node and condition.validate(
+                            message_type.name
+                        ):
+                            next_node = current_node
+                            break
+                    if next_node is None:
+                        raise RuleViolationError(
+                            f"No valid self-loop transition found for message type {message_type.name} at node {current_node}"
+                        )
 
-        # If no decision edge is found, fallback to standard edges
-        if next_node is None:
-            standard_edges = self._get_standard_edges(current_node)
-            if standard_edges:
-                next_node = standard_edges[0][
-                    0
-                ]  # Take the first standard edge target node
-            else:
-                raise RuleViolationError(
-                    f"No valid transition (decision or standard) found for message type {message_type.name} from node {current_node}"
-                )
+            # If no decision edge is found, fallback to standard edges
+            if next_node is None:
+                standard_edges = self._get_standard_edges(current_node)
+                if standard_edges:
+                    next_node = standard_edges[0][
+                        0
+                    ]  # Take the first standard edge target node
+                else:
+                    raise RuleViolationError(
+                        f"No valid transition (decision or standard) found for message type {message_type.name} from node {current_node}"
+                    )
 
         # Step 3: Update game state with the validated transition
         self._update_round_tracking(current_node, next_node)
