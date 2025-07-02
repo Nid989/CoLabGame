@@ -1,7 +1,6 @@
 import json
 import re
 import logging
-import numpy as np
 from typing import Dict, List, Optional, Union, Tuple, Any
 from PIL import Image
 
@@ -72,7 +71,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         self.request_count: int = 0
         self.request_count_parsed: int = 0
         self.request_count_violated: int = 0
-        self.player_violation_counts: Dict[str, Dict[str, int]] = {}
+        self.player_stats: Dict[str, Dict[str, int]] = {}
         self._episode_score: Optional[float] = None
 
     def _on_setup(self, **game_instance) -> None:
@@ -314,7 +313,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         self.log_key("request_count", self.request_count)
         self.log_key("request_count_parsed", self.request_count_parsed)
         self.log_key("request_count_violated", self.request_count_violated)
-        self.log_key("player_violation_counts", self.player_violation_counts)
+        self.log_key("player_stats", self.player_stats)
 
     def _parse_response(self, player: RoleBasedPlayer, response: str) -> str:
         """
@@ -356,6 +355,15 @@ class ComputerGame(NetworkDialogueGameMaster):
 
         # Chain the operations using Result monad
         # TODO: the `handle_json_content` method is quite inefficient, as it provide `action_space` everytime, when it is not needed.
+        self.request_count += 1
+        player_id = f"{self._current_player.name}_{self._current_player.role}"
+        self.player_stats.setdefault(
+            player_id, {"requests": 0, "parsed": 0, "violated": 0, "consecutive": 0}
+        )
+        self.player_stats[player_id]["requests"] += 1
+
+        # Chain the operations using Result monad
+        # TODO: the `handle_json_content` method is quite inefficient, as it provide `action_space` everytime, when it is not needed.
         result = (
             Ok(response)
             | (
@@ -393,6 +401,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         # Extract final result and raise errors
         if isinstance(result, Ok):
             self.request_count_parsed += 1
+            self.player_stats[player_id]["parsed"] += 1
             return result.value
         else:
             raise result.error
@@ -655,7 +664,6 @@ class ComputerGame(NetworkDialogueGameMaster):
             RuleViolationError: If no valid transition is found or if the message type does not
                                 match the edge condition.
         """
-        self.request_count += 1
         # Step 1: Parse the JSON response
         data = json.loads(parsed_response)
         message_type = MessageType[data["type"]]
@@ -744,9 +752,9 @@ class ComputerGame(NetworkDialogueGameMaster):
                 )
 
         # A successful turn resets the consecutive violation counter for the current player
-        player_id = self._current_player
-        if player_id in self.player_violation_counts:
-            self.player_violation_counts[player_id]["consecutive"] = 0
+        player_id = f"{self._current_player.name}_{self._current_player.role}"
+        if player_id in self.player_stats:
+            self.player_stats[player_id]["consecutive"] = 0
 
     def compute_episode_score(self):
         """
@@ -759,20 +767,18 @@ class ComputerGame(NetworkDialogueGameMaster):
         return self._episode_score
 
     def _handle_player_violation(self):
-        """
-        Handles the logic for player violations, updating counts and checking for game abortion.
-        This is called from _on_parse_error and _on_game_error.
-        """
+        """Handles the logic for player violations, including counting and checking abortion limits."""
         self.request_count_violated += 1
-        player_id = self._current_player
+        player_id = f"{self._current_player.name}_{self._current_player.role}"
 
-        # Initialize player violation tracking if not present
-        if player_id not in self.player_violation_counts:
-            self.player_violation_counts[player_id] = {"total": 0, "consecutive": 0}
+        # This should have been set in _parse_response, but as a safeguard:
+        self.player_stats.setdefault(
+            player_id, {"requests": 0, "parsed": 0, "violated": 0, "consecutive": 0}
+        )
 
         # Increment violation counts
-        self.player_violation_counts[player_id]["total"] += 1
-        self.player_violation_counts[player_id]["consecutive"] += 1
+        self.player_stats[player_id]["violated"] += 1
+        self.player_stats[player_id]["consecutive"] += 1
 
         # Check for abortion conditions
         consecutive_limit = self.game_config.get(
@@ -780,8 +786,8 @@ class ComputerGame(NetworkDialogueGameMaster):
         )
         total_limit = self.game_config.get("player_total_violation_limit", 5)
 
-        consecutive_violations = self.player_violation_counts[player_id]["consecutive"]
-        total_violations = self.player_violation_counts[player_id]["total"]
+        consecutive_violations = self.player_stats[player_id]["consecutive"]
+        total_violations = self.player_stats[player_id]["violated"]
 
         if consecutive_violations >= consecutive_limit:
             self.aborted = True
@@ -809,74 +815,99 @@ class ComputerGameScorer(GameScorer):
         super().__init__(game_name, experiment, game_instance)
 
     def compute_scores(self, episode_interactions: Dict) -> None:
-        """Temporary method to compute scores for Computer Game."""
+        """Computes scores for the ComputerGame based on task success, efficiency, and robustness."""
 
-        aborted = True
-        success = False
-        all_turn_scores = []
-        # Events are logged properly.
-        # I need to iterate over the events and identify the types and their respected values, and correspond them with METRICS available.
-        for turn_idx, turn in enumerate(episode_interactions["turns"]):
-            turn_score_dict = {
-                "request_count": 0,
-                "request_count_parsed": 0,
-                "request_count_violated": 0,
-            }
+        # Step 1: Extract episode-level metrics directly from the interaction dictionary.
+        # The framework aggregates metrics logged with `log_key` into the top level.
+        success = episode_interactions.get("success", False)
+        fail = episode_interactions.get("fail", False)
+        aborted = episode_interactions.get("aborted", False)
+        request_count = episode_interactions.get("request_count", 0)
+        request_count_parsed = episode_interactions.get("request_count_parsed", 0)
+        request_count_violated = episode_interactions.get("request_count_violated", 0)
+        player_stats = episode_interactions.get("player_stats", {})
 
-            for event in turn:
-                action = event["action"]
-                turn_score_dict["request_count"] += 1
-                if action["type"] == "validation_error":
-                    turn_score_dict["request_count_violated"] += 1
-                elif action["type"] == "parsed_response":
-                    turn_score_dict["request_count_parsed"] += 1
-                elif action["type"] == "episode_score":
-                    aborted = False
-                    success = bool(action["content"] == 1.0)
-
-            self.log_turn_score(
-                turn_idx,
-                metrics.METRIC_REQUEST_COUNT_VIOLATED,
-                turn_score_dict["request_count_violated"],
-            )
-            self.log_turn_score(
-                turn_idx,
-                metrics.METRIC_REQUEST_COUNT_PARSED,
-                turn_score_dict["request_count_parsed"],
-            )
-            self.log_turn_score(
-                turn_idx, metrics.METRIC_REQUEST_COUNT, turn_score_dict["request_count"]
-            )
-            all_turn_scores.append(turn_score_dict)
-
-        ep_request_count = 0
-        ep_request_count_violated = 0
-        ep_request_count_parsed = 0
-        for s in all_turn_scores:
-            ep_request_count += s["request_count"]
-            ep_request_count_violated += s["request_count_violated"]
-            ep_request_count_parsed += s["request_count_parsed"]
-
-        self.log_episode_score(metrics.METRIC_REQUEST_COUNT, ep_request_count)
+        # Step 2: Log episode-level binary outcomes and raw counts
+        self.log_episode_score(metrics.METRIC_SUCCESS, 1 if success else 0)
+        self.log_episode_score(metrics.METRIC_LOSE, 1 if fail else 0)
+        self.log_episode_score(metrics.METRIC_ABORTED, 1 if aborted else 0)
+        self.log_episode_score(metrics.METRIC_REQUEST_COUNT, request_count)
         self.log_episode_score(
-            metrics.METRIC_REQUEST_COUNT_VIOLATED, ep_request_count_violated
+            metrics.METRIC_REQUEST_COUNT_PARSED, request_count_parsed
         )
         self.log_episode_score(
-            metrics.METRIC_REQUEST_COUNT_PARSED, ep_request_count_parsed
+            metrics.METRIC_REQUEST_COUNT_VIOLATED, request_count_violated
         )
 
-        if aborted:
-            self.log_episode_score(metrics.METRIC_ABORTED, 1)
-            self.log_episode_score(metrics.METRIC_SUCCESS, 0)
-            self.log_episode_score(metrics.METRIC_LOSE, 0)
-            self.log_episode_score(metrics.BENCH_SCORE, np.nan)
-            self.log_episode_score("Player Score", np.nan)
+        # Step 3: Calculate and log Efficiency and Robustness ratios
+        if request_count > 0:
+            efficiency = request_count_parsed / request_count
+            robustness = 1 - (request_count_violated / request_count)
         else:
-            self.log_episode_score(metrics.METRIC_ABORTED, 0)
-            self.log_episode_score(metrics.METRIC_SUCCESS, int(success))
-            self.log_episode_score(metrics.METRIC_LOSE, int(not success))
-            self.log_episode_score(metrics.BENCH_SCORE, 100)
-            self.log_episode_score("Player Score", 100)
+            efficiency = 0
+            robustness = 0
+
+        self.log_episode_score("Efficiency", efficiency)
+        self.log_episode_score("Robustness", robustness)
+
+        # Step 4: Calculate and log the final BENCH_SCORE using Harmonic Mean
+        bench_score = 0.0
+        if success:
+            if (efficiency + robustness) > 0:
+                # Harmonic mean of Efficiency and Robustness, scaled to 100
+                bench_score = (
+                    2 * efficiency * robustness / (efficiency + robustness)
+                ) * 100
+            else:
+                bench_score = 0.0
+
+        self.log_episode_score(metrics.BENCH_SCORE, bench_score)
+
+        # Step 5: Log turn-level metrics for detailed analysis
+        for turn_idx, turn in enumerate(episode_interactions.get("turns", [])):
+            violated_in_turn = 0
+            parsed_in_turn = 0
+            for event in turn:
+                action = event.get("action", {})
+                if action.get("type") in ["parse_error", "game_error"]:
+                    violated_in_turn = 1
+                if action.get("type") == "parsed_response":
+                    parsed_in_turn = 1
+
+            self.log_turn_score(
+                turn_idx, metrics.METRIC_REQUEST_COUNT, 1
+            )  # One request per turn
+            self.log_turn_score(
+                turn_idx, metrics.METRIC_REQUEST_COUNT_PARSED, parsed_in_turn
+            )
+            self.log_turn_score(
+                turn_idx, metrics.METRIC_REQUEST_COUNT_VIOLATED, violated_in_turn
+            )
+
+        # Step 6: Log per-player scores for detailed diagnostics
+        for player_id, stats in player_stats.items():
+            p_requests = stats.get("requests", 0)
+            p_parsed = stats.get("parsed", 0)
+            p_violated = stats.get("violated", 0)
+
+            if p_requests > 0:
+                p_efficiency = p_parsed / p_requests
+                p_robustness = 1 - (p_violated / p_requests)
+            else:
+                p_efficiency = 0
+                p_robustness = 0
+
+            self.log_episode_score(f"{player_id}_Efficiency", p_efficiency)
+            self.log_episode_score(f"{player_id}_Robustness", p_robustness)
+            self.log_episode_score(
+                f"{player_id}_{metrics.METRIC_REQUEST_COUNT}", p_requests
+            )
+            self.log_episode_score(
+                f"{player_id}_{metrics.METRIC_REQUEST_COUNT_PARSED}", p_parsed
+            )
+            self.log_episode_score(
+                f"{player_id}_{metrics.METRIC_REQUEST_COUNT_VIOLATED}", p_violated
+            )
 
 
 class ComputerGameBenchmark(GameBenchmark):
