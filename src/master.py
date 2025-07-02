@@ -23,12 +23,8 @@ class NodeType(Enum):
 class EdgeType(Enum):
     """Enum representing different types of edges in the network."""
 
-    STANDARD = (
-        auto()
-    )  # Direct connection, always traversed if no other decision edges are taken
-    DECISION = (
-        auto()
-    )  # Conditional connection, traversed only if condition evaluates to True
+    STANDARD = auto()  # Direct connection, always traversed if no other decision edges are taken
+    DECISION = auto()  # Conditional connection, traversed only if condition evaluates to True
 
 
 class EdgeCondition:
@@ -130,14 +126,10 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         if to_node not in self.graph:
             raise ValueError(f"Node '{to_node}' does not exist in the graph")
         existing_edges = [
-            (u, v, data)
-            for u, v, data in self.graph.edges(data=True)
-            if u == from_node and v == to_node and data.get("type") == EdgeType.STANDARD
+            (u, v, data) for u, v, data in self.graph.edges(data=True) if u == from_node and v == to_node and data.get("type") == EdgeType.STANDARD
         ]
         if existing_edges:
-            raise ValueError(
-                f"A standard edge already exists from '{from_node}' to '{to_node}'"
-            )
+            raise ValueError(f"A standard edge already exists from '{from_node}' to '{to_node}'")
         self.graph.add_edge(
             from_node,
             to_node,
@@ -149,9 +141,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             edge_key = (from_node, to_node, f"standard_{from_node}_{to_node}")
             self.edge_labels[edge_key] = label
 
-    def add_decision_edge(
-        self, from_node: str, to_node: str, condition: EdgeCondition, label: str = ""
-    ):
+    def add_decision_edge(self, from_node: str, to_node: str, condition: EdgeCondition, label: str = ""):
         """Add a decision edge between nodes in the graph.
 
         Decision edges are traversed only if their condition is satisfied.
@@ -204,14 +194,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             bool: True if transition to a different node is required.
         """
 
-        print("_should_pass_turn - transition", self.transition)
-        print("_should_pass_turn - current_node", self._current_node)
-        print("_should_pass_turn - next_node", self.transition.next_node)
-
-        return (
-            self.transition.next_node is not None
-            and self.transition.next_node != self._current_node
-        )
+        return self.transition.next_node is not None and self.transition.next_node != self._current_node
 
     def _next_player(self) -> RoleBasedPlayer:
         """Determine the next player based on graph transitions.
@@ -259,17 +242,12 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             ValueError: If START node has no standard edges.
         """
         standard_edges = [
-            (_, to_node)
-            for _, to_node, edge_data in self.graph.out_edges("START", data=True)
-            if edge_data.get("type") == EdgeType.STANDARD
+            (_, to_node) for _, to_node, edge_data in self.graph.out_edges("START", data=True) if edge_data.get("type") == EdgeType.STANDARD
         ]
-        print("standard_edges", standard_edges)
         if not standard_edges:
             raise ValueError("No standard edges found from START node")
         self._current_node = standard_edges[0][1]
-        print("_on_before_game - current_node", self._current_node)
         self._current_player = self.get_player_from_node(self._current_node)
-        print("_on_before_game - current_player", self._current_player)
         self._update_round_tracking("START", self._current_node)
 
     def _update_round_tracking(self, prev_node: str, next_node: str):
@@ -338,10 +316,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             Optional[str]: Node ID if player is found, None otherwise.
         """
         for node_id, node_data in self.graph.nodes(data=True):
-            if (
-                node_data.get("type") == NodeType.PLAYER
-                and node_data.get("player") == player
-            ):
+            if node_data.get("type") == NodeType.PLAYER and node_data.get("player") == player:
                 return node_id
         return None
 
@@ -383,9 +358,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         if node_id not in self.graph:
             raise ValueError(f"Node '{node_id}' does not exist in the graph")
         return [
-            (to_node, edge_data)
-            for _, to_node, edge_data in self.graph.out_edges(node_id, data=True)
-            if edge_data.get("type") == EdgeType.STANDARD
+            (to_node, edge_data) for _, to_node, edge_data in self.graph.out_edges(node_id, data=True) if edge_data.get("type") == EdgeType.STANDARD
         ]
 
     def compute_turn_score(self):
@@ -407,9 +380,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             try:
                 self.node_positions = nx.nx_pydot.pydot_layout(self.graph, prog="dot")
             except Exception:
-                self.node_positions = nx.spring_layout(
-                    self.graph, k=0.5, iterations=100, seed=42
-                )
+                self.node_positions = nx.spring_layout(self.graph, k=0.5, iterations=100, seed=42)
 
         # Professional color palette
         node_colors = {
@@ -422,16 +393,8 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         base_node_size = 3300
 
         # Edges - Draw edges BEFORE nodes so nodes appear on top
-        standard_edges = [
-            (u, v)
-            for u, v, d in self.graph.edges(data=True)
-            if d.get("type") == EdgeType.STANDARD
-        ]
-        decision_edges = [
-            (u, v)
-            for u, v, d in self.graph.edges(data=True)
-            if d.get("type") == EdgeType.DECISION
-        ]
+        standard_edges = [(u, v) for u, v, d in self.graph.edges(data=True) if d.get("type") == EdgeType.STANDARD]
+        decision_edges = [(u, v) for u, v, d in self.graph.edges(data=True) if d.get("type") == EdgeType.DECISION]
 
         nx.draw_networkx_edges(
             self.graph,
@@ -459,11 +422,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
 
         # Now draw nodes on top of edges
         for node_type in NodeType:
-            nodes = [
-                node
-                for node in self.graph.nodes()
-                if self.graph.nodes[node].get("type") == node_type
-            ]
+            nodes = [node for node in self.graph.nodes() if self.graph.nodes[node].get("type") == node_type]
             if not nodes:
                 continue
             nx.draw_networkx_nodes(
@@ -483,11 +442,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             node_type = self.graph.nodes[node].get("type")
             if node_type == NodeType.PLAYER:
                 player = self.graph.nodes[node].get("player")
-                role_text = (
-                    player.role
-                    if hasattr(player, "role") and player.role
-                    else str(player.model)
-                )
+                role_text = player.role if hasattr(player, "role") and player.role else str(player.model)
                 node_labels[node] = f"{node}\n({role_text})"
             else:
                 node_labels[node] = node
