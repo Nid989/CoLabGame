@@ -66,12 +66,14 @@ class ComputerGame(NetworkDialogueGameMaster):
         self.message_state = MessageState()
         self.player_context_formatter = None
         self.aborted: bool = False
-        self.lose: bool = False
+        self.fail: bool = False
         self.success: bool = False
+        self.env_terminated: bool = False
         self.request_count: int = 0
         self.request_count_parsed: int = 0
         self.request_count_violated: int = 0
-        self.invalid_response: bool = False
+        self.player_violation_counts: Dict[str, Dict[str, int]] = {}
+        self._episode_score: Optional[float] = None
 
     def _on_setup(self, **game_instance) -> None:
         """Method executed at the start of the default setup method.
@@ -116,7 +118,10 @@ class ComputerGame(NetworkDialogueGameMaster):
             {"use_images": use_images, "require_a11y_tree": require_a11y_tree}
         )
         if use_images:
-            game_config["temporary_image_manager"] = TemporaryImageManager()
+            print("use_images")
+            game_config["temporary_image_manager"] = TemporaryImageManager(
+                game_id=self.game_instance["game_id"]
+            )
         self.game_config = game_config
 
     def _initialize_formatter(self) -> None:
@@ -140,6 +145,7 @@ class ComputerGame(NetworkDialogueGameMaster):
             if not self.env.start_recording():
                 raise RuntimeError("Failed to start environment recording")
         except Exception as e:
+            self.aborted = True
             error_message = (
                 f"Environment initialization failed: {str(e)}"
                 if "recording" not in str(e).lower()
@@ -205,29 +211,39 @@ class ComputerGame(NetworkDialogueGameMaster):
         """Determine if the game should continue to the next turn.
 
         Returns:
-            bool: False if game is completed or aborted, True otherwise
+            bool: False if game is completed or aborted, True otherwise.
         """
-        if self.invalid_response:
-            self.aborted = True
-            self.lose = True
+        # Stop if a critical error has occurred.
+        if self.aborted:
             return False
-        max_rounds = self.game_config.get("max_rounds", 5)
-        if self.current_round + 1 > max_rounds:
-            self.aborted = True
-            self.lose = True
-            self.log_to_self("failure", f"Maximum rounds {max_rounds} reached")
+
+        # Stop if the environment has signaled the game is over.
+        if self.env_terminated:
+            self.log_to_self("info", "Environment signaled termination.")
             return False
-        max_transitions_per_round = self.game_config.get("max_transitions_per_round", 5)
-        if self.transition.total_transitions + 1 > max_transitions_per_round:
+
+        # Stop if the game has reached the maximum number of rounds.
+        max_rounds = self.game_config.get("max_rounds", 1)
+        if self.current_round >= max_rounds:
             self.aborted = True
-            self.lose = True
-            self.log_to_self(
-                "failure",
-                f"Maximum transitions per round {max_transitions_per_round} reached",
-            )
+            reason = f"Maximum rounds {max_rounds} reached"
+            self.log_to_self("aborted", {"reason": reason})
             return False
+
+        # Stop if the game has reached the maximum number of transitions per round.
+        # We check the number of transitions in the current round.
+        max_transitions = self.game_config.get("max_transitions_per_round", 10)
+        if self.transition.total_transitions >= max_transitions:
+            self.aborted = True
+            reason = f"Maximum transitions per round {max_transitions} reached"
+            self.log_to_self("aborted", {"reason": reason})
+            return False
+
+        # Stop if the current node is the designated end node.
         if self._current_node == "END":
+            self.log_to_self("info", "Reached END node.")
             return False
+
         return True
 
     def _set_context_for(
@@ -270,18 +286,35 @@ class ComputerGame(NetworkDialogueGameMaster):
         logger.info(f"Set initial context for player at node {self._current_node}")
 
     def _on_after_game(self):
-        """Executed once at the end, after exiting the play loop.
-
-        Hook: Modify this method for game-specific functionality.
-
-        This method is useful to process and log/record overall game results.
         """
-        self.log_to_self("game_end", "Game completed")
-        if (
-            hasattr(self, "game_config")
-            and "temporary_image_manager" in self.game_config
-        ):
-            self.game_config["temporary_image_manager"].cleanup()
+        Called after the game ends (when _does_game_proceed returns False), before exiting the play loop.
+        Evaluates the environment, sets success/fail state, and logs episode metrics.
+        """
+        # Step 1: Evaluate the environment to get the score, done only once.
+        score = self.env.evaluate()
+        self._episode_score = float(score)  # Store for compute_episode_score
+
+        # Step 2: Determine final success/fail state.
+        if self.aborted:
+            self.fail = True
+            self.success = False
+        else:
+            if self._episode_score == 1.0:
+                self.success = True
+                self.fail = False
+            else:
+                self.success = False
+                self.fail = True
+
+        # Step 3: Log all final summary data for the episode.
+        self.log_key("success", self.success)
+        self.log_key("fail", self.fail)
+        self.log_key("aborted", self.aborted)
+        self.log_key("episode_score", self._episode_score)
+        self.log_key("request_count", self.request_count)
+        self.log_key("request_count_parsed", self.request_count_parsed)
+        self.log_key("request_count_violated", self.request_count_violated)
+        self.log_key("player_violation_counts", self.player_violation_counts)
 
     def _parse_response(self, player: RoleBasedPlayer, response: str) -> str:
         """
@@ -359,9 +392,9 @@ class ComputerGame(NetworkDialogueGameMaster):
 
         # Extract final result and raise errors
         if isinstance(result, Ok):
+            self.request_count_parsed += 1
             return result.value
         else:
-            # TODO: Implement custom error handling for exceptions from extract_json_codeblock, check_json_message, or handle_json_content
             raise result.error
 
     def extract_json_codeblock(
@@ -463,11 +496,12 @@ class ComputerGame(NetworkDialogueGameMaster):
             # TODO: Add player ID validation for 'from' field
             # Example: validate_player_id(json_data["from"])
 
-            # Validate 'to' field if present (basic string check)
-            if "to" in data:
-                # TODO: Add player ID validation for 'to' field
-                # Example: validate_player_id(json_data["to"])
-                pass
+            # TODO: Add player ID validation for 'to' field
+            # Example: validate_player_id(json_data["to"])
+            # if "to" in data:
+            #     # TODO: Add player ID validation for 'to' field
+            #     # Example: validate_player_id(json_data["to"])
+            #     pass
 
             # Basic content type validation
             if (
@@ -595,6 +629,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                         reason="Received None observation after action execution"
                     )
                 if done:
+                    self.env_terminated = True
                     logger.info("Game termination signal received (done=True)")
                     break
             except Exception as e:
@@ -620,6 +655,7 @@ class ComputerGame(NetworkDialogueGameMaster):
             RuleViolationError: If no valid transition is found or if the message type does not
                                 match the edge condition.
         """
+        self.request_count += 1
         # Step 1: Parse the JSON response
         data = json.loads(parsed_response)
         message_type = MessageType[data["type"]]
@@ -707,28 +743,65 @@ class ComputerGame(NetworkDialogueGameMaster):
                     f"Set context for next player at node {self.transition.next_node}"
                 )
 
+        # A successful turn resets the consecutive violation counter for the current player
+        player_id = self._current_player
+        if player_id in self.player_violation_counts:
+            self.player_violation_counts[player_id]["consecutive"] = 0
+
     def compute_episode_score(self):
         """
-        Computes the score for the current episode.
+        Returns the score for the current episode.
+        The score is pre-computed and stored in _on_after_game.
 
         Returns:
             float: A score of 1.0 for success or 0.0 for failure.
         """
-        result = self.env.evaluate()
-        self.log_to_self("episode_score", result)
-        return result
+        return self._episode_score
+
+    def _handle_player_violation(self):
+        """
+        Handles the logic for player violations, updating counts and checking for game abortion.
+        This is called from _on_parse_error and _on_game_error.
+        """
+        self.request_count_violated += 1
+        player_id = self._current_player
+
+        # Initialize player violation tracking if not present
+        if player_id not in self.player_violation_counts:
+            self.player_violation_counts[player_id] = {"total": 0, "consecutive": 0}
+
+        # Increment violation counts
+        self.player_violation_counts[player_id]["total"] += 1
+        self.player_violation_counts[player_id]["consecutive"] += 1
+
+        # Check for abortion conditions
+        consecutive_limit = self.game_config.get(
+            "player_consecutive_violation_limit", 3
+        )
+        total_limit = self.game_config.get("player_total_violation_limit", 5)
+
+        consecutive_violations = self.player_violation_counts[player_id]["consecutive"]
+        total_violations = self.player_violation_counts[player_id]["total"]
+
+        if consecutive_violations >= consecutive_limit:
+            self.aborted = True
+            reason = f"Player {player_id} exceeded consecutive violation limit ({consecutive_violations}/{consecutive_limit})."
+            self.log_to_self("aborted", {"reason": reason})
+
+        elif total_violations >= total_limit:
+            self.aborted = True
+            reason = f"Player {player_id} exceeded total violation limit ({total_violations}/{total_limit})."
+            self.log_to_self("aborted", {"reason": reason})
 
     def _on_parse_error(self, error: ParseError):
         """Hook to implement consequences for parsing errors e.g. prepare re-prompting or set game state to abort."""
         self.log_to_self("parse_error", str(error))
-        self.invalid_response = True
-        self.request_count_violated += 1
+        self._handle_player_violation()
 
     def _on_game_error(self, error: GameError):
         """Hook to implement consequences for game errors e.g. prepare re-prompting or set game state to failure."""
         self.log_to_self("game_error", str(error))
-        self.invalid_response = True
-        self.request_count_violated += 1
+        self._handle_player_violation()
 
 
 class ComputerGameScorer(GameScorer):
@@ -830,3 +903,6 @@ if __name__ == "__main__":
     game_1 = experiment_1["game_instances"][0]
     master = ComputerGame("computergame", None, experiment_1, ["mock", "mock"])
     master.setup(**game_1)
+
+# Need to decide on what will be my qualtiy score, for now need to keep to 0 or 100 (binary), since there is not much which can be evaluated
+# free-form and no fix intermediates.
