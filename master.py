@@ -71,8 +71,9 @@ class ComputerGame(NetworkDialogueGameMaster):
         self.request_count: int = 0
         self.request_count_parsed: int = 0
         self.request_count_violated: int = 0
-        self.player_stats: Dict[str, Dict[str, int]] = {}
-        self._episode_score: Optional[float] = None
+        self.player_stats = {}
+        self.round_stats = {}
+        self._episode_score: float = 0.0
 
     def _on_setup(self, **game_instance) -> None:
         """Method executed at the start of the default setup method.
@@ -314,6 +315,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         self.log_key("request_count_parsed", self.request_count_parsed)
         self.log_key("request_count_violated", self.request_count_violated)
         self.log_key("player_stats", self.player_stats)
+        self.log_key("round_stats", self.round_stats)
 
     def _parse_response(self, player: RoleBasedPlayer, response: str) -> str:
         """
@@ -356,11 +358,23 @@ class ComputerGame(NetworkDialogueGameMaster):
         # Chain the operations using Result monad
         # TODO: the `handle_json_content` method is quite inefficient, as it provide `action_space` everytime, when it is not needed.
         self.request_count += 1
-        player_id = f"{self._current_player.name}_{self._current_player.role}"
+        player_id = str(self._current_player.name)
         self.player_stats.setdefault(
-            player_id, {"requests": 0, "parsed": 0, "violated": 0, "consecutive": 0}
+            player_id,
+            {"requests": 0, "parsed": 0, "violated": 0, "violated_streak": 0},
         )
         self.player_stats[player_id]["requests"] += 1
+
+        # Update round-level stats
+        current_round = self.current_round
+        self.round_stats.setdefault(
+            current_round, {"requests": 0, "parsed": 0, "violated": 0, "players": {}}
+        )
+        self.round_stats[current_round]["requests"] += 1
+        self.round_stats[current_round]["players"].setdefault(
+            player_id, {"requests": 0, "parsed": 0, "violated": 0, "violated_streak": 0}
+        )
+        self.round_stats[current_round]["players"][player_id]["requests"] += 1
 
         # Chain the operations using Result monad
         # TODO: the `handle_json_content` method is quite inefficient, as it provide `action_space` everytime, when it is not needed.
@@ -402,6 +416,8 @@ class ComputerGame(NetworkDialogueGameMaster):
         if isinstance(result, Ok):
             self.request_count_parsed += 1
             self.player_stats[player_id]["parsed"] += 1
+            self.round_stats[current_round]["parsed"] += 1
+            self.round_stats[current_round]["players"][player_id]["parsed"] += 1
             return result.value
         else:
             raise result.error
@@ -752,9 +768,17 @@ class ComputerGame(NetworkDialogueGameMaster):
                 )
 
         # A successful turn resets the consecutive violation counter for the current player
-        player_id = f"{self._current_player.name}_{self._current_player.role}"
+        player_id = str(self._current_player.name)
         if player_id in self.player_stats:
-            self.player_stats[player_id]["consecutive"] = 0
+            self.player_stats[player_id]["violated_streak"] = 0
+
+        # Reset round-level consecutive violations as well
+        current_round = self.current_round
+        if (
+            current_round in self.round_stats
+            and player_id in self.round_stats[current_round]["players"]
+        ):
+            self.round_stats[current_round]["players"][player_id]["violated_streak"] = 0
 
     def compute_episode_score(self):
         """
@@ -769,16 +793,29 @@ class ComputerGame(NetworkDialogueGameMaster):
     def _handle_player_violation(self):
         """Handles the logic for player violations, including counting and checking abortion limits."""
         self.request_count_violated += 1
-        player_id = f"{self._current_player.name}_{self._current_player.role}"
+        player_id = str(self._current_player.name)
 
         # This should have been set in _parse_response, but as a safeguard:
         self.player_stats.setdefault(
-            player_id, {"requests": 0, "parsed": 0, "violated": 0, "consecutive": 0}
+            player_id,
+            {"requests": 0, "parsed": 0, "violated": 0, "violated_streak": 0},
         )
 
         # Increment violation counts
         self.player_stats[player_id]["violated"] += 1
-        self.player_stats[player_id]["consecutive"] += 1
+        self.player_stats[player_id]["violated_streak"] += 1
+
+        # Update round-level stats for violation
+        current_round = self.current_round
+        self.round_stats.setdefault(
+            current_round, {"requests": 0, "parsed": 0, "violated": 0, "players": {}}
+        )
+        self.round_stats[current_round]["violated"] += 1
+        self.round_stats[current_round]["players"].setdefault(
+            player_id, {"requests": 0, "parsed": 0, "violated": 0, "violated_streak": 0}
+        )
+        self.round_stats[current_round]["players"][player_id]["violated"] += 1
+        self.round_stats[current_round]["players"][player_id]["violated_streak"] += 1
 
         # Check for abortion conditions
         consecutive_limit = self.game_config.get(
@@ -786,7 +823,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         )
         total_limit = self.game_config.get("player_total_violation_limit", 5)
 
-        consecutive_violations = self.player_stats[player_id]["consecutive"]
+        consecutive_violations = self.player_stats[player_id]["violated_streak"]
         total_violations = self.player_stats[player_id]["violated"]
 
         if consecutive_violations >= consecutive_limit:
@@ -811,17 +848,10 @@ class ComputerGame(NetworkDialogueGameMaster):
 
 
 class ComputerGameScorer(GameScorer):
-    def __init__(self, game_name: str, experiment: Dict, game_instance: Dict):
-        super().__init__(game_name, experiment, game_instance)
-
-    def compute_scores(self, episode_interactions: Dict) -> None:
-        """Computes scores for the ComputerGame based on task success, efficiency, and robustness."""
-
-        # Step 1: Extract episode-level metrics directly from the interaction dictionary.
-        # The framework aggregates metrics logged with `log_key` into the top level.
-        success = episode_interactions.get("success", False)
-        fail = episode_interactions.get("fail", False)
-        aborted = episode_interactions.get("aborted", False)
+    def score_episode(self, episode_interactions: Dict):
+        # Step 1: Extract key episode-level data
+        success = episode_interactions.get(metrics.METRIC_SUCCESS, False)
+        aborted = episode_interactions.get(metrics.METRIC_ABORTED, False)
         request_count = episode_interactions.get("request_count", 0)
         request_count_parsed = episode_interactions.get("request_count_parsed", 0)
         request_count_violated = episode_interactions.get("request_count_violated", 0)
@@ -829,7 +859,7 @@ class ComputerGameScorer(GameScorer):
 
         # Step 2: Log episode-level binary outcomes and raw counts
         self.log_episode_score(metrics.METRIC_SUCCESS, 1 if success else 0)
-        self.log_episode_score(metrics.METRIC_LOSE, 1 if fail else 0)
+        self.log_episode_score(metrics.METRIC_LOSE, 1 if not success else 0)
         self.log_episode_score(metrics.METRIC_ABORTED, 1 if aborted else 0)
         self.log_episode_score(metrics.METRIC_REQUEST_COUNT, request_count)
         self.log_episode_score(
@@ -850,41 +880,16 @@ class ComputerGameScorer(GameScorer):
         self.log_episode_score("Efficiency", efficiency)
         self.log_episode_score("Robustness", robustness)
 
-        # Step 4: Calculate and log the final BENCH_SCORE using Harmonic Mean
-        bench_score = 0.0
-        if success:
-            if (efficiency + robustness) > 0:
-                # Harmonic mean of Efficiency and Robustness, scaled to 100
-                bench_score = (
-                    2 * efficiency * robustness / (efficiency + robustness)
-                ) * 100
-            else:
-                bench_score = 0.0
+        # Step 4: Calculate and log the final BENCH_SCORE
+        # The harmonic mean is only valid if the game was a success
+        if success and (efficiency + robustness) > 0:
+            bench_score = (2 * efficiency * robustness) / (efficiency + robustness)
+        else:
+            bench_score = 0
 
         self.log_episode_score(metrics.BENCH_SCORE, bench_score)
 
-        # Step 5: Log turn-level metrics for detailed analysis
-        for turn_idx, turn in enumerate(episode_interactions.get("turns", [])):
-            violated_in_turn = 0
-            parsed_in_turn = 0
-            for event in turn:
-                action = event.get("action", {})
-                if action.get("type") in ["parse_error", "game_error"]:
-                    violated_in_turn = 1
-                if action.get("type") == "parsed_response":
-                    parsed_in_turn = 1
-
-            self.log_turn_score(
-                turn_idx, metrics.METRIC_REQUEST_COUNT, 1
-            )  # One request per turn
-            self.log_turn_score(
-                turn_idx, metrics.METRIC_REQUEST_COUNT_PARSED, parsed_in_turn
-            )
-            self.log_turn_score(
-                turn_idx, metrics.METRIC_REQUEST_COUNT_VIOLATED, violated_in_turn
-            )
-
-        # Step 6: Log per-player scores for detailed diagnostics
+        # Step 5: Log per-player scores for detailed episode-level diagnostics
         for player_id, stats in player_stats.items():
             p_requests = stats.get("requests", 0)
             p_parsed = stats.get("parsed", 0)
@@ -908,6 +913,46 @@ class ComputerGameScorer(GameScorer):
             self.log_episode_score(
                 f"{player_id}_{metrics.METRIC_REQUEST_COUNT_VIOLATED}", p_violated
             )
+            self.log_episode_score(
+                f"{player_id}_Violated_Streak", stats.get("violated_streak", 0)
+            )
+
+    def score_rounds(self, episode_interactions: Dict):
+        round_stats = episode_interactions.get("round_stats", {})
+        for round_idx, stats in round_stats.items():
+            # Log aggregated round scores
+            self.log_round_score(
+                round_idx, metrics.METRIC_REQUEST_COUNT, stats["requests"]
+            )
+            self.log_round_score(
+                round_idx, metrics.METRIC_REQUEST_COUNT_PARSED, stats["parsed"]
+            )
+            self.log_round_score(
+                round_idx, metrics.METRIC_REQUEST_COUNT_VIOLATED, stats["violated"]
+            )
+
+            # Log per-player scores for the round
+            for player_name, player_round_stats in stats["players"].items():
+                self.log_round_score(
+                    round_idx,
+                    f"{player_name}_{metrics.METRIC_REQUEST_COUNT}",
+                    player_round_stats["requests"],
+                )
+                self.log_round_score(
+                    round_idx,
+                    f"{player_name}_{metrics.METRIC_REQUEST_COUNT_PARSED}",
+                    player_round_stats["parsed"],
+                )
+                self.log_round_score(
+                    round_idx,
+                    f"{player_name}_{metrics.METRIC_REQUEST_COUNT_VIOLATED}",
+                    player_round_stats["violated"],
+                )
+                self.log_round_score(
+                    round_idx,
+                    f"{player_name}_Violated_Streak",
+                    player_round_stats["violated_streak"],
+                )
 
 
 class ComputerGameBenchmark(GameBenchmark):
