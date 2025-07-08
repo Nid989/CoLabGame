@@ -114,21 +114,15 @@ class ComputerGame(NetworkDialogueGameMaster):
             "screenshot_a11y_tree",
             "som",
         ]
-        game_config.update(
-            {"use_images": use_images, "require_a11y_tree": require_a11y_tree}
-        )
+        game_config.update({"use_images": use_images, "require_a11y_tree": require_a11y_tree})
         if use_images:
             print("use_images")
-            game_config["temporary_image_manager"] = TemporaryImageManager(
-                game_id=self.game_instance["game_id"]
-            )
+            game_config["temporary_image_manager"] = TemporaryImageManager(game_id=self.game_instance["game_id"])
         self.game_config = game_config
 
     def _initialize_formatter(self) -> None:
         """Initialize the player context formatter with the current game configuration."""
-        self.player_context_formatter = PlayerContextFormatter(
-            game_config=self.game_config
-        )
+        self.player_context_formatter = PlayerContextFormatter(game_config=self.game_config)
 
     def _initialize_environment(self) -> None:
         """Initializes game environment with recording capabilities and retrieves the initial state observation.
@@ -137,9 +131,7 @@ class ComputerGame(NetworkDialogueGameMaster):
             RuntimeError: If environment or recording initialization fails
         """
         try:
-            self.env = EnvironmentFactory.create_environment(
-                self.environment_type, **self.game_config
-            )
+            self.env = EnvironmentFactory.create_environment(self.environment_type, **self.game_config)
             observation = self.env.reset(task_config=self.game_instance["task_config"])
             self.message_state.update(observation=observation)
             if not self.env.start_recording():
@@ -147,9 +139,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         except Exception as e:
             self.aborted = True
             error_message = (
-                f"Environment initialization failed: {str(e)}"
-                if "recording" not in str(e).lower()
-                else f"Recording initialization failed: {str(e)}"
+                f"Environment initialization failed: {str(e)}" if "recording" not in str(e).lower() else f"Recording initialization failed: {str(e)}"
             )
             raise RuntimeError(error_message) from e
 
@@ -196,9 +186,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                     message_type = condition_config.get("type")
                     if message_type not in MessageType.__members__:
                         raise KeyError(f"Invalid message-type field: {message_type}")
-                    condition = EdgeCondition(
-                        message_type=message_type, description=description
-                    )
+                    condition = EdgeCondition(message_type=message_type, description=description)
                     self.add_decision_edge(from_node, to_node, condition, description)
             anchor_node = graph_config.get("anchor_node")
             if anchor_node:
@@ -246,9 +234,7 @@ class ComputerGame(NetworkDialogueGameMaster):
 
         return True
 
-    def _set_context_for(
-        self, player: RoleBasedPlayer, formatted_context: Dict
-    ) -> None:
+    def _set_context_for(self, player: RoleBasedPlayer, formatted_context: Dict) -> None:
         """Sets context for a player based on formatted context data.
 
         Args:
@@ -271,16 +257,10 @@ class ComputerGame(NetworkDialogueGameMaster):
             - Adds the initial game-context to the anchor player
         """
         super()._on_before_game()
-        assert self._current_node == self.anchor_node, (
-            "Current node must be the anchor node at game start"
-        )
-        context = self.player_context_formatter.create_context_for(
-            self.message_state, self._current_player
-        )
+        assert self._current_node == self.anchor_node, "Current node must be the anchor node at game start"
+        context = self.player_context_formatter.create_context_for(self.message_state, self._current_player)
         if context is None:
-            logger.debug(
-                "No context generated for player; skipping inital context setup."
-            )
+            logger.debug("No context generated for player; skipping inital context setup.")
             return
         self._set_context_for(self._current_player, context)
         logger.info(f"Set initial context for player at node {self._current_node}")
@@ -331,9 +311,7 @@ class ComputerGame(NetworkDialogueGameMaster):
             GameError: If action content is invalid (e.g., invalid action parameters).
         """
 
-        def construct_response(
-            content: Any, message_type: MessageType, data: Dict[Any, Any]
-        ) -> Result:
+        def construct_response(content: Any, message_type: MessageType, data: Dict[Any, Any]) -> Result:
             """
             Constructs the final JSON response from parsed content, message type, and original data.
             Args:
@@ -349,9 +327,7 @@ class ComputerGame(NetworkDialogueGameMaster):
             }
             if message_type in MessageType.requires_to() and "to" in data:
                 parsed_response_dict["to"] = data.get("to", "")
-            parsed_response_dict["content"] = (
-                content  # Preserves List[str], List[Dict], or str
-            )
+            parsed_response_dict["content"] = content  # Preserves List[str], List[Dict], or str
             parsed_response = json.dumps(parsed_response_dict)
             return Ok(parsed_response)
 
@@ -367,13 +343,9 @@ class ComputerGame(NetworkDialogueGameMaster):
 
         # Update round-level stats
         current_round = self.current_round
-        self.round_stats.setdefault(
-            current_round, {"requests": 0, "parsed": 0, "violated": 0, "players": {}}
-        )
+        self.round_stats.setdefault(current_round, {"requests": 0, "parsed": 0, "violated": 0, "players": {}})
         self.round_stats[current_round]["requests"] += 1
-        self.round_stats[current_round]["players"].setdefault(
-            player_id, {"requests": 0, "parsed": 0, "violated": 0, "violated_streak": 0}
-        )
+        self.round_stats[current_round]["players"].setdefault(player_id, {"requests": 0, "parsed": 0, "violated": 0, "violated_streak": 0})
         self.round_stats[current_round]["players"][player_id]["requests"] += 1
 
         # Chain the operations using Result monad
@@ -385,13 +357,9 @@ class ComputerGame(NetworkDialogueGameMaster):
                 if isinstance(x, str)
                 else Error(ParseError(reason="Expected string input", response=str(x)))
             )
-            | (
-                lambda x: Ok(x[1]) if x[0] else Error(x[1])
-            )  # Ok(Dict) or Error(ParseError)
+            | (lambda x: Ok(x[1]) if x[0] else Error(x[1]))  # Ok(Dict) or Error(ParseError)
             | (lambda x: Ok((self.check_json_message(x), x)))
-            | (
-                lambda x: Ok((x[0][1], x[1])) if x[0][0] else Error(x[0][1])
-            )  # Ok((MessageType, Dict)) or Error(ParseError)
+            | (lambda x: Ok((x[0][1], x[1])) if x[0][0] else Error(x[0][1]))  # Ok((MessageType, Dict)) or Error(ParseError)
             | (
                 lambda x: Ok(
                     (
@@ -406,9 +374,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                     )
                 )
             )
-            | (
-                lambda x: Ok((x[0][1], x[1], x[2])) if x[0][0] else Error(x[0][1])
-            )  # Ok((content, MessageType, Dict)) or Error(ParseError/GameError)
+            | (lambda x: Ok((x[0][1], x[1], x[2])) if x[0][0] else Error(x[0][1]))  # Ok((content, MessageType, Dict)) or Error(ParseError/GameError)
             | (lambda x: construct_response(x[0], x[1], x[2]))  # Ok(str)
         )
 
@@ -422,9 +388,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         else:
             raise result.error
 
-    def extract_json_codeblock(
-        self, text: str
-    ) -> Tuple[bool, Optional[Dict[Any, Any]] | Exception]:
+    def extract_json_codeblock(self, text: str) -> Tuple[bool, Optional[Dict[Any, Any]] | Exception]:
         """
         Extracts and parses JSON content from a string containing code blocks, only allowing no language identifier or 'json'.
         Args:
@@ -443,9 +407,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                         reason="Code block found with invalid language identifier (only 'json' or no identifier allowed)",
                         response=text,
                     )
-                return False, ParseError(
-                    reason="No code block found in the input text", response=text
-                )
+                return False, ParseError(reason="No code block found in the input text", response=text)
 
             json_content = match.group(1).strip()
 
@@ -455,21 +417,15 @@ class ComputerGame(NetworkDialogueGameMaster):
             result = json.loads(json_content)
 
             if not isinstance(result, dict):
-                return False, ParseError(
-                    reason="Parsed content is not a JSON object", response=json_content
-                )
+                return False, ParseError(reason="Parsed content is not a JSON object", response=json_content)
 
             logger.info("Successfully parsed JSON from code block")
             return True, result
 
         except json.JSONDecodeError as e:
-            return False, ParseError(
-                reason=f"Invalid JSON format: {str(e)}", response=text
-            )
+            return False, ParseError(reason=f"Invalid JSON format: {str(e)}", response=text)
 
-    def check_json_message(
-        self, data: Dict[Any, Any]
-    ) -> Tuple[bool, Optional[MessageType] | Exception]:
+    def check_json_message(self, data: Dict[Any, Any]) -> Tuple[bool, Optional[MessageType] | Exception]:
         """
         Validates the JSON message structure and returns the MessageType.
         Args:
@@ -481,9 +437,7 @@ class ComputerGame(NetworkDialogueGameMaster):
             required_keys = {"type", "from", "content"}
             missing_keys = required_keys - set(data.keys())
             if missing_keys:
-                return False, ParseError(
-                    reason=f"Missing required keys: {missing_keys}", response=str(data)
-                )
+                return False, ParseError(reason=f"Missing required keys: {missing_keys}", response=str(data))
 
             try:
                 message_type = MessageType[data["type"]]
@@ -529,13 +483,8 @@ class ComputerGame(NetworkDialogueGameMaster):
             #     pass
 
             # Basic content type validation
-            if (
-                message_type == MessageType.EXECUTE
-                and self.game_config.get("action_space") == "computer13"
-            ):
-                if not isinstance(data["content"], list) or not all(
-                    isinstance(item, dict) for item in data["content"]
-                ):
+            if message_type == MessageType.EXECUTE and self.game_config.get("action_space") == "computer13":
+                if not isinstance(data["content"], list) or not all(isinstance(item, dict) for item in data["content"]):
                     return False, ParseError(
                         reason="Invalid 'content' field for computer13: must be a list of dictionaries",
                         response=str(data),
@@ -582,16 +531,10 @@ class ComputerGame(NetworkDialogueGameMaster):
         """
         try:
             # Convert message_type to string for registry
-            message_type_str = (
-                message_type.name
-                if isinstance(message_type, MessageType)
-                else message_type
-            )
+            message_type_str = message_type.name if isinstance(message_type, MessageType) else message_type
 
             # Call registry to process content
-            success, result = process_content(
-                data, message_type_str, environment_type, action_space
-            )
+            success, result = process_content(data, message_type_str, environment_type, action_space)
 
             if not success:
                 if isinstance(result, GameError):
@@ -628,9 +571,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                 response=str(data),
             )
 
-    def _execute_actions(
-        self, actions: List[Union[str, Dict]]
-    ) -> Dict[str, Union[str, Image.Image, Dict]]:
+    def _execute_actions(self, actions: List[Union[str, Dict]]) -> Dict[str, Union[str, Image.Image, Dict]]:
         """Execute either pyautogui or computer13 actions and record observations.
         Args:
             actions: List of actions (pyautogui code strings or computer13 action dictionaries)
@@ -646,21 +587,15 @@ class ComputerGame(NetworkDialogueGameMaster):
         for action in actions:
             try:
                 # Assume self.env.step returns (observation, reward, done, info)
-                observation, reward, done, info = self.env.step(
-                    action, self.game_config.get("sleep_after_execution", 0.0)
-                )
+                observation, reward, done, info = self.env.step(action, self.game_config.get("sleep_after_execution", 0.0))
                 if observation is None:
-                    raise GameError(
-                        reason="Received None observation after action execution"
-                    )
+                    raise GameError(reason="Received None observation after action execution")
                 if done:
                     self.env_terminated = True
                     logger.info("Game termination signal received (done=True)")
                     break
             except Exception as e:
-                raise GameError(
-                    reason=f"Failed to execute action {str(action)}: {str(e)}"
-                )
+                raise GameError(reason=f"Failed to execute action {str(action)}: {str(e)}")
 
         if observation is None:
             raise GameError(reason="No observation recorded after executing actions")
@@ -698,35 +633,25 @@ class ComputerGame(NetworkDialogueGameMaster):
                 if "to" in data:
                     target_node = data["to"]
                     for to_node, condition in decision_edges:
-                        if to_node == target_node and condition.validate(
-                            message_type.name
-                        ):
+                        if to_node == target_node and condition.validate(message_type.name):
                             next_node = target_node
                             break
                     if next_node is None:
-                        raise RuleViolationError(
-                            f"No valid transition found to target node {target_node} with message type {message_type.name}"
-                        )
+                        raise RuleViolationError(f"No valid transition found to target node {target_node} with message type {message_type.name}")
                 else:
                     # Check for self-loop or staying at current node
                     for to_node, condition in decision_edges:
-                        if to_node == current_node and condition.validate(
-                            message_type.name
-                        ):
+                        if to_node == current_node and condition.validate(message_type.name):
                             next_node = current_node
                             break
                     if next_node is None:
-                        raise RuleViolationError(
-                            f"No valid self-loop transition found for message type {message_type.name} at node {current_node}"
-                        )
+                        raise RuleViolationError(f"No valid self-loop transition found for message type {message_type.name} at node {current_node}")
 
             # If no decision edge is found, fallback to standard edges
             if next_node is None:
                 standard_edges = self._get_standard_edges(current_node)
                 if standard_edges:
-                    next_node = standard_edges[0][
-                        0
-                    ]  # Take the first standard edge target node
+                    next_node = standard_edges[0][0]  # Take the first standard edge target node
                 else:
                     raise RuleViolationError(
                         f"No valid transition (decision or standard) found for message type {message_type.name} from node {current_node}"
@@ -735,9 +660,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         # Step 3: Update game state with the validated transition
         self._update_round_tracking(current_node, next_node)
         self.transition.next_node = next_node
-        logger.info(
-            f"Transitioned from {current_node} to {next_node} based on message type {message_type.name}"
-        )
+        logger.info(f"Transitioned from {current_node} to {next_node} based on message type {message_type.name}")
 
         # Step 4: Process message content based on type
         if message_type == MessageType.EXECUTE:
@@ -758,14 +681,10 @@ class ComputerGame(NetworkDialogueGameMaster):
         if self.transition.next_node:
             next_player = self.get_player_from_node(self.transition.next_node)
             if next_player:
-                formatted_context = self.player_context_formatter.create_context_for(
-                    self.message_state, next_player
-                )
+                formatted_context = self.player_context_formatter.create_context_for(self.message_state, next_player)
                 self._set_context_for(next_player, formatted_context)
                 self.message_state.reset(preserve=["observation"])
-                logger.info(
-                    f"Set context for next player at node {self.transition.next_node}"
-                )
+                logger.info(f"Set context for next player at node {self.transition.next_node}")
 
         # A successful turn resets the consecutive violation counter for the current player
         player_id = str(self._current_player.name)
@@ -774,10 +693,7 @@ class ComputerGame(NetworkDialogueGameMaster):
 
         # Reset round-level consecutive violations as well
         current_round = self.current_round
-        if (
-            current_round in self.round_stats
-            and player_id in self.round_stats[current_round]["players"]
-        ):
+        if current_round in self.round_stats and player_id in self.round_stats[current_round]["players"]:
             self.round_stats[current_round]["players"][player_id]["violated_streak"] = 0
 
     def compute_episode_score(self):
@@ -807,20 +723,14 @@ class ComputerGame(NetworkDialogueGameMaster):
 
         # Update round-level stats for violation
         current_round = self.current_round
-        self.round_stats.setdefault(
-            current_round, {"requests": 0, "parsed": 0, "violated": 0, "players": {}}
-        )
+        self.round_stats.setdefault(current_round, {"requests": 0, "parsed": 0, "violated": 0, "players": {}})
         self.round_stats[current_round]["violated"] += 1
-        self.round_stats[current_round]["players"].setdefault(
-            player_id, {"requests": 0, "parsed": 0, "violated": 0, "violated_streak": 0}
-        )
+        self.round_stats[current_round]["players"].setdefault(player_id, {"requests": 0, "parsed": 0, "violated": 0, "violated_streak": 0})
         self.round_stats[current_round]["players"][player_id]["violated"] += 1
         self.round_stats[current_round]["players"][player_id]["violated_streak"] += 1
 
         # Check for abortion conditions
-        consecutive_limit = self.game_config.get(
-            "player_consecutive_violation_limit", 3
-        )
+        consecutive_limit = self.game_config.get("player_consecutive_violation_limit", 3)
         total_limit = self.game_config.get("player_total_violation_limit", 5)
 
         consecutive_violations = self.player_stats[player_id]["violated_streak"]
@@ -862,12 +772,8 @@ class ComputerGameScorer(GameScorer):
         self.log_episode_score(metrics.METRIC_LOSE, 1 if not success else 0)
         self.log_episode_score(metrics.METRIC_ABORTED, 1 if aborted else 0)
         self.log_episode_score(metrics.METRIC_REQUEST_COUNT, request_count)
-        self.log_episode_score(
-            metrics.METRIC_REQUEST_COUNT_PARSED, request_count_parsed
-        )
-        self.log_episode_score(
-            metrics.METRIC_REQUEST_COUNT_VIOLATED, request_count_violated
-        )
+        self.log_episode_score(metrics.METRIC_REQUEST_COUNT_PARSED, request_count_parsed)
+        self.log_episode_score(metrics.METRIC_REQUEST_COUNT_VIOLATED, request_count_violated)
 
         # Step 3: Calculate and log Efficiency and Robustness ratios
         if request_count > 0:
@@ -904,32 +810,18 @@ class ComputerGameScorer(GameScorer):
 
             self.log_episode_score(f"{player_id}_Efficiency", p_efficiency)
             self.log_episode_score(f"{player_id}_Robustness", p_robustness)
-            self.log_episode_score(
-                f"{player_id}_{metrics.METRIC_REQUEST_COUNT}", p_requests
-            )
-            self.log_episode_score(
-                f"{player_id}_{metrics.METRIC_REQUEST_COUNT_PARSED}", p_parsed
-            )
-            self.log_episode_score(
-                f"{player_id}_{metrics.METRIC_REQUEST_COUNT_VIOLATED}", p_violated
-            )
-            self.log_episode_score(
-                f"{player_id}_Violated_Streak", stats.get("violated_streak", 0)
-            )
+            self.log_episode_score(f"{player_id}_{metrics.METRIC_REQUEST_COUNT}", p_requests)
+            self.log_episode_score(f"{player_id}_{metrics.METRIC_REQUEST_COUNT_PARSED}", p_parsed)
+            self.log_episode_score(f"{player_id}_{metrics.METRIC_REQUEST_COUNT_VIOLATED}", p_violated)
+            self.log_episode_score(f"{player_id}_Violated_Streak", stats.get("violated_streak", 0))
 
     def score_rounds(self, episode_interactions: Dict):
         round_stats = episode_interactions.get("round_stats", {})
         for round_idx, stats in round_stats.items():
             # Log aggregated round scores
-            self.log_round_score(
-                round_idx, metrics.METRIC_REQUEST_COUNT, stats["requests"]
-            )
-            self.log_round_score(
-                round_idx, metrics.METRIC_REQUEST_COUNT_PARSED, stats["parsed"]
-            )
-            self.log_round_score(
-                round_idx, metrics.METRIC_REQUEST_COUNT_VIOLATED, stats["violated"]
-            )
+            self.log_round_score(round_idx, metrics.METRIC_REQUEST_COUNT, stats["requests"])
+            self.log_round_score(round_idx, metrics.METRIC_REQUEST_COUNT_PARSED, stats["parsed"])
+            self.log_round_score(round_idx, metrics.METRIC_REQUEST_COUNT_VIOLATED, stats["violated"])
 
             # Log per-player scores for the round
             for player_name, player_round_stats in stats["players"].items():
@@ -959,9 +851,7 @@ class ComputerGameBenchmark(GameBenchmark):
     def __init__(self, game_spec: GameSpec):
         super().__init__(game_spec)
 
-    def create_game_master(
-        self, experiment: Dict, player_models: List[backends.Model]
-    ) -> GameMaster:
+    def create_game_master(self, experiment: Dict, player_models: List[backends.Model]) -> GameMaster:
         return ComputerGame(self.game_name, self.game_path, experiment, player_models)
 
     def create_game_scorer(self, experiment: Dict, game_instance: Dict) -> GameScorer:
@@ -979,6 +869,3 @@ if __name__ == "__main__":
     game_1 = experiment_1["game_instances"][0]
     master = ComputerGame("computergame", None, experiment_1, ["mock", "mock"])
     master.setup(**game_1)
-
-# Need to decide on what will be my qualtiy score, for now need to keep to 0 or 100 (binary), since there is not much which can be evaluated
-# free-form and no fix intermediates.
