@@ -27,6 +27,34 @@
         }
     },
     {
+        "model_name": "claude-3-7-sonnet-20250219",
+        "model_id": "claude-3-7-sonnet-20250219",
+        "backend": "anthropic",
+        "release_date": "2025-02-19",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "en",
+            "es",
+            "fr",
+            "ja"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "Anthropic",
+            "url": "https://www.anthropic.com/legal/commercial-terms"
+        },
+        "model_config": {
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            },
+            "thinking_mode": true
+        }
+    },
+    {
         "model_name": "o3-mini-2025-01-31",
         "model_id": "o3-mini-2025-01-31",
         "backend": "openai",
@@ -57,6 +85,283 @@
         },
         "model_config": {
             "reasoning_model": true
+        }
+    },
+    {
+        "model_name": "o4-mini-2025-04-16",
+        "model_id": "o4-mini-2025-04-16",
+        "backend": "openai",
+        "release_date": "2025-04-16",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "ar",
+            "bn",
+            "zh",
+            "fr",
+            "de",
+            "hi",
+            "en",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "pt",
+            "es",
+            "sw",
+            "yo"
+        ],
+        "context_size": "200k",
+        "license": {
+            "name": "OpenAI",
+            "url": "https://openai.com/policies/row-terms-of-use/"
+        },
+        "model_config": {
+            "reasoning_model": true
+        }
+    },
+    {
+        "model_name": "gpt-4.1-2025-04-14",
+        "model_id": "gpt-4.1-2025-04-14",
+        "backend": "openai",
+        "release_date": "2025-04-14",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "ar",
+            "bn",
+            "zh",
+            "fr",
+            "de",
+            "hi",
+            "en",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "pt",
+            "es",
+            "sw",
+            "yo"
+        ],
+        "context_size": "200k",
+        "license": {
+            "name": "OpenAI",
+            "url": "https://openai.com/policies/row-terms-of-use/"
+        },
+        "model_config": {
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            }
+        }
+    },
+    {
+        "model_name": "gemma-3-27b",
+        "model_id": "google/gemma-3-27b-it",
+        "backend": "openai_compatible",
+        "release_date": "2025-03-19",
+        "open_weight": true,
+        "parameters": "27B",
+        "languages": [
+            "en",
+            "de"
+        ],
+        "context_size": "100k",
+        "license": {},
+        "model_config": {
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            }
+        }
+    },
+    {
+        "model_name": "gemini-2.0-pro",
+        "model_id": "gemini-2.0-pro",
+        "backend": "google",
+        "release_date": "2025-06-17",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "ar",
+            "bn",
+            "bg",
+            "zh",
+            "hr",
+            "cs",
+            "da",
+            "nl",
+            "en",
+            "et",
+            "fi",
+            "fr",
+            "de",
+            "el",
+            "iw",
+            "hi",
+            "hu",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "lv",
+            "lt",
+            "no",
+            "pl",
+            "pt",
+            "ro",
+            "ru",
+            "sr",
+            "sk",
+            "sl",
+            "es",
+            "sw",
+            "sv",
+            "th",
+            "tr",
+            "uk",
+            "vi"
+        ],
+        "context_size": "32k",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            }
+        }
+    },
+    {
+        "model_name": "gemini-2.5-flash",
+        "model_id": "gemini-2.5-flash",
+        "backend": "google",
+        "release_date": "2025-06-17",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "ar",
+            "bn",
+            "bg",
+            "zh",
+            "hr",
+            "cs",
+            "da",
+            "nl",
+            "en",
+            "et",
+            "fi",
+            "fr",
+            "de",
+            "el",
+            "iw",
+            "hi",
+            "hu",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "lv",
+            "lt",
+            "no",
+            "pl",
+            "pt",
+            "ro",
+            "ru",
+            "sr",
+            "sk",
+            "sl",
+            "es",
+            "sw",
+            "sv",
+            "th",
+            "tr",
+            "uk",
+            "vi"
+        ],
+        "context_size": "32k",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            }
+        }
+    },
+
+    {
+        "model_name": "gemini-2.5-pro",
+        "model_id": "gemini-2.5-pro",
+        "backend": "google",
+        "release_date": "2025-06-17",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "ar",
+            "bn",
+            "bg",
+            "zh",
+            "hr",
+            "cs",
+            "da",
+            "nl",
+            "en",
+            "et",
+            "fi",
+            "fr",
+            "de",
+            "el",
+            "iw",
+            "hi",
+            "hu",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "lv",
+            "lt",
+            "no",
+            "pl",
+            "pt",
+            "ro",
+            "ru",
+            "sr",
+            "sk",
+            "sl",
+            "es",
+            "sw",
+            "sv",
+            "th",
+            "tr",
+            "uk",
+            "vi"
+        ],
+        "context_size": "32k",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            }
         }
     }
 ]

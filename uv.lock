@@ -602,7 +602,7 @@ wheels = [
 
 [[package]]
 name = "clemcore"
-version = "2.0.0"
+version = "3.1.1"
 source = { directory = "../clemcore" }
 dependencies = [
     { name = "aleph-alpha-client" },
@@ -631,11 +631,12 @@ requires-dist = [
     { name = "einops", marker = "extra == 'huggingface'", specifier = "==0.6.1" },
     { name = "google-generativeai", specifier = "==0.8.4" },
     { name = "matplotlib", specifier = "==3.7.1" },
-    { name = "mistralai", specifier = "==0.0.12" },
-    { name = "nltk", specifier = ">=3.8.1" },
+    { name = "mistralai", specifier = "==1.8.0" },
+    { name = "nltk", specifier = "==3.8.1" },
     { name = "numpy", specifier = ">=1.24.3,<2.0.0" },
-    { name = "openai", specifier = "==1.12.0" },
+    { name = "openai", specifier = "==1.75.0" },
     { name = "pandas", specifier = "==2.0.1" },
+    { name = "peft", marker = "extra == 'huggingface'", specifier = "==0.15.2" },
     { name = "protobuf", marker = "extra == 'huggingface'", specifier = "==4.21.6" },
     { name = "python-engineio", marker = "extra == 'slurk'", specifier = "==4.4.0" },
     { name = "python-socketio", marker = "extra == 'slurk'", specifier = "==5.7.2" },
@@ -643,11 +644,14 @@ requires-dist = [
     { name = "retry", specifier = ">=0.9.2" },
     { name = "seaborn", specifier = "==0.12.2" },
     { name = "sentencepiece", marker = "extra == 'huggingface'", specifier = "==0.1.99" },
-    { name = "torch", marker = "extra == 'huggingface'", specifier = "==2.1.1" },
+    { name = "timm", marker = "extra == 'huggingface'", specifier = ">=1.0.15" },
+    { name = "torch", marker = "extra == 'huggingface'", specifier = "~=2.1.1" },
+    { name = "torch", marker = "extra == 'vllm'", specifier = "~=2.6.0" },
+    { name = "torchvision", marker = "extra == 'huggingface'", specifier = "==0.16.1" },
     { name = "tqdm", specifier = ">=4.65.0" },
-    { name = "transformers", marker = "extra == 'huggingface'", specifier = "==4.47.0" },
-    { name = "transformers", marker = "extra == 'vllm'", specifier = "==4.47.0" },
-    { name = "vllm", marker = "extra == 'vllm'", specifier = "==0.5.4" },
+    { name = "transformers", marker = "extra == 'huggingface'", specifier = "==4.51.1" },
+    { name = "transformers", marker = "extra == 'vllm'", specifier = "==4.51.1" },
+    { name = "vllm", marker = "extra == 'vllm'", specifier = "==0.8.4" },
     { name = "websocket-client", marker = "extra == 'slurk'" },
 ]
 
@@ -1024,7 +1028,7 @@ requires-dist = [
     { name = "h11", specifier = "==0.14.0" },
     { name = "httpcore", specifier = "==1.0.7" },
     { name = "httplib2", specifier = "==0.22.0" },
-    { name = "httpx", specifier = "==0.25.2" },
+    { name = "httpx", specifier = "==0.28.1" },
     { name = "huggingface-hub", specifier = "==0.29.3" },
     { name = "idna", specifier = "==3.10" },
     { name = "imagehash", specifier = "==4.3.2" },
@@ -1048,7 +1052,7 @@ requires-dist = [
     { name = "lxml", specifier = "==5.3.1" },
     { name = "markupsafe", specifier = "==3.0.2" },
     { name = "matplotlib", specifier = "==3.7.1" },
-    { name = "mistralai", specifier = "==0.0.12" },
+    { name = "mistralai", specifier = "==1.8.0" },
     { name = "mouseinfo", specifier = "==0.1.3" },
     { name = "mpmath", specifier = "==1.3.0" },
     { name = "msal", specifier = "==1.32.0" },
@@ -1059,13 +1063,13 @@ requires-dist = [
     { name = "mutagen", specifier = "==1.47.0" },
     { name = "networkx", specifier = "==3.4.2" },
     { name = "ninja", specifier = "==1.11.1.3" },
-    { name = "nltk", specifier = "==3.9.1" },
+    { name = "nltk", specifier = "==3.8.1" },
     { name = "numba", specifier = "==0.61.0" },
     { name = "numpy", specifier = "==1.26.4" },
     { name = "numpy-financial", specifier = "==1.0.0" },
     { name = "oauth2client", specifier = "==4.1.3" },
     { name = "odfpy", specifier = "==1.4.1" },
-    { name = "openai", specifier = "==1.12.0" },
+    { name = "openai", specifier = "==1.75.0" },
     { name = "opencv-python", specifier = "==4.8.1.78" },
     { name = "opencv-python-headless", specifier = "==4.11.0.86" },
     { name = "openpyxl", specifier = "==3.1.5" },
@@ -1398,6 +1402,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d3/38/af70d7ab1ae9d4da450eeec1fa3918940a5fafb9055e934af8d6eb0c2313/et_xmlfile-2.0.0.tar.gz", hash = "sha256:dab3f4764309081ce75662649be815c4c9081e88f0837825f90fd28317d4da54", size = 17234 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c1/8b/5fe2cc11fee489817272089c4203e679c63b570a5aaeb18d852ae3cbba6a/et_xmlfile-2.0.0-py3-none-any.whl", hash = "sha256:7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa", size = 18059 },
+]
+
+[[package]]
+name = "eval-type-backport"
+version = "0.2.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/30/ea/8b0ac4469d4c347c6a385ff09dc3c048c2d021696664e26c7ee6791631b5/eval_type_backport-0.2.2.tar.gz", hash = "sha256:f0576b4cf01ebb5bd358d02314d31846af5e07678387486e2c798af0e7d849c1", size = 9079 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ce/31/55cd413eaccd39125368be33c46de24a1f639f2e12349b0361b4678f3915/eval_type_backport-0.2.2-py3-none-any.whl", hash = "sha256:cb6ad7c393517f476f96d456d0412ea80f0a8cf96f6892834cd9340149111b0a", size = 5830 },
 ]
 
 [[package]]
@@ -1920,18 +1933,17 @@ wheels = [
 
 [[package]]
 name = "httpx"
-version = "0.25.2"
+version = "0.28.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
     { name = "certifi" },
     { name = "httpcore" },
     { name = "idna" },
-    { name = "sniffio" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8c/23/911d93a022979d3ea295f659fbe7edb07b3f4561a477e83b3a6d0e0c914e/httpx-0.25.2.tar.gz", hash = "sha256:8b8fcaa0c8ea7b05edd69a094e63a2094c4efcb48129fb757361bc423c0ad9e8", size = 123889 }
+sdist = { url = "https://files.pythonhosted.org/packages/b1/df/48c586a5fe32a0f01324ee087459e112ebb7224f646c0b5023f5e79e9956/httpx-0.28.1.tar.gz", hash = "sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc", size = 141406 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a2/65/6940eeb21dcb2953778a6895281c179efd9100463ff08cb6232bb6480da7/httpx-0.25.2-py3-none-any.whl", hash = "sha256:a05d3d052d9b2dfce0e3896636467f8a5342fb2b902c819428e1ac65413ca118", size = 74980 },
+    { url = "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl", hash = "sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad", size = 73517 },
 ]
 
 [[package]]
@@ -2411,16 +2423,18 @@ wheels = [
 
 [[package]]
 name = "mistralai"
-version = "0.0.12"
+version = "1.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "eval-type-backport" },
     { name = "httpx" },
-    { name = "orjson" },
     { name = "pydantic" },
+    { name = "python-dateutil" },
+    { name = "typing-inspection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/b8/dc2cc9d559aad3d6cba7f6658e06822ec80149e810ba35c2e79062af1fdf/mistralai-0.0.12.tar.gz", hash = "sha256:fe652836146a15bdce7691a95803a32c53c641c5400093447ffa93bf2ed296b2", size = 10556 }
+sdist = { url = "https://files.pythonhosted.org/packages/3d/7d/d477dedc679fd5edd02f536af39654686e3c4abfc200eca6073fe0a64e36/mistralai-1.8.0.tar.gz", hash = "sha256:f13f69155030c801937d52d3f7c795bd721c4e48630e6ff9e3a7839485852adc", size = 175487 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e3/23/003143706f9d6e14d77eb267c1c3ee27528087212827c694296216414418/mistralai-0.0.12-py3-none-any.whl", hash = "sha256:d489d1f0a31bf0edbe15c6d12f68b943148d2a725a088be0d8a5d4c888f8436c", size = 14624 },
+    { url = "https://files.pythonhosted.org/packages/99/da/8c076916d08e1131236548cbf9ddc593d02d2e869926199b9c69c959f8e2/mistralai-1.8.0-py3-none-any.whl", hash = "sha256:6287f6ac3a6f3a3f53177dffbb5861834225ae1c2b266e0094b039696bc05dbb", size = 372347 },
 ]
 
 [[package]]
@@ -2626,7 +2640,7 @@ wheels = [
 
 [[package]]
 name = "nltk"
-version = "3.9.1"
+version = "3.8.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -2634,9 +2648,9 @@ dependencies = [
     { name = "regex" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3c/87/db8be88ad32c2d042420b6fd9ffd4a149f9a0d7f0e86b3f543be2eeeedd2/nltk-3.9.1.tar.gz", hash = "sha256:87d127bd3de4bd89a4f81265e5fa59cb1b199b27440175370f7417d2bc7ae868", size = 2904691 }
+sdist = { url = "https://files.pythonhosted.org/packages/57/49/51af17a2b0d850578d0022408802aa452644d40281a6c6e82f7cb0235ddb/nltk-3.8.1.zip", hash = "sha256:1834da3d0682cba4f2cede2f9aad6b0fafb6461ba451db0efb6f9c39798d64d3", size = 4620388 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4d/66/7d9e26593edda06e8cb531874633f7c2372279c3b0f46235539fe546df8b/nltk-3.9.1-py3-none-any.whl", hash = "sha256:4fa26829c5b00715afe3061398a8989dc643b92ce7dd93fb4585a70930d168a1", size = 1505442 },
+    { url = "https://files.pythonhosted.org/packages/a6/0a/0d20d2c0f16be91b9fa32a77b76c60f9baf6eba419e5ef5deca17af9c582/nltk-3.8.1-py3-none-any.whl", hash = "sha256:fd5c9109f976fa86bcadba8f91e47f5e9293bd034474752e92a520f81c93dda5", size = 1510663 },
 ]
 
 [[package]]
@@ -2839,20 +2853,21 @@ sdist = { url = "https://files.pythonhosted.org/packages/97/73/8ade73f6749177003
 
 [[package]]
 name = "openai"
-version = "1.12.0"
+version = "1.75.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
     { name = "distro" },
     { name = "httpx" },
+    { name = "jiter" },
     { name = "pydantic" },
     { name = "sniffio" },
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5b/25/907dbe5ee7972a8b7bed51516e23196607ce7048fde0c554d98f2e2ae7bd/openai-1.12.0.tar.gz", hash = "sha256:99c5d257d09ea6533d689d1cc77caa0ac679fa21efef8893d8b0832a86877f1b", size = 130552 }
+sdist = { url = "https://files.pythonhosted.org/packages/99/b1/318f5d4c482f19c5fcbcde190801bfaaaec23413cda0b88a29f6897448ff/openai-1.75.0.tar.gz", hash = "sha256:fb3ea907efbdb1bcfd0c44507ad9c961afd7dce3147292b54505ecfd17be8fd1", size = 429492 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/26/a1/75474477af2a1dae3a25f80b72bbaf20e8296191ece7fff2f67984206f33/openai-1.12.0-py3-none-any.whl", hash = "sha256:a54002c814e05222e413664f651b5916714e4700d041d5cf5724d3ae1a3e3481", size = 226675 },
+    { url = "https://files.pythonhosted.org/packages/80/9a/f34f163294345f123673ed03e77c33dee2534f3ac1f9d18120384457304d/openai-1.75.0-py3-none-any.whl", hash = "sha256:fe6f932d2ded3b429ff67cc9ad118c71327db32eb9d32dd723de3acfca337125", size = 646972 },
 ]
 
 [[package]]
@@ -4756,6 +4771,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/df/db/f35a00659bc03fec321ba8bce9420de607a1d37f8342eee1863174c69557/typing_extensions-4.12.2.tar.gz", hash = "sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8", size = 85321 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/26/9f/ad63fc0248c5379346306f8668cda6e2e2e9c95e01216d2b8ffd9ff037d0/typing_extensions-4.12.2-py3-none-any.whl", hash = "sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d", size = 37438 },
+]
+
+[[package]]
+name = "typing-inspection"
+version = "0.4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f8/b1/0c11f5058406b3af7609f121aaa6b609744687f1d158b3c3a5bf4cc94238/typing_inspection-0.4.1.tar.gz", hash = "sha256:6ae134cc0203c33377d43188d4064e9b357dba58cff3185f22924610e70a9d28", size = 75726 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/17/69/cd203477f944c353c31bade965f880aa1061fd6bf05ded0726ca845b6ff7/typing_inspection-0.4.1-py3-none-any.whl", hash = "sha256:389055682238f53b04f7badcb49b989835495a96700ced5dab2d8feae4b26f51", size = 14552 },
 ]
 
 [[package]]

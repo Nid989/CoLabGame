@@ -286,129 +286,6 @@ class ComputerGame(NetworkDialogueGameMaster):
         self._set_context_for(self._current_player, context)
         logger.info(f"Set initial context for player at node {self._current_node}")
 
-    def _on_after_game(self):
-        """
-        Called after the game ends (when _does_game_proceed returns False), before exiting the play loop.
-        Evaluates the environment, sets success/fail state, and logs episode metrics.
-        """
-        # Step 1: Evaluate the environment to get the score, done only once.
-        score = self.env.evaluate()
-        self._episode_score = float(score)  # Store for compute_episode_score
-
-        # Step 2: Determine final success/fail state.
-        if self.aborted:
-            self.fail = True
-            self.success = False
-        else:
-            if self._episode_score == 1.0:
-                self.success = True
-                self.fail = False
-            else:
-                self.success = False
-                self.fail = True
-
-        # Step 3: Log all final summary data for the episode.
-        self.log_key("success", self.success)
-        self.log_key("fail", self.fail)
-        self.log_key("aborted", self.aborted)
-        self.log_key("episode_score", self._episode_score)
-        self.log_key("request_count", self.request_count)
-        self.log_key("request_count_parsed", self.request_count_parsed)
-        self.log_key("request_count_violated", self.request_count_violated)
-        self.log_key("player_stats", self.player_stats)
-        self.log_key("round_stats", self.round_stats)
-
-    def _parse_response(self, player: RoleBasedPlayer, response: str) -> str:
-        """
-        Chains the parsing, validation, and content processing steps to produce a parsed response.
-        Focuses solely on parsing logic using class methods, returning a JSON serializable string.
-        Args:
-            player: Ignored Player object (part of class method signature).
-            response: Input string containing JSON within code blocks.
-        Returns:
-            str: JSON string with validated fields (type, from, to, content).
-        Raises:
-            ParseError: If parsing or validation fails (e.g., invalid JSON, missing fields, invalid message type).
-            GameError: If action content is invalid (e.g., invalid action parameters).
-        """
-
-        def construct_response(content: Any, message_type: MessageType, data: Dict[Any, Any]) -> Result:
-            """
-            Constructs the final JSON response from parsed content, message type, and original data.
-            Args:
-                content: The processed content (e.g., List[str], List[Dict], or str).
-                message_type: The validated MessageType.
-                data: The original parsed JSON dictionary.
-            Returns:
-                Result: Ok(str) with the JSON response.
-            """
-            parsed_response_dict = {
-                "type": message_type.name,
-                "from": data.get("from", ""),
-            }
-            if message_type in MessageType.requires_to() and "to" in data:
-                parsed_response_dict["to"] = data.get("to", "")
-            parsed_response_dict["content"] = content  # Preserves List[str], List[Dict], or str
-            parsed_response = json.dumps(parsed_response_dict)
-            return Ok(parsed_response)
-
-        # Chain the operations using Result monad
-        # TODO: the `handle_json_content` method is quite inefficient, as it provide `action_space` everytime, when it is not needed.
-        self.request_count += 1
-        player_id = str(self._current_player.name)
-        self.player_stats.setdefault(
-            player_id,
-            {"requests": 0, "parsed": 0, "violated": 0, "violated_streak": 0},
-        )
-        self.player_stats[player_id]["requests"] += 1
-
-        # Update round-level stats
-        current_round = self.current_round
-        self.round_stats.setdefault(current_round, {"requests": 0, "parsed": 0, "violated": 0, "players": {}})
-        self.round_stats[current_round]["requests"] += 1
-        self.round_stats[current_round]["players"].setdefault(player_id, {"requests": 0, "parsed": 0, "violated": 0, "violated_streak": 0})
-        self.round_stats[current_round]["players"][player_id]["requests"] += 1
-
-        # Chain the operations using Result monad
-        # TODO: the `handle_json_content` method is quite inefficient, as it provide `action_space` everytime, when it is not needed.
-        result = (
-            Ok(response)
-            | (
-                lambda x: Ok(self.extract_json_codeblock(x))
-                if isinstance(x, str)
-                else Error(ParseError(reason="Expected string input", response=str(x)))
-            )
-            | (lambda x: Ok(x[1]) if x[0] else Error(x[1]))  # Ok(Dict) or Error(ParseError)
-            | (lambda x: Ok((self.check_json_message(x), x)))
-            | (lambda x: Ok((x[0][1], x[1])) if x[0][0] else Error(x[0][1]))  # Ok((MessageType, Dict)) or Error(ParseError)
-            | (
-                lambda x: Ok(
-                    (
-                        self.handle_json_content(
-                            x[1]["content"],
-                            x[0],
-                            self.environment_type,
-                            self.game_config["action_space"],
-                        ),
-                        x[0],
-                        x[1],
-                    )
-                )
-            )
-            | (lambda x: Ok((x[0][1], x[1], x[2])) if x[0][0] else Error(x[0][1]))  # Ok((content, MessageType, Dict)) or Error(ParseError/GameError)
-            | (lambda x: construct_response(x[0], x[1], x[2]))  # Ok(str)
-        )
-
-        # Extract final result and raise errors
-        if isinstance(result, Ok):
-            self.request_count_parsed += 1
-            self.player_stats[player_id]["parsed"] += 1
-            self.round_stats[current_round]["parsed"] += 1
-            self.round_stats[current_round]["players"][player_id]["parsed"] += 1
-            return result.value
-        else:
-            raise result.error
-
     def extract_json_codeblock(self, text: str) -> Tuple[bool, Optional[Dict[Any, Any]] | Exception]:
         """
         Extracts and parses JSON content from a string containing code blocks, only allowing no language identifier or 'json'.
@@ -605,6 +482,97 @@ class ComputerGame(NetworkDialogueGameMaster):
                 response=str(data),
             )
 
+    def _parse_response(self, player: RoleBasedPlayer, response: str) -> str:
+        """
+        Chains the parsing, validation, and content processing steps to produce a parsed response.
+        Focuses solely on parsing logic using class methods, returning a JSON serializable string.
+        Args:
+            player: Ignored Player object (part of class method signature).
+            response: Input string containing JSON within code blocks.
+        Returns:
+            str: JSON string with validated fields (type, from, to, content).
+        Raises:
+            ParseError: If parsing or validation fails (e.g., invalid JSON, missing fields, invalid message type).
+            GameError: If action content is invalid (e.g., invalid action parameters).
+        """
+
+        def construct_response(content: Any, message_type: MessageType, data: Dict[Any, Any]) -> Result:
+            """
+            Constructs the final JSON response from parsed content, message type, and original data.
+            Args:
+                content: The processed content (e.g., List[str], List[Dict], or str).
+                message_type: The validated MessageType.
+                data: The original parsed JSON dictionary.
+            Returns:
+                Result: Ok(str) with the JSON response.
+            """
+            parsed_response_dict = {
+                "type": message_type.name,
+                "from": data.get("from", ""),
+            }
+            if message_type in MessageType.requires_to() and "to" in data:
+                parsed_response_dict["to"] = data.get("to", "")
+            parsed_response_dict["content"] = content  # Preserves List[str], List[Dict], or str
+            parsed_response = json.dumps(parsed_response_dict)
+            return Ok(parsed_response)
+
+        # Chain the operations using Result monad
+        # TODO: the `handle_json_content` method is quite inefficient, as it provide `action_space` everytime, when it is not needed.
+        self.request_count += 1
+        player_id = str(self._current_player.name)
+        self.player_stats.setdefault(
+            player_id,
+            {"requests": 0, "parsed": 0, "violated": 0, "violated_streak": 0},
+        )
+        self.player_stats[player_id]["requests"] += 1
+
+        # Update round-level stats
+        current_round = self.current_round
+        self.round_stats.setdefault(current_round, {"requests": 0, "parsed": 0, "violated": 0, "players": {}})
+        self.round_stats[current_round]["requests"] += 1
+        self.round_stats[current_round]["players"].setdefault(player_id, {"requests": 0, "parsed": 0, "violated": 0, "violated_streak": 0})
+        self.round_stats[current_round]["players"][player_id]["requests"] += 1
+
+        # Chain the operations using Result monad
+        # TODO: the `handle_json_content` method is quite inefficient, as it provide `action_space` everytime, when it is not needed.
+        result = (
+            Ok(response)
+            | (
+                lambda x: Ok(self.extract_json_codeblock(x))
+                if isinstance(x, str)
+                else Error(ParseError(reason="Expected string input", response=str(x)))
+            )
+            | (lambda x: Ok(x[1]) if x[0] else Error(x[1]))  # Ok(Dict) or Error(ParseError)
+            | (lambda x: Ok((self.check_json_message(x), x)))
+            | (lambda x: Ok((x[0][1], x[1])) if x[0][0] else Error(x[0][1]))  # Ok((MessageType, Dict)) or Error(ParseError)
+            | (
+                lambda x: Ok(
+                    (
+                        self.handle_json_content(
+                            x[1]["content"],
+                            x[0],
+                            self.environment_type,
+                            self.game_config["action_space"],
+                        ),
+                        x[0],
+                        x[1],
+                    )
+                )
+            )
+            | (lambda x: Ok((x[0][1], x[1], x[2])) if x[0][0] else Error(x[0][1]))  # Ok((content, MessageType, Dict)) or Error(ParseError/GameError)
+            | (lambda x: construct_response(x[0], x[1], x[2]))  # Ok(str)
+        )
+
+        # Extract final result and raise errors
+        if isinstance(result, Ok):
+            self.request_count_parsed += 1
+            self.player_stats[player_id]["parsed"] += 1
+            self.round_stats[current_round]["parsed"] += 1
+            self.round_stats[current_round]["players"][player_id]["parsed"] += 1
+            return result.value
+        else:
+            raise result.error
+
     def _execute_actions(self, actions: List[Union[str, Dict]]) -> Dict[str, Union[str, Image.Image, Dict]]:
         """Execute either pyautogui or computer13 actions and record observations.
         Args:
@@ -736,16 +704,6 @@ class ComputerGame(NetworkDialogueGameMaster):
         if current_round in self.round_stats and player_id in self.round_stats[current_round]["players"]:
             self.round_stats[current_round]["players"][player_id]["violated_streak"] = 0
 
-    def compute_episode_score(self):
-        """
-        Returns the score for the current episode.
-        The score is pre-computed and stored in _on_after_game.
-
-        Returns:
-            float: A score of 1.0 for success or 0.0 for failure.
-        """
-        return self._episode_score
-
     def _handle_player_violation(self):
         """Handles the logic for player violations, including counting and checking abortion limits."""
         self.request_count_violated += 1
@@ -795,6 +753,48 @@ class ComputerGame(NetworkDialogueGameMaster):
         """Hook to implement consequences for game errors e.g. prepare re-prompting or set game state to failure."""
         self.log_to_self("game_error", str(error))
         self._handle_player_violation()
+
+    def _on_after_game(self):
+        """
+        Called after the game ends (when _does_game_proceed returns False), before exiting the play loop.
+        Evaluates the environment, sets success/fail state, and logs episode metrics.
+        """
+        # Step 1: Evaluate the environment to get the score, done only once.
+        score = self.env.evaluate()
+        self._episode_score = float(score)  # Store for compute_episode_score
+
+        # Step 2: Determine final success/fail state.
+        if self.aborted:
+            self.fail = True
+            self.success = False
+        else:
+            if self._episode_score == 1.0:
+                self.success = True
+                self.fail = False
+            else:
+                self.success = False
+                self.fail = True
+
+        # Step 3: Log all final summary data for the episode.
+        self.log_key("success", self.success)
+        self.log_key("fail", self.fail)
+        self.log_key("aborted", self.aborted)
+        self.log_key("episode_score", self._episode_score)
+        self.log_key("request_count", self.request_count)
+        self.log_key("request_count_parsed", self.request_count_parsed)
+        self.log_key("request_count_violated", self.request_count_violated)
+        self.log_key("player_stats", self.player_stats)
+        self.log_key("round_stats", self.round_stats)
+
+    def compute_episode_score(self):
+        """
+        Returns the score for the current episode.
+        The score is pre-computed and stored in _on_after_game.
+
+        Returns:
+            float: A score of 1.0 for success or 0.0 for failure.
+        """
+        return self._episode_score
 
     def get_player_by_role(self, role_identifier: str) -> Optional[RoleBasedPlayer]:
         """Get a player by their role identifier (e.g., 'executor_1', 'advisor', etc.).
