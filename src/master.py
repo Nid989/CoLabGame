@@ -28,28 +28,63 @@ class EdgeType(Enum):
 
 
 class EdgeCondition:
-    """Condition for transitioning between nodes in the network based on MessageType."""
+    """Condition for transitioning between nodes in the network based on MessageType and optional role permissions."""
 
-    def __init__(self, message_type: str, description: str = ""):
-        """Initialize an edge condition with a MessageType.
+    def __init__(self, message_type: str, description: str = "", allowed_from_roles: List[str] = None, allowed_to_roles: List[str] = None):
+        """Initialize an edge condition with a MessageType and optional role constraints.
 
         Args:
             message_type: The MessageType that determines the condition for transition.
             description: Human-readable description of the condition.
+            allowed_from_roles: List of roles that can send this message type (None = any role).
+            allowed_to_roles: List of roles that can receive this message type (None = any role).
         """
         self.message_type = message_type
         self.description = description
+        self.allowed_from_roles = allowed_from_roles or []
+        self.allowed_to_roles = allowed_to_roles or []
 
-    def validate(self, message_type: str) -> bool:
-        """Validate if the provided MessageType matches the condition type.
+    def validate(self, message_type: str, from_role: str = None, to_role: str = None) -> bool:
+        """Validate if the provided MessageType and roles match the condition.
 
         Args:
             message_type: The MessageType to validate against the condition.
+            from_role: The role of the sender (optional).
+            to_role: The role of the receiver (optional).
 
         Returns:
-            bool: True if the MessageType matches the condition type, False otherwise.
+            bool: True if the MessageType and roles match the condition, False otherwise.
         """
-        return self.message_type == message_type
+        # Check message type match
+        if self.message_type != message_type:
+            return False
+
+        # Check from_role constraints if specified
+        if self.allowed_from_roles and from_role:
+            # Support both exact match and base role match
+            base_from_role = from_role.split("_")[0] if "_" in from_role else from_role
+            if from_role not in self.allowed_from_roles and base_from_role not in self.allowed_from_roles:
+                return False
+
+        # Check to_role constraints if specified
+        if self.allowed_to_roles and to_role:
+            # Support both exact match and base role match
+            base_to_role = to_role.split("_")[0] if "_" in to_role else to_role
+            if to_role not in self.allowed_to_roles and base_to_role not in self.allowed_to_roles:
+                return False
+
+        return True
+
+    def __str__(self) -> str:
+        """String representation of the edge condition."""
+        parts = [f"MessageType: {self.message_type}"]
+        if self.allowed_from_roles:
+            parts.append(f"From: {', '.join(self.allowed_from_roles)}")
+        if self.allowed_to_roles:
+            parts.append(f"To: {', '.join(self.allowed_to_roles)}")
+        if self.description:
+            parts.append(f"Description: {self.description}")
+        return " | ".join(parts)
 
 
 class NetworkDialogueGameMaster(DialogueGameMaster):

@@ -20,7 +20,6 @@ from src.environment import Environment, EnvironmentFactory
 from src.player import RoleBasedPlayer
 from src.message import MessageType, MessageState, PlayerContextFormatter
 from src.utils.registry.parsers import parsers, get_parser_metadata, process_content
-from src.utils.constants import DEFAULT_HANDLER_TYPE
 from src.utils.general import TemporaryImageManager
 from dataclasses import dataclass
 
@@ -152,26 +151,46 @@ class ComputerGame(NetworkDialogueGameMaster):
             KeyError: If condition type is invalid
         """
         try:
+            from src.message import RoleConfig
+            from src.utils.template_manager import PromptTemplateManager
+
+            # Initialize template manager
+            template_manager = PromptTemplateManager()
+
             graph_config = self.game_instance.get("graph")
             roles = self.game_instance.get("roles", [])
+
             for node in graph_config.get("nodes", []):
                 node_id = node.get("id")
                 node_type = node.get("type")
                 if node_type != "PLAYER" or not node_id:
                     continue
+
                 role_index = node.get("role_index", 0)
-                role_config = roles[role_index]
+                role_data = roles[role_index]
+
+                # Create RoleConfig from role data
+                role_config = RoleConfig.from_dict(role_data)
+
+                # Generate dynamic prompt if no initial_prompt is provided
+                if not role_config.initial_prompt:
+                    role_config.initial_prompt = template_manager.generate_prompt(role_config)
+
+                # Create player with message permissions
                 player = RoleBasedPlayer(
                     self.player_models[0],
-                    role=role_config.get("name"),
-                    handler_type=role_config.get("handler_type", DEFAULT_HANDLER_TYPE),
-                    allowed_components=role_config.get("allowed_components", []),
+                    role=role_config.name,
+                    handler_type=role_config.handler_type,
+                    allowed_components=role_config.allowed_components,
+                    message_permissions=role_config.message_permissions,
                 )
+
                 self.add_player_to_graph(
                     player=player,
-                    initial_prompt=role_config.get("initial_prompt"),
+                    initial_prompt=role_config.initial_prompt,
                     node_id=node_id,
                 )
+
             for edge in graph_config.get("edges", []):
                 from_node = edge.get("from")
                 to_node = edge.get("to")
@@ -188,9 +207,11 @@ class ComputerGame(NetworkDialogueGameMaster):
                         raise KeyError(f"Invalid message-type field: {message_type}")
                     condition = EdgeCondition(message_type=message_type, description=description)
                     self.add_decision_edge(from_node, to_node, condition, description)
+
             anchor_node = graph_config.get("anchor_node")
             if anchor_node:
                 self.set_anchor_node(anchor_node)
+
             logger.info("Graph building complete")
         except Exception as e:
             raise RuntimeError(f"Failed to build interaction graph: {str(e)}") from e
@@ -448,6 +469,13 @@ class ComputerGame(NetworkDialogueGameMaster):
                     response=str(data),
                 )
 
+            # Validate role-based permissions
+            current_player = self._current_player
+            if hasattr(current_player, "validate_outgoing_message"):
+                is_valid, error_msg = current_player.validate_outgoing_message(message_type)
+                if not is_valid:
+                    return False, ParseError(reason=error_msg, response=str(data))
+
             if message_type in MessageType.requires_to():
                 if "to" not in data:
                     return False, ParseError(
@@ -459,6 +487,15 @@ class ComputerGame(NetworkDialogueGameMaster):
                         reason="Invalid type for 'to' field: must be a string",
                         response=str(data),
                     )
+
+                # Validate target role can receive this message type
+                target_role = data["to"]
+                target_player = self.get_player_by_role(target_role)
+                if target_player and hasattr(target_player, "validate_incoming_message"):
+                    is_valid, error_msg = target_player.validate_incoming_message(message_type)
+                    if not is_valid:
+                        return False, ParseError(reason=error_msg, response=str(data))
+
             elif message_type in MessageType.prohibits_to():
                 if "to" in data:
                     return False, ParseError(
@@ -472,15 +509,12 @@ class ComputerGame(NetworkDialogueGameMaster):
                     response=str(data),
                 )
 
-            # TODO: Add player ID validation for 'from' field
-            # Example: validate_player_id(json_data["from"])
-
-            # TODO: Add player ID validation for 'to' field
-            # Example: validate_player_id(json_data["to"])
-            # if "to" in data:
-            #     # TODO: Add player ID validation for 'to' field
-            #     # Example: validate_player_id(json_data["to"])
-            #     pass
+            # Validate 'from' field matches current player role
+            if hasattr(current_player, "role") and data["from"] != current_player.role:
+                return False, ParseError(
+                    reason=f"'from' field must match current player role. Expected '{current_player.role}', got '{data['from']}'",
+                    response=str(data),
+                )
 
             # Basic content type validation
             if message_type == MessageType.EXECUTE and self.game_config.get("action_space") == "computer13":
@@ -623,6 +657,8 @@ class ComputerGame(NetworkDialogueGameMaster):
         # Step 2: Validate transition from current node
         current_node = self._current_node
         next_node = None
+        from_role = player.role if hasattr(player, "role") else None
+        to_role = data.get("to") if "to" in data else None
 
         if message_type == MessageType.STATUS:
             next_node = "END"
@@ -633,19 +669,23 @@ class ComputerGame(NetworkDialogueGameMaster):
                 if "to" in data:
                     target_node = data["to"]
                     for to_node, condition in decision_edges:
-                        if to_node == target_node and condition.validate(message_type.name):
+                        if to_node == target_node and condition.validate(message_type.name, from_role, to_role):
                             next_node = target_node
                             break
                     if next_node is None:
-                        raise RuleViolationError(f"No valid transition found to target node {target_node} with message type {message_type.name}")
+                        raise RuleViolationError(
+                            f"No valid transition found to target node {target_node} with message type {message_type.name} from role {from_role}"
+                        )
                 else:
                     # Check for self-loop or staying at current node
                     for to_node, condition in decision_edges:
-                        if to_node == current_node and condition.validate(message_type.name):
+                        if to_node == current_node and condition.validate(message_type.name, from_role, to_role):
                             next_node = current_node
                             break
                     if next_node is None:
-                        raise RuleViolationError(f"No valid self-loop transition found for message type {message_type.name} at node {current_node}")
+                        raise RuleViolationError(
+                            f"No valid self-loop transition found for message type {message_type.name} from role {from_role} at node {current_node}"
+                        )
 
             # If no decision edge is found, fallback to standard edges
             if next_node is None:
@@ -654,7 +694,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                     next_node = standard_edges[0][0]  # Take the first standard edge target node
                 else:
                     raise RuleViolationError(
-                        f"No valid transition (decision or standard) found for message type {message_type.name} from node {current_node}"
+                        f"No valid transition (decision or standard) found for message type {message_type.name} from role {from_role} from node {current_node}"
                     )
 
         # Step 3: Update game state with the validated transition
@@ -755,6 +795,50 @@ class ComputerGame(NetworkDialogueGameMaster):
         """Hook to implement consequences for game errors e.g. prepare re-prompting or set game state to failure."""
         self.log_to_self("game_error", str(error))
         self._handle_player_violation()
+
+    def get_player_by_role(self, role_identifier: str) -> Optional[RoleBasedPlayer]:
+        """Get a player by their role identifier (e.g., 'executor_1', 'advisor', etc.).
+
+        Args:
+            role_identifier: The role identifier to search for
+
+        Returns:
+            RoleBasedPlayer or None if not found
+        """
+        # Search through all players in the network
+        for node_id, player in self.players.items():
+            if hasattr(player, "role") and player.role == role_identifier:
+                return player
+
+        # If exact match not found, try to find by base role type
+        # This handles cases where we're looking for 'executor' but have 'executor_1'
+        for node_id, player in self.players.items():
+            if hasattr(player, "role"):
+                # Extract base role type (e.g., 'executor' from 'executor_1')
+                base_role = player.role.split("_")[0] if "_" in player.role else player.role
+                if base_role == role_identifier:
+                    return player
+
+        return None
+
+    def get_all_players_by_base_role(self, base_role: str) -> List[RoleBasedPlayer]:
+        """Get all players that match a base role type (e.g., all executors).
+
+        Args:
+            base_role: The base role type to search for (e.g., 'executor', 'advisor')
+
+        Returns:
+            List of RoleBasedPlayer instances matching the base role
+        """
+        matching_players = []
+        for node_id, player in self.players.items():
+            if hasattr(player, "role"):
+                # Extract base role type (e.g., 'executor' from 'executor_1')
+                player_base_role = player.role.split("_")[0] if "_" in player.role else player.role
+                if player_base_role == base_role:
+                    matching_players.append(player)
+
+        return matching_players
 
 
 class ComputerGameScorer(GameScorer):

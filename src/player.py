@@ -12,12 +12,10 @@ class RoleBasedMeta(type(Player)):
 
     _role_implementations: Dict[str, Dict[str, Any]] = {
         "executor": {
-            "_custom_response": lambda self,
-            context: f"Executor response to {context['content']}"  # Placeholder
+            "_custom_response": lambda self, context: f"Executor response to {context['content']}"  # Placeholder
         },
         "advisor": {
-            "_custom_response": lambda self,
-            context: f"Advisor response to {context['content']}"  # Placeholder
+            "_custom_response": lambda self, context: f"Advisor response to {context['content']}"  # Placeholder
         },
     }
 
@@ -36,9 +34,7 @@ class RoleBasedMeta(type(Player)):
             ValueError: If the specified role is not supported.
         """
         if role not in cls._role_implementations:
-            raise ValueError(
-                f"Invalid role: {role}. Must be one of {list(cls._role_implementations.keys())}"
-            )
+            raise ValueError(f"Invalid role: {role}. Must be one of {list(cls._role_implementations.keys())}")
 
         # Create a new class dynamically with the role-specific implementation
         role_class = type(
@@ -77,6 +73,7 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         footer_prompt: str = "What will be your next step to complete the task?",
         handler_type: str = "standard",
         allowed_components: List[str] = None,
+        message_permissions=None,
         **kwargs,
     ):
         """Initialize a RoleBasedPlayer with role-specific configuration.
@@ -84,6 +81,7 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
             footer_prompt: A string append to user-context, typically a question for response.
             handler_type: Types of handler ('standard' or 'environment')
             allowed_components: List of message-components permissible for the player's context.
+            message_permissions: MessagePermissions instance for this role, or None for defaults.
         """
         super().__init__(model, **kwargs)
         self._role = role
@@ -92,16 +90,23 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         self.allowed_components = allowed_components or []
         self.retries = 0
 
+        # Import here to avoid circular imports
+        from src.message import MessagePermissions
+
+        # Set message permissions (use defaults if not provided)
+        if message_permissions is None:
+            self.message_permissions = MessagePermissions.get_default_for_role(role)
+        else:
+            self.message_permissions = message_permissions
+
     @property
     def role(self) -> str:
         """Get the current role of the assistant"""
-
         return self._role
 
     @property
     def footer_prompt(self) -> str:
         """Get the footer prompt appended to responses."""
-
         return self._footer_prompt
 
     @footer_prompt.setter
@@ -109,18 +114,90 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         """Set the footer prompt appended to responses."""
         if not isinstance(value, str):
             raise ValueError("footer_prompt must be a string")
-
         self._footer_prompt = value
 
-    def _custom_response(self, messages, turn_idx) -> str:
-        """Response for programmatic Player interaction.
-        - Overwrite this method to implement programmatic behavior (model_name: mock, dry_run, programmatic, custom).
-        - Base implementation - will be overridden by role-specific implementation
-        - This should never be called directly.
+    def can_send(self, message_type) -> bool:
+        """Check if this player can send the given message type.
+
         Args:
-            messages: A list of dicts that contain the history of the conversation.
-            turn_idx: The index of the current turn.
+            message_type: MessageType enum or string
+
         Returns:
-            The programmatic response as text.
+            bool: True if the player can send this message type
         """
-        raise NotImplementedError("No role-specific implementation found")
+        from src.message import MessageType
+
+        if isinstance(message_type, str):
+            message_type = MessageType.from_string(message_type)
+
+        return self.message_permissions.can_send(message_type)
+
+    def can_receive(self, message_type) -> bool:
+        """Check if this player can receive the given message type.
+
+        Args:
+            message_type: MessageType enum or string
+
+        Returns:
+            bool: True if the player can receive this message type
+        """
+        from src.message import MessageType
+
+        if isinstance(message_type, str):
+            message_type = MessageType.from_string(message_type)
+
+        return self.message_permissions.can_receive(message_type)
+
+    def get_allowed_send_types(self) -> List[str]:
+        """Get list of message types this player can send as strings."""
+        return self.message_permissions.get_send_types_str()
+
+    def get_allowed_receive_types(self) -> List[str]:
+        """Get list of message types this player can receive as strings."""
+        return self.message_permissions.get_receive_types_str()
+
+    def validate_outgoing_message(self, message_type) -> tuple[bool, str]:
+        """Validate if this player can send the given message type.
+
+        Args:
+            message_type: MessageType enum or string
+
+        Returns:
+            tuple: (is_valid, error_message)
+        """
+        from src.message import MessageType
+
+        try:
+            if isinstance(message_type, str):
+                message_type = MessageType.from_string(message_type)
+
+            if not self.can_send(message_type):
+                allowed = ", ".join(self.get_allowed_send_types())
+                return False, f"Role '{self.role}' cannot send {message_type.name} messages. Allowed: {allowed}"
+
+            return True, ""
+        except ValueError as e:
+            return False, str(e)
+
+    def validate_incoming_message(self, message_type) -> tuple[bool, str]:
+        """Validate if this player can receive the given message type.
+
+        Args:
+            message_type: MessageType enum or string
+
+        Returns:
+            tuple: (is_valid, error_message)
+        """
+        from src.message import MessageType
+
+        try:
+            if isinstance(message_type, str):
+                message_type = MessageType.from_string(message_type)
+
+            if not self.can_receive(message_type):
+                allowed = ", ".join(self.get_allowed_receive_types())
+                return False, f"Role '{self.role}' cannot receive {message_type.name} messages. Allowed: {allowed}"
+
+            return True, ""
+        except ValueError as e:
+            return False, str(e)

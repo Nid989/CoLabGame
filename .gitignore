@@ -16,6 +16,7 @@ remove/
 /cache/
 /legacy/
 /debug_output/
+/saved_images/
 
 # Temporary and system files
 .DS_Store
