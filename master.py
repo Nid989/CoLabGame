@@ -99,9 +99,121 @@ class ComputerGame(NetworkDialogueGameMaster):
         templates = self.experiment["templates"]
         roles = templates["roles"]
         graph = templates["graph"]
+
+        # Check if participants dictionary exists for dynamic graph generation
+        participants = self.game_instance.get("participants")
+        if participants:
+            # Generate graph and roles dynamically based on participants
+            graph, roles = self._generate_dynamic_graph_and_roles(participants, roles)
+
         self.game_instance["roles"] = roles
         self.game_instance["graph"] = graph
         self.message_state.update(goal=self.game_instance["task_config"]["instruction"])
+
+    def _generate_dynamic_graph_and_roles(self, participants: Dict, base_roles: List[Dict]) -> Tuple[Dict, List[Dict]]:
+        """Generate graph and roles dynamically based on participants configuration.
+
+        Args:
+            participants: Dictionary with participant configuration
+            base_roles: Base role templates from experiment
+
+        Returns:
+            Tuple[Dict, List[Dict]]: (graph_config, updated_roles)
+        """
+        # Determine if this is single-agent or multi-agent based on participants
+        is_single_agent = len(participants) == 1 and "executor" in participants and participants["executor"]["count"] == 1
+
+        if is_single_agent:
+            # Single-agent scenario
+            graph_config = self._generate_single_agent_graph()
+            updated_roles = self._update_single_agent_roles(base_roles)
+        else:
+            # Multi-agent scenario
+            graph_config = self._generate_multi_agent_graph(participants)
+            updated_roles = self._update_multi_agent_roles(base_roles, participants)
+
+        return graph_config, updated_roles
+
+    def _generate_single_agent_graph(self) -> Dict:
+        """Generate a simple single-agent graph: START -> executor -> END"""
+        return {
+            "nodes": [{"id": "START", "type": "START"}, {"id": "executor", "type": "PLAYER", "role_index": 0}, {"id": "END", "type": "END"}],
+            "edges": [
+                {"from": "START", "to": "executor", "type": "STANDARD", "description": ""},
+                {"from": "executor", "to": "executor", "type": "DECISION", "condition": {"type": "EXECUTE"}, "description": "EXECUTE"},
+                {"from": "executor", "to": "END", "type": "STANDARD", "description": ""},
+            ],
+            "anchor_node": "executor",
+        }
+
+    def _generate_multi_agent_graph(self, participants: Dict) -> Dict:
+        """Generate a multi-agent star topology graph based on participants"""
+        executor_count = participants["executor"]["count"]
+
+        # Create nodes
+        nodes = [{"id": "START", "type": "START"}, {"id": "advisor", "type": "PLAYER", "role_index": 0}]
+
+        # Add executor nodes
+        for i in range(executor_count):
+            executor_id = f"executor_{i + 1}" if executor_count > 1 else "executor"
+            nodes.append(
+                {
+                    "id": executor_id,
+                    "type": "PLAYER",
+                    "role_index": 1,  # All executors use the same role template
+                }
+            )
+
+        nodes.append({"id": "END", "type": "END"})
+
+        # Create edges for star topology
+        edges = [{"from": "START", "to": "advisor", "type": "STANDARD", "description": ""}]
+
+        # Add bidirectional communication between advisor and each executor
+        for i in range(executor_count):
+            executor_id = f"executor_{i + 1}" if executor_count > 1 else "executor"
+
+            # Advisor to executor
+            edges.extend(
+                [
+                    {"from": "advisor", "to": executor_id, "type": "DECISION", "condition": {"type": "REQUEST"}, "description": "REQUEST"},
+                    {"from": "advisor", "to": executor_id, "type": "DECISION", "condition": {"type": "RESPONSE"}, "description": "RESPONSE"},
+                ]
+            )
+
+            # Executor to advisor
+            edges.extend(
+                [
+                    {"from": executor_id, "to": "advisor", "type": "DECISION", "condition": {"type": "REQUEST"}, "description": "REQUEST"},
+                    {"from": executor_id, "to": "advisor", "type": "DECISION", "condition": {"type": "RESPONSE"}, "description": "RESPONSE"},
+                ]
+            )
+
+            # Executor self-loop for EXECUTE messages
+            edges.append({"from": executor_id, "to": executor_id, "type": "DECISION", "condition": {"type": "EXECUTE"}, "description": "EXECUTE"})
+
+        # Add advisor to END for goal completion
+        edges.append({"from": "advisor", "to": "END", "type": "DECISION", "condition": {"type": "STATUS"}, "description": "STATUS"})
+
+        return {"nodes": nodes, "edges": edges, "anchor_node": "advisor"}
+
+    def _update_single_agent_roles(self, base_roles: List[Dict]) -> List[Dict]:
+        """Update roles for single-agent scenario"""
+        # For single-agent, we only need the executor role with base name
+        return [role for role in base_roles if role["name"] == "executor"]
+
+    def _update_multi_agent_roles(self, base_roles: List[Dict], participants: Dict) -> List[Dict]:
+        """Update roles for multi-agent scenario - keep base role names only"""
+        updated_roles = []
+
+        for base_role in base_roles:
+            role_name = base_role["name"]
+            if role_name in participants:
+                # Always keep the base role name (no numbering)
+                # Multiple nodes will point to the same role via role_index
+                updated_roles.append(base_role.copy())
+
+        return updated_roles
 
     def _prepare_game_config(self) -> None:
         """Prepare game configuration dictionary"""
@@ -132,9 +244,6 @@ class ComputerGame(NetworkDialogueGameMaster):
         try:
             self.env = EnvironmentFactory.create_environment(self.environment_type, **self.game_config)
             observation = self.env.reset(task_config=self.game_instance["task_config"])
-            print("--------------------------------")
-            print(observation)
-            print("--------------------------------")
             self.message_state.update(observation=observation)
             if not self.env.start_recording():
                 raise RuntimeError("Failed to start environment recording")
@@ -177,12 +286,16 @@ class ComputerGame(NetworkDialogueGameMaster):
 
                 # Generate dynamic prompt if no initial_prompt is provided
                 if not role_config.initial_prompt:
-                    role_config.initial_prompt = template_manager.generate_prompt(role_config, self.game_config.get("observation_type"))
+                    participants = self.game_instance.get("participants")
+                    role_config.initial_prompt = template_manager.generate_prompt(
+                        role_config, self.game_config.get("observation_type"), participants, node_id
+                    )
+                    print(role_config.initial_prompt)
 
                 # Create player with message permissions
                 player = RoleBasedPlayer(
                     self.player_models[0],
-                    role=role_config.name,
+                    role=node_id,  # Use node_id as the role identifier
                     handler_type=role_config.handler_type,
                     allowed_components=role_config.allowed_components,
                     message_permissions=role_config.message_permissions,
@@ -283,6 +396,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         super()._on_before_game()
         assert self._current_node == self.anchor_node, "Current node must be the anchor node at game start"
         context = self.player_context_formatter.create_context_for(self.message_state, self._current_player)
+        self.message_state.reset(preserve=["observation"])
         if context is None:
             logger.debug("No context generated for player; skipping inital context setup.")
             return
@@ -808,14 +922,14 @@ class ComputerGame(NetworkDialogueGameMaster):
         Returns:
             RoleBasedPlayer or None if not found
         """
-        # Search through all players in the network
-        for node_id, player in self.players.items():
+        # Search through all players using the inherited players_by_names
+        for player in self.players_by_names.values():
             if hasattr(player, "role") and player.role == role_identifier:
                 return player
 
         # If exact match not found, try to find by base role type
         # This handles cases where we're looking for 'executor' but have 'executor_1'
-        for node_id, player in self.players.items():
+        for player in self.players_by_names.values():
             if hasattr(player, "role"):
                 # Extract base role type (e.g., 'executor' from 'executor_1')
                 base_role = player.role.split("_")[0] if "_" in player.role else player.role
@@ -823,25 +937,6 @@ class ComputerGame(NetworkDialogueGameMaster):
                     return player
 
         return None
-
-    def get_all_players_by_base_role(self, base_role: str) -> List[RoleBasedPlayer]:
-        """Get all players that match a base role type (e.g., all executors).
-
-        Args:
-            base_role: The base role type to search for (e.g., 'executor', 'advisor')
-
-        Returns:
-            List of RoleBasedPlayer instances matching the base role
-        """
-        matching_players = []
-        for node_id, player in self.players.items():
-            if hasattr(player, "role"):
-                # Extract base role type (e.g., 'executor' from 'executor_1')
-                player_base_role = player.role.split("_")[0] if "_" in player.role else player.role
-                if player_base_role == base_role:
-                    matching_players.append(player)
-
-        return matching_players
 
 
 class ComputerGameScorer(GameScorer):
@@ -876,7 +971,7 @@ class ComputerGameScorer(GameScorer):
         # Step 4: Calculate and log the final BENCH_SCORE
         # The harmonic mean is only valid if the game was a success
         if success and (efficiency + robustness) > 0:
-            bench_score = (2 * efficiency * robustness) / (efficiency + robustness)
+            bench_score = (2 * efficiency * robustness) / (efficiency + robustness) * 100
         else:
             bench_score = 0
 

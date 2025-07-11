@@ -1,7 +1,7 @@
 {
     "experiments": [
         {
-            "name": "single_executor_a11y_tree",
+            "name": "single_agent_a11y_tree",
             "environment_type": "osworld",
             "templates": {
                 "roles": [
@@ -21,51 +21,17 @@
                         ]
                     }
                 ],
-                "graph": {
-                    "nodes": [
-                        {
-                            "id": "START",
-                            "type": "START"
-                        },
-                        {
-                            "id": "executor",
-                            "type": "PLAYER",
-                            "role_index": 0
-                        },
-                        {
-                            "id": "END",
-                            "type": "END"
-                        }
-                    ],
-                    "edges": [
-                        {
-                            "from": "START",
-                            "to": "executor",
-                            "type": "STANDARD",
-                            "description": ""
-                        },
-                        {
-                            "from": "executor",
-                            "to": "executor",
-                            "type": "DECISION",
-                            "condition": {
-                                "type": "EXECUTE"
-                            },
-                            "description": "EXECUTE"
-                        },
-                        {
-                            "from": "executor",
-                            "to": "END",
-                            "type": "STANDARD",
-                            "description": ""
-                        }
-                    ],
-                    "anchor_node": "executor"
-                }
+                "graph": {}
             },
             "game_instances": [
                 {
                     "game_id": "0322da86-6287-45ca-81fd-efdf46c8e955",
+                    "participants": {
+                        "executor": {
+                            "count": 1,
+                            "domains": []
+                        }
+                    },
                     "task_config": {
                         "id": "0322da86-6287-45ca-81fd-efdf46c8e955",
                         "snapshot": "vscode",
@@ -126,6 +92,12 @@
                 },
                 {
                     "game_id": "8c8ee588-1cbf-412d-8fef-6e8b61e44ae9",
+                    "participants": {
+                        "executor": {
+                            "count": 1,
+                            "domains": []
+                        }
+                    },
                     "task_config": {
                         "id": "8c8ee588-1cbf-412d-8fef-6e8b61e44ae9",
                         "snapshot": "vscode",
@@ -195,13 +167,13 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 15,
+                "max_transitions_per_round": 10,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5
             }
         },
         {
-            "name": "single_executor_screenshot_a11y_tree",
+            "name": "single_agent_screenshot_a11y_tree",
             "environment_type": "osworld",
             "templates": {
                 "roles": [
@@ -221,51 +193,17 @@
                         ]
                     }
                 ],
-                "graph": {
-                    "nodes": [
-                        {
-                            "id": "START",
-                            "type": "START"
-                        },
-                        {
-                            "id": "executor",
-                            "type": "PLAYER",
-                            "role_index": 0
-                        },
-                        {
-                            "id": "END",
-                            "type": "END"
-                        }
-                    ],
-                    "edges": [
-                        {
-                            "from": "START",
-                            "to": "executor",
-                            "type": "STANDARD",
-                            "description": ""
-                        },
-                        {
-                            "from": "executor",
-                            "to": "executor",
-                            "type": "DECISION",
-                            "condition": {
-                                "type": "EXECUTE"
-                            },
-                            "description": "EXECUTE"
-                        },
-                        {
-                            "from": "executor",
-                            "to": "END",
-                            "type": "STANDARD",
-                            "description": ""
-                        }
-                    ],
-                    "anchor_node": "executor"
-                }
+                "graph": {}
             },
             "game_instances": [
                 {
                     "game_id": "0322da86-6287-45ca-81fd-efdf46c8e955",
+                    "participants": {
+                        "executor": {
+                            "count": 1,
+                            "domains": []
+                        }
+                    },
                     "task_config": {
                         "id": "0322da86-6287-45ca-81fd-efdf46c8e955",
                         "snapshot": "vscode",
@@ -326,6 +264,12 @@
                 },
                 {
                     "game_id": "8c8ee588-1cbf-412d-8fef-6e8b61e44ae9",
+                    "participants": {
+                        "executor": {
+                            "count": 1,
+                            "domains": []
+                        }
+                    },
                     "task_config": {
                         "id": "8c8ee588-1cbf-412d-8fef-6e8b61e44ae9",
                         "snapshot": "vscode",
@@ -395,13 +339,13 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 15,
+                "max_transitions_per_round": 10,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5
             }
         },
         {
-            "name": "single_executor_screenshot",
+            "name": "single_agent_screenshot",
             "environment_type": "osworld",
             "templates": {
                 "roles": [
@@ -421,51 +365,17 @@
                         ]
                     }
                 ],
-                "graph": {
-                    "nodes": [
-                        {
-                            "id": "START",
-                            "type": "START"
-                        },
-                        {
-                            "id": "executor",
-                            "type": "PLAYER",
-                            "role_index": 0
-                        },
-                        {
-                            "id": "END",
-                            "type": "END"
-                        }
-                    ],
-                    "edges": [
-                        {
-                            "from": "START",
-                            "to": "executor",
-                            "type": "STANDARD",
-                            "description": ""
-                        },
-                        {
-                            "from": "executor",
-                            "to": "executor",
-                            "type": "DECISION",
-                            "condition": {
-                                "type": "EXECUTE"
-                            },
-                            "description": "EXECUTE"
-                        },
-                        {
-                            "from": "executor",
-                            "to": "END",
-                            "type": "STANDARD",
-                            "description": ""
-                        }
-                    ],
-                    "anchor_node": "executor"
-                }
+                "graph": {}
             },
             "game_instances": [
                 {
                     "game_id": "0322da86-6287-45ca-81fd-efdf46c8e955",
+                    "participants": {
+                        "executor": {
+                            "count": 1,
+                            "domains": []
+                        }
+                    },
                     "task_config": {
                         "id": "0322da86-6287-45ca-81fd-efdf46c8e955",
                         "snapshot": "vscode",
@@ -526,6 +436,12 @@
                 },
                 {
                     "game_id": "8c8ee588-1cbf-412d-8fef-6e8b61e44ae9",
+                    "participants": {
+                        "executor": {
+                            "count": 1,
+                            "domains": []
+                        }
+                    },
                     "task_config": {
                         "id": "8c8ee588-1cbf-412d-8fef-6e8b61e44ae9",
                         "snapshot": "vscode",
@@ -595,7 +511,417 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 15,
+                "max_transitions_per_round": 10,
+                "player_consecutive_violation_limit": 3,
+                "player_total_violation_limit": 5
+            }
+        },
+        {
+            "name": "multi_agent_star_screenshot",
+            "environment_type": "osworld",
+            "templates": {
+                "roles": [
+                    {
+                        "name": "advisor",
+                        "handler_type": "standard",
+                        "message_permissions": {
+                            "send": [
+                                "REQUEST",
+                                "RESPONSE",
+                                "STATUS"
+                            ],
+                            "receive": [
+                                "REQUEST",
+                                "RESPONSE"
+                            ]
+                        },
+                        "allowed_components": [
+                            "request",
+                            "response",
+                            "goal"
+                        ]
+                    },
+                    {
+                        "name": "executor",
+                        "handler_type": "environment",
+                        "message_permissions": {
+                            "send": [
+                                "EXECUTE",
+                                "REQUEST",
+                                "RESPONSE"
+                            ],
+                            "receive": [
+                                "REQUEST",
+                                "RESPONSE"
+                            ]
+                        },
+                        "allowed_components": [
+                            "observation",
+                            "request",
+                            "response"
+                        ]
+                    }
+                ],
+                "graph": {}
+            },
+            "game_instances": [
+                {
+                    "game_id": "0322da86-6287-45ca-81fd-efdf46c8e955",
+                    "participants": {
+                        "advisor": {
+                            "count": 1,
+                            "domains": []
+                        },
+                        "executor": {
+                            "count": 2,
+                            "domains": ["devtools", "file management"]
+                        }
+                    },
+                    "task_config": {
+                        "id": "0322da86-6287-45ca-81fd-efdf46c8e955",
+                        "snapshot": "vscode",
+                        "instruction": "Fix the syntax error in the file 'task_process_16.py' and run it. The program should print the message without errors.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250709_001634/0322da86-6287-45ca-81fd-efdf46c8e955/task_process_16_0322da86.py",
+                                            "path": "/home/user/Desktop/task_process_16_0322da86.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "code",
+                                        "/home/user/Desktop/task_process_16_0322da86.py"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "/bin/bash",
+                                            "-c",
+                                            "cd /home/user/Desktop && python3 task_process_16_0322da86.py > output.txt 2>&1"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "func": "compare_text_file",
+                            "expected": {
+                                "type": "cloud_file",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250709_001634/0322da86-6287-45ca-81fd-efdf46c8e955/expected_output_0322da86.txt",
+                                "dest": "expected_output.txt"
+                            },
+                            "result": {
+                                "type": "vm_file",
+                                "path": "/home/user/Desktop/output.txt",
+                                "dest": "actual_output.txt"
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "8c8ee588-1cbf-412d-8fef-6e8b61e44ae9",
+                    "participants": {
+                        "advisor": {
+                            "count": 1,
+                            "domains": []
+                        },
+                        "executor": {
+                            "count": 2,
+                            "domains": ["devtools", "file management"]
+                        }
+                    },
+                    "task_config": {
+                        "id": "8c8ee588-1cbf-412d-8fef-6e8b61e44ae9",
+                        "snapshot": "vscode",
+                        "instruction": "In the file 'task_display_06.py', change the value of 'taskcode_data_4' from 29 to 58, then run the program.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250709_001634/8c8ee588-1cbf-412d-8fef-6e8b61e44ae9/task_display_06_8c8ee588.py",
+                                            "path": "/home/user/Desktop/task_display_06_8c8ee588.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "code",
+                                        "/home/user/Desktop/task_display_06_8c8ee588.py"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "/bin/bash",
+                                            "-c",
+                                            "cd /home/user/Desktop && python3 task_display_06_8c8ee588.py > output.txt 2>&1"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "func": "compare_text_file",
+                            "expected": {
+                                "type": "cloud_file",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250709_001634/8c8ee588-1cbf-412d-8fef-6e8b61e44ae9/expected_output_8c8ee588.txt",
+                                "dest": "expected_output.txt"
+                            },
+                            "result": {
+                                "type": "vm_file",
+                                "path": "/home/user/Desktop/output.txt",
+                                "dest": "actual_output.txt"
+                            }
+                        }
+                    }
+                }
+            ],
+            "config": {
+                "headless": false,
+                "observation_type": "screenshot",
+                "action_space": "pyautogui",
+                "screen_width": 1920,
+                "screen_height": 1080,
+                "path_to_vm": "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx",
+                "sleep_after_execution": 0,
+                "max_retries": 2,
+                "max_rounds": 10,
+                "max_transitions_per_round": 10,
+                "player_consecutive_violation_limit": 3,
+                "player_total_violation_limit": 5
+            }
+        },
+        {
+            "name": "multi_agent_star_screenshot_a11y_tree",
+            "environment_type": "osworld",
+            "templates": {
+                "roles": [
+                    {
+                        "name": "advisor",
+                        "handler_type": "standard",
+                        "message_permissions": {
+                            "send": [
+                                "REQUEST",
+                                "RESPONSE",
+                                "STATUS"
+                            ],
+                            "receive": [
+                                "REQUEST",
+                                "RESPONSE"
+                            ]
+                        },
+                        "allowed_components": [
+                            "request",
+                            "response",
+                            "goal"
+                        ]
+                    },
+                    {
+                        "name": "executor",
+                        "handler_type": "environment",
+                        "message_permissions": {
+                            "send": [
+                                "EXECUTE",
+                                "REQUEST",
+                                "RESPONSE"
+                            ],
+                            "receive": [
+                                "REQUEST",
+                                "RESPONSE"
+                            ]
+                        },
+                        "allowed_components": [
+                            "observation",
+                            "request",
+                            "response"
+                        ]
+                    }
+                ],
+                "graph": {}
+            },
+            "game_instances": [
+                {
+                    "game_id": "0322da86-6287-45ca-81fd-efdf46c8e955",
+                    "participants": {
+                        "advisor": {
+                            "count": 1,
+                            "domains": []
+                        },
+                        "executor": {
+                            "count": 2,
+                            "domains": ["devtools", "file management"]
+                        }
+                    },
+                    "task_config": {
+                        "id": "0322da86-6287-45ca-81fd-efdf46c8e955",
+                        "snapshot": "vscode",
+                        "instruction": "Fix the syntax error in the file 'task_process_16.py' and run it. The program should print the message without errors.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250709_001634/0322da86-6287-45ca-81fd-efdf46c8e955/task_process_16_0322da86.py",
+                                            "path": "/home/user/Desktop/task_process_16_0322da86.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "code",
+                                        "/home/user/Desktop/task_process_16_0322da86.py"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "/bin/bash",
+                                            "-c",
+                                            "cd /home/user/Desktop && python3 task_process_16_0322da86.py > output.txt 2>&1"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "func": "compare_text_file",
+                            "expected": {
+                                "type": "cloud_file",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250709_001634/0322da86-6287-45ca-81fd-efdf46c8e955/expected_output_0322da86.txt",
+                                "dest": "expected_output.txt"
+                            },
+                            "result": {
+                                "type": "vm_file",
+                                "path": "/home/user/Desktop/output.txt",
+                                "dest": "actual_output.txt"
+                            }
+                        }
+                    }
+                },
+                {
+                    "game_id": "8c8ee588-1cbf-412d-8fef-6e8b61e44ae9",
+                    "participants": {
+                        "advisor": {
+                            "count": 1,
+                            "domains": []
+                        },
+                        "executor": {
+                            "count": 2,
+                            "domains": ["devtools", "file management"]
+                        }
+                    },
+                    "task_config": {
+                        "id": "8c8ee588-1cbf-412d-8fef-6e8b61e44ae9",
+                        "snapshot": "vscode",
+                        "instruction": "In the file 'task_display_06.py', change the value of 'taskcode_data_4' from 29 to 58, then run the program.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250709_001634/8c8ee588-1cbf-412d-8fef-6e8b61e44ae9/task_display_06_8c8ee588.py",
+                                            "path": "/home/user/Desktop/task_display_06_8c8ee588.py"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "code",
+                                        "/home/user/Desktop/task_display_06_8c8ee588.py"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "/bin/bash",
+                                            "-c",
+                                            "cd /home/user/Desktop && python3 task_display_06_8c8ee588.py > output.txt 2>&1"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "func": "compare_text_file",
+                            "expected": {
+                                "type": "cloud_file",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250709_001634/8c8ee588-1cbf-412d-8fef-6e8b61e44ae9/expected_output_8c8ee588.txt",
+                                "dest": "expected_output.txt"
+                            },
+                            "result": {
+                                "type": "vm_file",
+                                "path": "/home/user/Desktop/output.txt",
+                                "dest": "actual_output.txt"
+                            }
+                        }
+                    }
+                }
+            ],
+            "config": {
+                "headless": false,
+                "observation_type": "screenshot_a11y_tree",
+                "action_space": "pyautogui",
+                "screen_width": 1920,
+                "screen_height": 1080,
+                "path_to_vm": "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx",
+                "sleep_after_execution": 0,
+                "max_retries": 2,
+                "max_rounds": 10,
+                "max_transitions_per_round": 10,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5
             }

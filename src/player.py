@@ -24,7 +24,7 @@ class RoleBasedMeta(type(Player)):
         Args:
             cls: The class being instantiated (RoleBasedPlayer).
             model: The model used by the player.
-            role: The role of the player (currently; 'executor' or 'advisor').
+            role: The role of the player (e.g., 'executor', 'advisor', 'executor_1', 'executor_2').
             *args: Positional arguments passed to the class constructor.
             **kwargs: Keyword arguments passed to the class constructor.
         Returns:
@@ -33,23 +33,26 @@ class RoleBasedMeta(type(Player)):
         Raises:
             ValueError: If the specified role is not supported.
         """
-        if role not in cls._role_implementations:
-            raise ValueError(f"Invalid role: {role}. Must be one of {list(cls._role_implementations.keys())}")
+        # Extract base role type for implementation lookup (e.g., 'executor_1' -> 'executor')
+        base_role = role.split("_")[0] if "_" in role else role
+
+        if base_role not in cls._role_implementations:
+            raise ValueError(f"Invalid base role: {base_role}. Must be one of {list(cls._role_implementations.keys())}")
 
         # Create a new class dynamically with the role-specific implementation
         role_class = type(
-            f"{cls.__name__}_{role.capitalize()}",
+            f"{cls.__name__}_{base_role.capitalize()}",
             (cls,),
             {
-                **cls._role_implementations[role],
+                **cls._role_implementations[base_role],
                 "__module__": cls.__module__,
-                "__qualname__": f"{cls.__name__}_{role.capitalize()}",
+                "__qualname__": f"{cls.__name__}_{base_role.capitalize()}",
             },
         )
 
         # Create instance with the role-specific class
         instance = super(RoleBasedMeta, role_class).__call__(model, *args, **kwargs)
-        instance._role = role
+        instance._role = role  # Store the full role (e.g., 'executor_1')
         return instance
 
     @classmethod
@@ -125,7 +128,9 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
 
         # Set message permissions (use defaults if not provided)
         if message_permissions is None:
-            self.message_permissions = MessagePermissions.get_default_for_role(role)
+            # Extract base role type for permission lookup (e.g., 'executor_1' -> 'executor')
+            base_role = role.split("_")[0] if "_" in role else role
+            self.message_permissions = MessagePermissions.get_default_for_role(base_role)
         else:
             self.message_permissions = message_permissions
 

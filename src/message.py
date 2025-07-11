@@ -310,6 +310,7 @@ class PlayerContextFormatter:
         Returns:
             Dict: Dictionary containing formatted context with 'role', 'content', and optional 'image' keys
         """
+        print("create_context_for", message_state.preview())
         handler_type = player.handler_type
         allowed_components = player.allowed_components if player.allowed_components else set()
         footer_prompt = player._footer_prompt if player._footer_prompt else None

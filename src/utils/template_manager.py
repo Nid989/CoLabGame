@@ -22,7 +22,7 @@ class PromptTemplateManager:
             template_dir: Directory containing template files. Defaults to in/prompts/
         """
         if template_dir is None:
-            template_dir = Path(__file__).parent.parent.parent / "in" / "prompts"
+            template_dir = Path(__file__).parent.parent.parent / "resources" / "prompts"
 
         self.template_dir = Path(template_dir)
         self.env = jinja2.Environment(loader=jinja2.FileSystemLoader(str(self.template_dir)), trim_blocks=True, lstrip_blocks=True)
@@ -55,18 +55,22 @@ class PromptTemplateManager:
             return preferred_type
         return message_types[0] if message_types else ""
 
-    def generate_prompt(self, role_config: RoleConfig, observation_type: Optional[str] = None) -> str:
+    def generate_prompt(
+        self, role_config: RoleConfig, observation_type: Optional[str] = None, participants: Optional[Dict] = None, node_id: Optional[str] = None
+    ) -> str:
         """Generate a dynamic prompt based on role configuration.
 
         Args:
             role_config: Configuration for the role
             observation_type: The type of observation for environment-specific prompts.
+            participants: Multi-agent participant configuration for dynamic context
+            node_id: The specific node ID (e.g., 'executor_1', 'executor_2') for context
 
         Returns:
             Generated prompt string
         """
         # Determine template file based on role and handler type
-        template_name = self._get_template_name(role_config)
+        template_name = self._get_template_name(role_config, participants)
 
         try:
             template = self.env.get_template(template_name)
@@ -75,12 +79,12 @@ class PromptTemplateManager:
             template = self._get_base_template(role_config)
 
         # Prepare template context
-        context = self._prepare_template_context(role_config, observation_type)
+        context = self._prepare_template_context(role_config, observation_type, participants, node_id)
 
         # Render the template
         return template.render(**context)
 
-    def _get_template_name(self, role_config: RoleConfig) -> str:
+    def _get_template_name(self, role_config: RoleConfig, participants: Optional[Dict] = None) -> str:
         """Determine the appropriate template file name."""
         role_name = role_config.name
         handler_type = role_config.handler_type
@@ -88,12 +92,20 @@ class PromptTemplateManager:
         # Extract base role type (e.g., 'executor' from 'executor_1')
         base_role = role_name.split("_")[0] if "_" in role_name else role_name
 
+        # Determine if this is a multi-agent scenario
+        is_multi_agent = participants is not None and len(participants.keys()) > 1
+
         # Try role-specific template first
         if base_role == "advisor":
-            return "advisor_prompt.j2"
+            if is_multi_agent:
+                return "multi_agent_advisor_prompt.j2"
+            else:
+                return "advisor_prompt.j2"
         elif base_role == "executor":
-            if handler_type == "environment":
-                return "executor_prompt.j2"
+            if is_multi_agent:
+                return "multi_agent_executor_prompt.j2"
+            elif handler_type == "environment":
+                return "single_agent_executor_prompt.j2"
             else:
                 return "executor_standard_prompt.j2"
         else:
@@ -157,7 +169,9 @@ Proceed with your assigned responsibilities.
 
         return jinja2.Template(base_template)
 
-    def _prepare_template_context(self, role_config: RoleConfig, observation_type: Optional[str] = None) -> Dict:
+    def _prepare_template_context(
+        self, role_config: RoleConfig, observation_type: Optional[str] = None, participants: Optional[Dict] = None, node_id: Optional[str] = None
+    ) -> Dict:
         """Prepare context variables for template rendering."""
         permissions = role_config.message_permissions
         send_types = permissions.get_send_types_str()
@@ -187,8 +201,8 @@ Proceed with your assigned responsibilities.
             "TASK": "Use this type to define or describe tasks.",
         }
 
-        return {
-            "role_name": role_config.name,
+        context = {
+            "role_name": node_id or role_config.name,  # Use node_id for specific instance identification
             "role_description": role_descriptions.get(base_role, "perform your assigned role"),
             "handler_type": role_config.handler_type,
             "send_types": send_types,
@@ -200,6 +214,43 @@ Proceed with your assigned responsibilities.
             "message_descriptions": message_descriptions,
             "observation_type": observation_type,
         }
+
+        # Add multi-agent context if participants provided
+        if participants:
+            # NOTE: assumption is that there is only one advisor and multiple executors
+            executor_count = participants.get("executor", {}).get("count", 0)
+
+            if base_role == "advisor":
+                context.update(
+                    {
+                        "include_executor_domains": executor_count > 1,
+                        "executor_domains": participants.get("executor", {}).get("domains", []) if executor_count > 1 else [],
+                    }
+                )
+            elif base_role == "executor":
+                # Find current executor's domain using node_id
+                own_domain = None
+                if executor_count > 1 and node_id:
+                    # Extract executor number from node_id (e.g., "executor_2" -> 2)
+                    if "_" in node_id:
+                        try:
+                            executor_num = int(node_id.split("_")[1])
+                            domains = participants.get("executor", {}).get("domains", [])
+                            if executor_num <= len(domains):
+                                own_domain = domains[executor_num - 1]
+                        except (ValueError, IndexError):
+                            pass
+
+                context.update(
+                    {
+                        "include_own_domain": executor_count > 1 and own_domain is not None,
+                        "own_domain": own_domain,
+                        "include_other_executors": executor_count > 1,
+                        "total_executors": executor_count,
+                    }
+                )
+
+        return context
 
     def create_message_schema(self, permissions: MessagePermissions) -> Dict:
         """Create a JSON schema for the message format based on permissions.

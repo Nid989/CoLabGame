@@ -117,7 +117,13 @@
             "url": "https://openai.com/policies/row-terms-of-use/"
         },
         "model_config": {
-            "reasoning_model": true
+            "reasoning_model": true,
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            }
         }
     },
     {
