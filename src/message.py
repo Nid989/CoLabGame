@@ -13,6 +13,17 @@ from src.utils.constants import (
 
 logger = logging.getLogger(__name__)
 
+# Mapping for component splitting based on memory configuration
+MEMORY_COMPONENT_MAPPING = {
+    "observation": "forget_observations",
+    "goal": "forget_goals",
+    "plan": "forget_plans",
+    "task": "forget_tasks",
+    "request": "forget_requests",
+    "response": "forget_responses",
+    "tagged_content": "forget_tagged_content",
+}
+
 
 class MessageType(Enum):
     """Enum for valid message types with configuration for 'to' field requirements."""
@@ -308,7 +319,8 @@ class PlayerContextFormatter:
             return None
 
         processed_state = self._process_components(filtered_state)
-        formatted_context = self.assemble(processed_state)
+        # Pass player's memory config to assemble for content splitting
+        formatted_context = self.assemble(processed_state, player_memory_config=getattr(player, "memory_config", None))
 
         if footer_prompt and "content" in formatted_context:
             formatted_context["content"] += f"\n\n{footer_prompt}"
@@ -389,28 +401,75 @@ class PlayerContextFormatter:
                 processed[component_name] = component_value
         return MessageState(**processed)
 
-    def assemble(self, message_state: MessageState) -> Dict:
+    def assemble(self, message_state: MessageState, player_memory_config: Dict = None) -> Dict:
         """Assemble a message context using registered handlers.
 
         Args:
             message_state: Instance of MessageState
+            player_memory_config: Optional memory configuration for content splitting
 
         Returns:
-            Dict: Dictionary with 'role', 'content', and optional 'image' keys
+            Dict: Dictionary with 'role', 'content', and optional 'image' keys,
+                  plus additional keys for forgettable content
         """
         parts = []
         image_paths = []
+        extra_keys = {}  # For forgettable content
+
         for component_name, component_value in message_state.__dict__.items():
             if component_value is None:
                 continue
+
             if component_name in self.format_handlers:
                 handler = self.format_handlers[component_name]
                 formatted_component = handler(component_value)
-                parts.append(formatted_component["content"])
-                image_paths.extend(formatted_component.get("image", []))
+                content = formatted_component["content"]
+                images = formatted_component.get("image", [])
+
+                # Check if this component should be split based on memory config
+                should_split = False
+                if player_memory_config and component_name in MEMORY_COMPONENT_MAPPING:
+                    forget_key = MEMORY_COMPONENT_MAPPING[component_name]
+                    should_split = player_memory_config.get(forget_key, False)
+
+                if should_split:
+                    # Put content in separate key for forgetting
+                    detail_key = f"{component_name}_detail"
+                    extra_keys[detail_key] = f"\n{content}"
+                else:
+                    # Keep in main content
+                    parts.append(content)
+
+                # Handle images
+                if images:
+                    if player_memory_config and player_memory_config.get("forget_images", True):
+                        # Images are always handled by clemcore's forget_extras for "image" key
+                        image_paths.extend(images)
+                    else:
+                        image_paths.extend(images)
             else:
-                parts.append(f"{component_name.capitalize()}: {str(component_value)}")
-        return {"content": "\n".join(parts), "image": image_paths or None}
+                # Fallback for unregistered handlers
+                content = f"{component_name.capitalize()}: {str(component_value)}"
+
+                # Check if should split
+                should_split = False
+                if player_memory_config and component_name in MEMORY_COMPONENT_MAPPING:
+                    forget_key = MEMORY_COMPONENT_MAPPING[component_name]
+                    should_split = player_memory_config.get(forget_key, False)
+
+                if should_split:
+                    detail_key = f"{component_name}_detail"
+                    extra_keys[detail_key] = f"\n{content}"
+                else:
+                    parts.append(content)
+
+        # Build final context
+        context = {"content": "\n".join(parts), "image": image_paths or None}
+
+        # Add extra keys for forgettable content
+        context.update(extra_keys)
+
+        return context
 
     def _format_observation(self, observation: Dict) -> Dict:
         """Format an observation component.

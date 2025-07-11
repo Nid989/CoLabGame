@@ -74,6 +74,7 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         handler_type: str = "standard",
         allowed_components: List[str] = None,
         message_permissions=None,
+        memory_config: Dict[str, bool] = None,  # NEW: Memory configuration
         **kwargs,
     ):
         """Initialize a RoleBasedPlayer with role-specific configuration.
@@ -82,8 +83,37 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
             handler_type: Types of handler ('standard' or 'environment')
             allowed_components: List of message-components permissible for the player's context.
             message_permissions: MessagePermissions instance for this role, or None for defaults.
+            memory_config: Dictionary controlling what content should be forgotten after each turn.
         """
-        super().__init__(model, **kwargs)
+        # Default memory configuration - what to forget
+        default_memory_config = {
+            "forget_observations": False,  # Split and forget observation details
+            "forget_images": True,  # Forget images
+            "forget_goals": False,  # Remember goals
+            "forget_requests": False,  # Remember requests
+            "forget_responses": False,  # Remember responses
+            "forget_plans": False,  # Remember plans
+            "forget_tasks": False,  # Remember tasks
+            "forget_tagged_content": False,  # Remember tagged content
+        }
+
+        # Merge with user-provided config
+        self.memory_config = {**default_memory_config, **(memory_config or {})}
+
+        # Build forget_extras list based on configuration
+        forget_extras = []
+        for component, should_forget in self.memory_config.items():
+            if should_forget:
+                if component == "forget_observations":
+                    forget_extras.append("observation_detail")
+                elif component == "forget_images":
+                    forget_extras.append("image")
+                elif component.startswith("forget_"):
+                    # Convert forget_requests -> request_detail
+                    base_component = component.replace("forget_", "").rstrip("s")  # Remove trailing 's'
+                    forget_extras.append(f"{base_component}_detail")
+
+        super().__init__(model, forget_extras=forget_extras, **kwargs)
         self._role = role
         self._footer_prompt = footer_prompt
         self.handler_type = handler_type

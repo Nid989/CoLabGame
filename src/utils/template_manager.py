@@ -55,11 +55,12 @@ class PromptTemplateManager:
             return preferred_type
         return message_types[0] if message_types else ""
 
-    def generate_prompt(self, role_config: RoleConfig) -> str:
+    def generate_prompt(self, role_config: RoleConfig, observation_type: Optional[str] = None) -> str:
         """Generate a dynamic prompt based on role configuration.
 
         Args:
             role_config: Configuration for the role
+            observation_type: The type of observation for environment-specific prompts.
 
         Returns:
             Generated prompt string
@@ -74,7 +75,7 @@ class PromptTemplateManager:
             template = self._get_base_template(role_config)
 
         # Prepare template context
-        context = self._prepare_template_context(role_config)
+        context = self._prepare_template_context(role_config, observation_type)
 
         # Render the template
         return template.render(**context)
@@ -156,7 +157,7 @@ Proceed with your assigned responsibilities.
 
         return jinja2.Template(base_template)
 
-    def _prepare_template_context(self, role_config: RoleConfig) -> Dict:
+    def _prepare_template_context(self, role_config: RoleConfig, observation_type: Optional[str] = None) -> Dict:
         """Prepare context variables for template rendering."""
         permissions = role_config.message_permissions
         send_types = permissions.get_send_types_str()
@@ -197,6 +198,7 @@ Proceed with your assigned responsibilities.
             "has_addressable_types": len(addressable_types) > 0,
             "allowed_components": role_config.allowed_components,
             "message_descriptions": message_descriptions,
+            "observation_type": observation_type,
         }
 
     def create_message_schema(self, permissions: MessagePermissions) -> Dict:

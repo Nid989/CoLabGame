@@ -132,6 +132,9 @@ class ComputerGame(NetworkDialogueGameMaster):
         try:
             self.env = EnvironmentFactory.create_environment(self.environment_type, **self.game_config)
             observation = self.env.reset(task_config=self.game_instance["task_config"])
+            print("--------------------------------")
+            print(observation)
+            print("--------------------------------")
             self.message_state.update(observation=observation)
             if not self.env.start_recording():
                 raise RuntimeError("Failed to start environment recording")
@@ -174,7 +177,7 @@ class ComputerGame(NetworkDialogueGameMaster):
 
                 # Generate dynamic prompt if no initial_prompt is provided
                 if not role_config.initial_prompt:
-                    role_config.initial_prompt = template_manager.generate_prompt(role_config)
+                    role_config.initial_prompt = template_manager.generate_prompt(role_config, self.game_config.get("observation_type"))
 
                 # Create player with message permissions
                 player = RoleBasedPlayer(
@@ -844,8 +847,8 @@ class ComputerGame(NetworkDialogueGameMaster):
 class ComputerGameScorer(GameScorer):
     def score_episode(self, episode_interactions: Dict):
         # Step 1: Extract key episode-level data
-        success = episode_interactions.get(metrics.METRIC_SUCCESS, False)
-        aborted = episode_interactions.get(metrics.METRIC_ABORTED, False)
+        success = episode_interactions.get("success", False)
+        aborted = episode_interactions.get("aborted", False)
         request_count = episode_interactions.get("request_count", 0)
         request_count_parsed = episode_interactions.get("request_count_parsed", 0)
         request_count_violated = episode_interactions.get("request_count_violated", 0)
