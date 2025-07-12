@@ -23,29 +23,9 @@ You work with an executor agent (**executor**) who can handle general computer a
 
 Communicate using JSON messages. Each message must contain exactly one JSON object inside a `json` code block.
 
-**Structure:**
+**JSON Schema:**
 ```json
-{
-  {{ send_types|message_type_schema }}
-  "type": "message type",
-  
-  // Always "{{ role_name }}"
-  "from": "{{ role_name }}",
-  
-{% if has_addressable_types %}
-  // Required for {{ addressable_types|join(', ') }}
-  {% if include_executor_domains and executor_domains %}
-  // Available executor IDs: {% for domain in executor_domains %}"executor_{{ loop.index }}"{% if not loop.last %}, {% endif %}{% endfor %}
-  
-  {% else %}
-  // Available executor ID: "executor"
-  {% endif %}
-  "to": "target_role",
-{% endif %}
-  
-  // Content specific to the selected message type
-  "content": "string"
-}
+{{ json_schema | tojson(indent=2) }}
 ```
 
 ---

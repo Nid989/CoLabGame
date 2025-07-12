@@ -45,26 +45,9 @@ You are the primary executor working with the Advisor to complete the goal.
 
 Communicate using JSON messages. Each message must contain exactly one JSON object inside a `json` code block.
 
-**Structure:**
-```
-{
-  {{ send_types|message_type_schema }}
-  "type": "message type",
-
-  // Always "{{ role_name }}"
-  "from": "{{ role_name }}",
-  
-  {% if has_addressable_types %}
-  // The "to" field is required for {{ addressable_types|join(', ') }}.
-  // Available IDs:
-  //   "advisor"{% if include_other_executors and total_executors > 1 %}{% for i in range(1, total_executors + 1) %}{% if "executor_" + i|string != role_name %}, "executor_{{ i }}"{% endif %}{% endfor %}{% endif %}
-  
-  "to": "target_role",
-  {% endif %}
-  
-  // Content specific to the selected message type
-  "content": "string"
-}
+**JSON Schema:**
+```json
+{{ json_schema | tojson(indent=2) }}
 ```
 
 ---

@@ -2,6 +2,7 @@
 Template management system for dynamic prompt generation based on role permissions.
 """
 
+import json
 import logging
 from typing import Dict, List, Optional
 from pathlib import Path
@@ -31,6 +32,8 @@ class PromptTemplateManager:
         self.env.filters["join_with_or"] = self._join_with_or
         self.env.filters["message_type_schema"] = self._message_type_schema
         self.env.filters["select_message_type"] = self._select_message_type
+        self.env.filters["generate_json_schema"] = self._generate_json_schema
+        self.env.filters["tojson"] = lambda obj, **kwargs: json.dumps(obj, **kwargs)
 
     def _join_with_or(self, items: List[str]) -> str:
         """Join list items with 'or' for the last item."""
@@ -55,6 +58,68 @@ class PromptTemplateManager:
             return preferred_type
         return message_types[0] if message_types else ""
 
+    def _generate_json_schema(self, permissions: MessagePermissions, role_name: str, participants: Optional[Dict] = None) -> str:
+        """Generate a standard JSON schema for message format."""
+        send_types = permissions.get_send_types_str()
+        requires_to = [mt for mt in permissions.send if mt in MessageType.requires_to()]
+
+        # Build available target roles
+        available_targets = []
+        if participants:
+            if "advisor" in participants:
+                available_targets.append("advisor")
+            if "executor" in participants:
+                executor_count = participants["executor"].get("count", 1)
+                if executor_count == 1:
+                    available_targets.append("executor")
+                else:
+                    for i in range(1, executor_count + 1):
+                        available_targets.append(f"executor_{i}")
+        else:
+            # Default targets
+            available_targets = ["advisor", "executor"]
+
+        # Remove the current agent's ID from available targets
+        if role_name in available_targets:
+            available_targets.remove(role_name)
+
+        # Build properties in logical order: type, from, to, content
+        properties = {
+            "type": {"type": "string", "enum": send_types, "description": f"Message type, must be one of: {', '.join(send_types)}"},
+            "from": {"type": "string", "const": role_name, "description": f"Sender role identifier, must be '{role_name}'"},
+        }
+
+        # Add 'to' field for message types that require it (inserted between 'from' and 'content')
+        if requires_to:
+            properties["to"] = {
+                "type": "string",
+                "enum": available_targets,
+                "description": f"Target role identifier, required for {', '.join([mt.name for mt in requires_to])} messages",
+            }
+
+        # Add content field last to maintain logical order
+        properties["content"] = {"type": "string", "minLength": 1, "description": "Message content"}
+
+        schema = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": properties,
+            "required": ["type", "from", "content"],
+            "additionalProperties": False,
+        }
+
+        # Make 'to' conditionally required
+        if requires_to:
+            schema["anyOf"] = [
+                {"properties": {"type": {"enum": [mt.name for mt in requires_to]}}, "required": ["type", "from", "to", "content"]},
+                {
+                    "properties": {"type": {"enum": [mt.name for mt in permissions.send if mt not in requires_to]}},
+                    "required": ["type", "from", "content"],
+                },
+            ]
+
+        return schema
+
     def generate_prompt(
         self, role_config: RoleConfig, observation_type: Optional[str] = None, participants: Optional[Dict] = None, node_id: Optional[str] = None
     ) -> str:
@@ -77,6 +142,9 @@ class PromptTemplateManager:
         except jinja2.TemplateNotFound:
             logger.warning(f"Template {template_name} not found, falling back to base template")
             template = self._get_base_template(role_config)
+            # For base template, we need to add the JSON schema to the context
+            context = self._prepare_template_context(role_config, observation_type, participants, node_id)
+            return template.render(**context)
 
         # Prepare template context
         context = self._prepare_template_context(role_config, observation_type, participants, node_id)
@@ -126,14 +194,7 @@ You are the **{{ role_name|title }}**, operating in the system. Your role is to 
 You must respond using structured JSON messages. Each reply must contain **exactly one JSON object** enclosed in a markdown code block using the `json` language identifier. The schema is:
 
 ```json
-{
-  "type": "message type",     {{ send_types|message_type_schema }}
-  "from": "{{ role_name }}",  // Always set to "{{ role_name }}"
-  {% if has_addressable_types -%}
-  "to": "target_role",        // Required for {{ addressable_types|join(', ') }} messages
-  {% endif -%}
-  "content": "string"         // Message content
-}
+{{ json_schema | tojson(indent=2) }}
 ```
 
 ---
@@ -213,6 +274,7 @@ Proceed with your assigned responsibilities.
             "allowed_components": role_config.allowed_components,
             "message_descriptions": message_descriptions,
             "observation_type": observation_type,
+            "json_schema": self._generate_json_schema(permissions, node_id or role_config.name, participants),
         }
 
         # Add multi-agent context if participants provided

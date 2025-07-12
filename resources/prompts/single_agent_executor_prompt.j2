@@ -24,16 +24,9 @@ You will receive observations from the environment to guide your actions.
 
 Communicate using JSON messages. Each message must contain exactly one JSON object inside a `json` code block.
 
-**Structure:**
+**JSON Schema:**
 ```json
-{
-  "type": "message type", {{ send_types|message_type_schema }}
-  "from": "{{ role_name }}",  // Always "{{ role_name }}"
-{% if has_addressable_types %}
-  "to": "target_role",  // Required for {{ addressable_types|join(', ') }}
-{% endif %}
-  "content": "string" // Content specific to the selected message type
-}
+{{ json_schema | tojson(indent=2) }}
 ```
 
 ---

@@ -227,7 +227,6 @@ class ComputerGame(NetworkDialogueGameMaster):
         ]
         game_config.update({"use_images": use_images, "require_a11y_tree": require_a11y_tree})
         if use_images:
-            print("use_images")
             game_config["temporary_image_manager"] = TemporaryImageManager(game_id=self.game_instance["game_id"])
         self.game_config = game_config
 
@@ -876,23 +875,17 @@ class ComputerGame(NetworkDialogueGameMaster):
         Called after the game ends (when _does_game_proceed returns False), before exiting the play loop.
         Evaluates the environment, sets success/fail state, and logs episode metrics.
         """
-        # Step 1: Evaluate the environment to get the score, done only once.
-        score = self.env.evaluate()
-        self._episode_score = float(score)  # Store for compute_episode_score
-
-        # Step 2: Determine final success/fail state.
-        if self.aborted:
-            self.fail = True
-            self.success = False
+        # Step 1: Evaluate the episode and set success/fail/score flags
+        if not self.aborted:
+            self._episode_score = float(self.env.evaluate())
+            self.success = self._episode_score == 1.0
+            self.fail = not self.success
         else:
-            if self._episode_score == 1.0:
-                self.success = True
-                self.fail = False
-            else:
-                self.success = False
-                self.fail = True
+            self._episode_score = 0.0
+            self.success = False
+            self.fail = True
 
-        # Step 3: Log all final summary data for the episode.
+        # Step 2: Log all final summary data for the episode.
         self.log_key("success", self.success)
         self.log_key("fail", self.fail)
         self.log_key("aborted", self.aborted)
