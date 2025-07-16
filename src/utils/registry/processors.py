@@ -8,9 +8,7 @@ processors = Registry[Callable]()
 
 
 @processors.register("observation")
-def process_observation(
-    observation: Dict[str, Any], game_config: Dict
-) -> Dict[str, Any]:
+def process_observation(observation: Dict[str, Any], game_config: Dict) -> Dict[str, Any]:
     """Process raw observation data into a standardized format
     Args:
         observation: Raw observation data
@@ -18,11 +16,15 @@ def process_observation(
     Returns:
         Processed observation data
     """
+    # Check if screenshot exists and is a string (local path)
+    if "screenshot" in observation and not isinstance(observation["screenshot"], str):
+        raise ValueError(f"Expected 'screenshot' to be a string (local path), but got {type(observation['screenshot']).__name__}")
+
     processed_obs = {}
     observation_type = game_config.get("observation_type", "a11y_tree")
     platform = game_config.get("platform", "ubuntu")
     a11y_tree_max_tokens = game_config.get("a11y_tree_max_tokens", None)
-    temporary_image_manager = game_config.get("temporary_image_manager", None)
+
     preprocessed_obs = preprocess_observation(
         observation=observation,
         observation_type=observation_type,
@@ -30,17 +32,7 @@ def process_observation(
         a11y_tree_max_tokens=a11y_tree_max_tokens,
     )
     processed_obs.update(preprocessed_obs)
-    if temporary_image_manager and "screenshot" in preprocessed_obs:
-        screenshot = preprocessed_obs["screenshot"]
-        if isinstance(screenshot, bytes):
-            image_path = temporary_image_manager.save_image(screenshot)
-            processed_obs["screenshot"] = image_path
-        else:
-            raise ValueError(
-                "Expected 'screenshot' to be bytes, but got {}".format(
-                    type(screenshot).__name__
-                )
-            )
+
     return processed_obs
 
 

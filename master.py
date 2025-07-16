@@ -3,6 +3,7 @@ import re
 import logging
 from typing import Dict, List, Optional, Union, Tuple, Any
 from PIL import Image
+from dotenv import load_dotenv
 
 from clemcore import backends
 from clemcore.clemgame import (
@@ -20,8 +21,11 @@ from src.environment import Environment, EnvironmentFactory
 from src.player import RoleBasedPlayer
 from src.message import MessageType, MessageState, PlayerContextFormatter
 from src.utils.registry.parsers import parsers, get_parser_metadata, process_content
-from src.utils.general import TemporaryImageManager
+from src.utils.image_manager import ImageManager
 from dataclasses import dataclass
+import os
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -226,13 +230,51 @@ class ComputerGame(NetworkDialogueGameMaster):
             "som",
         ]
         game_config.update({"use_images": use_images, "require_a11y_tree": require_a11y_tree})
-        if use_images:
-            game_config["temporary_image_manager"] = TemporaryImageManager(game_id=self.game_instance["game_id"])
+
+        # Always initialize ImageManager for archival purposes
+        aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+        aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        aws_region = os.getenv("AWS_REGION")
+        s3_bucket = os.getenv("S3_BUCKET_NAME")
+
+        if not all([aws_access_key_id, aws_secret_access_key, aws_region, s3_bucket]):
+            raise ValueError("Missing required S3 environment variables.")
+
+        game_config["image_manager"] = ImageManager(
+            game_id=self.game_instance["game_id"],
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            aws_region=aws_region,
+            s3_bucket=s3_bucket,
+        )
+        self.log_to_self("image_manager_s3_prefix", game_config["image_manager"].s3_prefix)
         self.game_config = game_config
 
     def _initialize_formatter(self) -> None:
         """Initialize the player context formatter with the current game configuration."""
         self.player_context_formatter = PlayerContextFormatter(game_config=self.game_config)
+
+    def _process_screenshot(self, observation: Dict) -> None:
+        """Process screenshot in observation: save to S3 and handle path replacement based on observation type."""
+        # Handles screenshot processing: saves image to S3, updates observation with local path or removes screenshot key based on observation type.
+        if "screenshot" not in observation or not isinstance(observation["screenshot"], bytes):
+            return
+
+        image_manager = self.game_config.get("image_manager")
+        if not image_manager:
+            return
+
+        image_manager.save_image(observation["screenshot"])
+        observation_type = self.game_config.get("observation_type", "a11y_tree")
+
+        if observation_type in ["screenshot", "screenshot_a11y_tree", "som"]:
+            local_path = image_manager.get_latest_image_path()
+            observation["screenshot"] = local_path if local_path else None
+        elif observation_type == "a11y_tree":
+            observation.pop("screenshot", None)
+
+        # Log the wget link for the latest uploaded screenshot image
+        self.log_to_self("screenshot", {"image": [image_manager.get_latest_image_wget_link()]})
 
     def _initialize_environment(self) -> None:
         """Initializes game environment with recording capabilities and retrieves the initial state observation.
@@ -243,6 +285,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         try:
             self.env = EnvironmentFactory.create_environment(self.environment_type, **self.game_config)
             observation = self.env.reset(task_config=self.game_instance["task_config"])
+            self._process_screenshot(observation)
             self.message_state.update(observation=observation)
             if not self.env.start_recording():
                 raise RuntimeError("Failed to start environment recording")
@@ -708,6 +751,9 @@ class ComputerGame(NetworkDialogueGameMaster):
                 observation, reward, done, info = self.env.step(action, self.game_config.get("sleep_after_execution", 0.0))
                 if observation is None:
                     raise GameError(reason="Received None observation after action execution")
+
+                self._process_screenshot(observation)
+
                 if done:
                     self.env_terminated = True
                     logger.info("Game termination signal received (done=True)")
@@ -886,15 +932,26 @@ class ComputerGame(NetworkDialogueGameMaster):
             self.fail = True
 
         # Step 2: Log all final summary data for the episode.
-        self.log_key("success", self.success)
-        self.log_key("fail", self.fail)
-        self.log_key("aborted", self.aborted)
-        self.log_key("episode_score", self._episode_score)
-        self.log_key("request_count", self.request_count)
-        self.log_key("request_count_parsed", self.request_count_parsed)
-        self.log_key("request_count_violated", self.request_count_violated)
-        self.log_key("player_stats", self.player_stats)
-        self.log_key("round_stats", self.round_stats)
+        log_keys = [
+            ("success", self.success),
+            ("fail", self.fail),
+            ("aborted", self.aborted),
+            ("episode_score", self._episode_score),
+            ("request_count", self.request_count),
+            ("request_count_parsed", self.request_count_parsed),
+            ("request_count_violated", self.request_count_violated),
+            ("player_stats", self.player_stats),
+            ("round_stats", self.round_stats),
+        ]
+        for key, value in log_keys:
+            self.log_key(key, value)
+            if key in ["player_stats", "round_stats"]:
+                continue
+            self.log_to_self(key, value)
+
+        # Cleanup image manager resources
+        if "image_manager" in self.game_config:
+            self.game_config["image_manager"].cleanup()
 
     def compute_episode_score(self):
         """
