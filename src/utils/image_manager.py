@@ -44,7 +44,10 @@ class ImageManager:
             region_name=aws_region,
         )
 
-        self.temp_dir = tempfile.mkdtemp(prefix=f"game_sessions/{game_id}_{short_uuid}/")
+        # Correct temp directory creation: avoid slashes in prefix
+        base_temp_dir = tempfile.mkdtemp(prefix="game_sessions_")
+        self.temp_dir = os.path.join(base_temp_dir, f"{game_id}_{short_uuid}")
+        os.makedirs(self.temp_dir, exist_ok=True)
 
         # Registry to track uploaded images: {image_id: local_path}
         self.image_registry: Dict[str, str] = {}

@@ -1,9 +1,12 @@
+import os
 import json
 import re
 import logging
 from typing import Dict, List, Optional, Union, Tuple, Any
 from PIL import Image
+from pathlib import Path
 from dotenv import load_dotenv
+from dataclasses import dataclass
 
 from clemcore import backends
 from clemcore.clemgame import (
@@ -22,8 +25,7 @@ from src.player import RoleBasedPlayer
 from src.message import MessageType, MessageState, PlayerContextFormatter
 from src.utils.registry.parsers import parsers, get_parser_metadata, process_content
 from src.utils.image_manager import ImageManager
-from dataclasses import dataclass
-import os
+from src.utils.s3_manager import S3Manager
 
 load_dotenv()
 
@@ -247,7 +249,7 @@ class ComputerGame(NetworkDialogueGameMaster):
             aws_region=aws_region,
             s3_bucket=s3_bucket,
         )
-        self.log_to_self("image_manager_s3_prefix", game_config["image_manager"].s3_prefix)
+        self.log_key("image_manager_s3_prefix", game_config["image_manager"].s3_prefix)
         self.game_config = game_config
 
     def _initialize_formatter(self) -> None:
@@ -990,8 +992,40 @@ class ComputerGame(NetworkDialogueGameMaster):
 
 
 class ComputerGameScorer(GameScorer):
+    def __init__(self, name: str, experiment: Dict, game_instance: Dict):
+        super().__init__(name, experiment, game_instance)
+
+        # Initialize S3 manager for downloading images
+        aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+        aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        aws_region = os.getenv("AWS_REGION")
+        s3_bucket = os.getenv("S3_BUCKET_NAME")
+
+        self.s3_manager = S3Manager(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, region_name=aws_region)
+        self.s3_bucket = s3_bucket
+        self.image_manager_s3_prefix = None
+
+    def _on_store_scores(self, file_path: str):
+        interactions_dir = str(Path(file_path).parent)
+
+        if self.image_manager_s3_prefix:
+            data_dir = os.path.join(interactions_dir, "images")
+            os.makedirs(data_dir, exist_ok=True)
+            try:
+                downloaded_files = self.s3_manager.download_directory(
+                    bucket_name=self.s3_bucket, s3_prefix=self.image_manager_s3_prefix, local_dir=data_dir
+                )
+                logger.info(f"Successfully downloaded {len(downloaded_files)} files from S3")
+            except Exception as e:
+                logger.error(f"Failed to download S3 directory: {e}")
+        else:
+            logger.info("No image_manager_s3_prefix available, skipping S3 download")
+
     def score_episode(self, episode_interactions: Dict):
-        # Step 1: Extract key episode-level data
+        # Step 1: Store the image manager s3 prefix for later use (_on_store_score)
+        self.image_manager_s3_prefix = episode_interactions.get("image_manager_s3_prefix", None)
+
+        # Step 2: Extract key episode-level data
         success = episode_interactions.get("success", False)
         aborted = episode_interactions.get("aborted", False)
         request_count = episode_interactions.get("request_count", 0)
@@ -999,7 +1033,7 @@ class ComputerGameScorer(GameScorer):
         request_count_violated = episode_interactions.get("request_count_violated", 0)
         player_stats = episode_interactions.get("player_stats", {})
 
-        # Step 2: Log episode-level binary outcomes and raw counts
+        # Step 3: Log episode-level binary outcomes and raw counts
         self.log_episode_score(metrics.METRIC_SUCCESS, 1 if success else 0)
         self.log_episode_score(metrics.METRIC_LOSE, 1 if not success else 0)
         self.log_episode_score(metrics.METRIC_ABORTED, 1 if aborted else 0)
@@ -1007,7 +1041,7 @@ class ComputerGameScorer(GameScorer):
         self.log_episode_score(metrics.METRIC_REQUEST_COUNT_PARSED, request_count_parsed)
         self.log_episode_score(metrics.METRIC_REQUEST_COUNT_VIOLATED, request_count_violated)
 
-        # Step 3: Calculate and log Efficiency and Robustness ratios
+        # Step 4: Calculate and log Efficiency and Robustness ratios
         if request_count > 0:
             efficiency = request_count_parsed / request_count
             robustness = 1 - (request_count_violated / request_count)
@@ -1018,7 +1052,7 @@ class ComputerGameScorer(GameScorer):
         self.log_episode_score("Efficiency", efficiency)
         self.log_episode_score("Robustness", robustness)
 
-        # Step 4: Calculate and log the final BENCH_SCORE
+        # Step 5: Calculate and log the final BENCH_SCORE
         # The harmonic mean is only valid if the game was a success
         if success and (efficiency + robustness) > 0:
             bench_score = (2 * efficiency * robustness) / (efficiency + robustness) * 100
@@ -1027,7 +1061,7 @@ class ComputerGameScorer(GameScorer):
 
         self.log_episode_score(metrics.BENCH_SCORE, bench_score)
 
-        # Step 5: Log per-player scores for detailed episode-level diagnostics
+        # Step 6: Log per-player scores for detailed episode-level diagnostics
         for player_id, stats in player_stats.items():
             p_requests = stats.get("requests", 0)
             p_parsed = stats.get("parsed", 0)
