@@ -178,6 +178,7 @@ pytweening==1.2.0
 pytz==2025.1
 PyWavelets==1.8.0
 PyYAML==6.0.2
+python-dotenv==1.0.1
 qrcode==8.0
 RapidFuzz==3.12.2
 regex==2024.11.6

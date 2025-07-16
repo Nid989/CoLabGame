@@ -35,3 +35,6 @@ vmware_vm_data
 # Project specific files
 key.json
 /in/*.md
+
+# Outputs
+outputs/
