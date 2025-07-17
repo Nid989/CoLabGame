@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 # Mapping for component splitting based on memory configuration
 MEMORY_COMPONENT_MAPPING = {
     "observation": "forget_observations",
-    "goal": "forget_goals",
     "plan": "forget_plans",
     "task": "forget_tasks",
     "request": "forget_requests",
@@ -127,6 +126,7 @@ class RoleConfig:
     allowed_components: List[str] = None
     message_permissions: MessagePermissions = None
     initial_prompt: str = None
+    receives_goal: bool = False
 
     def __post_init__(self):
         """Initialize defaults and validate configuration."""
@@ -150,6 +150,7 @@ class RoleConfig:
         handler_type = data.get("handler_type", "standard")
         allowed_components = data.get("allowed_components", [])
         initial_prompt = data.get("initial_prompt")
+        receives_goal = data.get("receives_goal", False)
 
         # Handle message permissions
         message_permissions = None
@@ -162,6 +163,7 @@ class RoleConfig:
             allowed_components=allowed_components,
             message_permissions=message_permissions,
             initial_prompt=initial_prompt,
+            receives_goal=receives_goal,
         )
 
 
@@ -171,7 +173,6 @@ class MessageState:
 
     Fields:
         observation: Optional dictionary (e.g., {'screenshot': str, 'accessibility_tree': str})
-        goal: Optional goal string
         plan: Optional plan string
         task: Optional task string
         request: Optional request string
@@ -180,7 +181,6 @@ class MessageState:
     """
 
     observation: Optional[Dict[str, Union[str, Image.Image, Dict]]] = None
-    goal: Optional[str] = None
     plan: Optional[str] = None
     task: Optional[str] = None
     request: Optional[str] = None
@@ -224,7 +224,6 @@ class MessageState:
                 elif field == "observation" and not isinstance(value, dict):
                     raise ValueError("Observation must be a dictionary")
                 elif field in {
-                    "goal",
                     "plan",
                     "task",
                     "request",
@@ -284,7 +283,6 @@ class PlayerContextFormatter:
     def _setup_handlers(self):
         """Set up the default format handlers."""
         self.add_handler("observation", self._format_observation)
-        self.add_handler("goal", self._format_goal)
         self.add_handler("plan", self._format_plan)
         self.add_handler("task", self._format_task)
         self.add_handler("request", self._format_request)
@@ -348,7 +346,6 @@ class PlayerContextFormatter:
         """
         handler_rules = {
             "standard": {
-                "goal",
                 "plan",
                 "task",
                 "request",
@@ -357,7 +354,6 @@ class PlayerContextFormatter:
             },
             "environment": {
                 "observation",
-                "goal",
                 "plan",
                 "task",
                 "request",
@@ -506,17 +502,6 @@ class PlayerContextFormatter:
             raise ValueError(f"Invalid observation_type: {observation_type}. Expected one of [{OBSERVATION_TYPE_values}]")
         content, images = formatters[observation_type](observation)
         return {"content": f"## Observation\n{content}", "image": images}
-
-    def _format_goal(self, goal: str) -> Dict:
-        """Format a goal component.
-
-        Args:
-            goal: Goal string
-
-        Returns:
-            Dict: Dictionary with 'content' and 'image' keys
-        """
-        return {"content": f"## Goal\n{goal}", "image": []}
 
     def _format_plan(self, plan: str) -> Dict:
         """Format a plan component.

@@ -114,7 +114,6 @@ class ComputerGame(NetworkDialogueGameMaster):
 
         self.game_instance["roles"] = roles
         self.game_instance["graph"] = graph
-        self.message_state.update(goal=self.game_instance["task_config"]["instruction"])
 
     def _generate_dynamic_graph_and_roles(self, participants: Dict, base_roles: List[Dict]) -> Tuple[Dict, List[Dict]]:
         """Generate graph and roles dynamically based on participants configuration.
@@ -331,8 +330,11 @@ class ComputerGame(NetworkDialogueGameMaster):
                 # Generate dynamic prompt if no initial_prompt is provided
                 if not role_config.initial_prompt:
                     participants = self.game_instance.get("participants")
+                    goal = None
+                    if role_config.receives_goal:
+                        goal = self.game_instance["task_config"]["instruction"]
                     role_config.initial_prompt = template_manager.generate_prompt(
-                        role_config, self.game_config.get("observation_type"), participants, node_id
+                        role_config, self.game_config.get("observation_type"), participants, node_id, goal
                     )
                     print(role_config.initial_prompt)
 
@@ -343,6 +345,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                     handler_type=role_config.handler_type,
                     allowed_components=role_config.allowed_components,
                     message_permissions=role_config.message_permissions,
+                    sliding_window_size=self.game_config.get("sliding_window_size"),
                 )
 
                 self.add_player_to_graph(

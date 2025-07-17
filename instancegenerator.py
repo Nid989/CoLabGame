@@ -182,6 +182,7 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
             "max_transitions_per_round": system_config["max_transitions_per_round"],
             "player_consecutive_violation_limit": system_config["player_consecutive_violation_limit"],
             "player_total_violation_limit": system_config["player_total_violation_limit"],
+            "sliding_window_size": system_config.get("sliding_window_size"),
         }
 
     def _create_single_agent_templates(self):
@@ -205,7 +206,8 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
                 "name": "executor",
                 "handler_type": "environment",
                 "message_permissions": {"send": ["EXECUTE", "STATUS"], "receive": []},
-                "allowed_components": ["goal", "observation"],
+                "allowed_components": ["observation"],
+                "receives_goal": True,
             }
         ]
 
@@ -216,13 +218,15 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
                 "name": "advisor",
                 "handler_type": "standard",
                 "message_permissions": {"send": ["REQUEST", "RESPONSE", "STATUS"], "receive": ["REQUEST", "RESPONSE"]},
-                "allowed_components": ["request", "response", "goal"],
+                "allowed_components": ["request", "response"],
+                "receives_goal": True,
             },
             {
                 "name": "executor",
                 "handler_type": "environment",
                 "message_permissions": {"send": ["EXECUTE", "REQUEST", "RESPONSE"], "receive": ["REQUEST", "RESPONSE"]},
                 "allowed_components": ["observation", "request", "response"],
+                "receives_goal": False,
             },
         ]
 

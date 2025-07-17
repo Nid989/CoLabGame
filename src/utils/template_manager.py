@@ -121,7 +121,12 @@ class PromptTemplateManager:
         return schema
 
     def generate_prompt(
-        self, role_config: RoleConfig, observation_type: Optional[str] = None, participants: Optional[Dict] = None, node_id: Optional[str] = None
+        self,
+        role_config: RoleConfig,
+        observation_type: Optional[str] = None,
+        participants: Optional[Dict] = None,
+        node_id: Optional[str] = None,
+        goal: Optional[str] = None,
     ) -> str:
         """Generate a dynamic prompt based on role configuration.
 
@@ -130,6 +135,7 @@ class PromptTemplateManager:
             observation_type: The type of observation for environment-specific prompts.
             participants: Multi-agent participant configuration for dynamic context
             node_id: The specific node ID (e.g., 'executor_1', 'executor_2') for context
+            goal: Optional goal string to be included in the prompt
 
         Returns:
             Generated prompt string
@@ -143,11 +149,11 @@ class PromptTemplateManager:
             logger.warning(f"Template {template_name} not found, falling back to base template")
             template = self._get_base_template(role_config)
             # For base template, we need to add the JSON schema to the context
-            context = self._prepare_template_context(role_config, observation_type, participants, node_id)
+            context = self._prepare_template_context(role_config, observation_type, participants, node_id, goal)
             return template.render(**context)
 
         # Prepare template context
-        context = self._prepare_template_context(role_config, observation_type, participants, node_id)
+        context = self._prepare_template_context(role_config, observation_type, participants, node_id, goal)
 
         # Render the template
         return template.render(**context)
@@ -231,7 +237,12 @@ Proceed with your assigned responsibilities.
         return jinja2.Template(base_template)
 
     def _prepare_template_context(
-        self, role_config: RoleConfig, observation_type: Optional[str] = None, participants: Optional[Dict] = None, node_id: Optional[str] = None
+        self,
+        role_config: RoleConfig,
+        observation_type: Optional[str] = None,
+        participants: Optional[Dict] = None,
+        node_id: Optional[str] = None,
+        goal: Optional[str] = None,
     ) -> Dict:
         """Prepare context variables for template rendering."""
         permissions = role_config.message_permissions
@@ -275,6 +286,7 @@ Proceed with your assigned responsibilities.
             "message_descriptions": message_descriptions,
             "observation_type": observation_type,
             "json_schema": self._generate_json_schema(permissions, node_id or role_config.name, participants),
+            "goal": goal,
         }
 
         # Add multi-agent context if participants provided

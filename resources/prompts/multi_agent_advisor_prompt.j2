@@ -89,5 +89,13 @@ Use this to signal when the overall goal is complete.
 - If an executor is blocked, consider assigning a discovery task to another executor to unblock them.
 - Base your final decision on goal completion on the reports from executors.
 - If an executor requests a `sudo` password, respond with "password".
+- Base your reasoning accordingly, since you have access only to recent steps and observations; earlier context may be unavailable.
 
-You will now receive your goal and should begin by assigning the first task. 
+{% if goal %}
+---
+## Goal
+
+{{ goal }}
+
+You should begin by assigning the first task.
+{% endif %} 

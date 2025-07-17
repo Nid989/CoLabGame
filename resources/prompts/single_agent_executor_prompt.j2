@@ -71,5 +71,11 @@ Use this to signal when you are finished.
 - Never explain or describe code inside the JSON
 - If a task seems infeasible or cannot be completed, send a `STATUS` message with the content "FAIL".
 - Proceed methodically and logically until the goal is either achieved or determined to be unachievable
+- Base your reasoning accordingly, since you have access only to recent steps and observations; earlier context may be unavailable.
 
-You will now receive your goal. 
+{% if goal %}
+---
+## Goal
+
+{{ goal }}
+{% endif %} 
