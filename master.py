@@ -27,6 +27,8 @@ from src.message import MessageType, MessageState, PlayerContextFormatter
 from src.utils.registry.parsers import parsers, get_parser_metadata, process_content
 from src.utils.image_manager import ImageManager
 from src.utils.s3_manager import S3Manager
+from src.topologies.factory import TopologyFactory
+from src.topologies.base import TopologyType
 
 load_dotenv()
 
@@ -126,97 +128,62 @@ class ComputerGame(NetworkDialogueGameMaster):
         Returns:
             Tuple[Dict, List[Dict]]: (graph_config, updated_roles)
         """
-        # Determine if this is single-agent or multi-agent based on participants
-        is_single_agent = len(participants) == 1 and "executor" in participants and participants["executor"]["count"] == 1
+        # Determine topology type
+        topology_type = self._determine_topology_type(participants)
 
-        if is_single_agent:
-            # Single-agent scenario
-            graph_config = self._generate_single_agent_graph()
-            updated_roles = self._update_single_agent_roles(base_roles)
-        else:
-            # Multi-agent scenario
-            graph_config = self._generate_multi_agent_graph(participants)
-            updated_roles = self._update_multi_agent_roles(base_roles, participants)
+        # Create topology instance
+        topology = TopologyFactory.create_topology(topology_type)
+
+        # Generate graph using topology
+        graph_config = topology.generate_graph(participants)
+
+        # Update roles based on topology
+        updated_roles = self._update_roles_for_topology(base_roles, participants, topology)
 
         return graph_config, updated_roles
 
-    def _generate_single_agent_graph(self) -> Dict:
-        """Generate a simple single-agent graph: START -> executor -> END"""
-        return {
-            "nodes": [{"id": "START", "type": "START"}, {"id": "executor", "type": "PLAYER", "role_index": 0}, {"id": "END", "type": "END"}],
-            "edges": [
-                {"from": "START", "to": "executor", "type": "STANDARD", "description": ""},
-                {"from": "executor", "to": "executor", "type": "DECISION", "condition": {"type": "EXECUTE"}, "description": "EXECUTE"},
-                {"from": "executor", "to": "END", "type": "STANDARD", "description": ""},
-            ],
-            "anchor_node": "executor",
-        }
+    def _determine_topology_type(self, participants: Dict) -> TopologyType:
+        """Determine topology type from participants.
 
-    def _generate_multi_agent_graph(self, participants: Dict) -> Dict:
-        """Generate a multi-agent star topology graph based on participants"""
-        executor_count = participants["executor"]["count"]
+        Args:
+            participants: Dictionary with participant configuration
 
-        # Create nodes
-        nodes = [{"id": "START", "type": "START"}, {"id": "advisor", "type": "PLAYER", "role_index": 0}]
+        Returns:
+            TopologyType: The determined topology type
+        """
+        if len(participants) == 1 and "executor" in participants:
+            return TopologyType.SINGLE
+        else:
+            # Default to star for multi-agent
+            return TopologyType.STAR
 
-        # Add executor nodes
-        for i in range(executor_count):
-            executor_id = f"executor_{i + 1}" if executor_count > 1 else "executor"
-            nodes.append(
-                {
-                    "id": executor_id,
-                    "type": "PLAYER",
-                    "role_index": 1,  # All executors use the same role template
-                }
-            )
+    def _update_roles_for_topology(self, base_roles: List[Dict], participants: Dict, topology) -> List[Dict]:
+        """Update roles based on topology configuration.
 
-        nodes.append({"id": "END", "type": "END"})
+        Args:
+            base_roles: Base role templates from experiment
+            participants: Dictionary with participant configuration
+            topology: Topology instance
 
-        # Create edges for star topology
-        edges = [{"from": "START", "to": "advisor", "type": "STANDARD", "description": ""}]
+        Returns:
+            List[Dict]: Updated role configurations
+        """
+        topology_config = topology.get_config()
 
-        # Add bidirectional communication between advisor and each executor
-        for i in range(executor_count):
-            executor_id = f"executor_{i + 1}" if executor_count > 1 else "executor"
-
-            # Advisor to executor
-            edges.extend(
-                [
-                    {"from": "advisor", "to": executor_id, "type": "DECISION", "condition": {"type": "REQUEST"}, "description": "REQUEST"},
-                    {"from": "advisor", "to": executor_id, "type": "DECISION", "condition": {"type": "RESPONSE"}, "description": "RESPONSE"},
-                ]
-            )
-
-            # Executor to advisor
-            edges.extend(
-                [
-                    {"from": executor_id, "to": "advisor", "type": "DECISION", "condition": {"type": "REQUEST"}, "description": "REQUEST"},
-                    {"from": executor_id, "to": "advisor", "type": "DECISION", "condition": {"type": "RESPONSE"}, "description": "RESPONSE"},
-                ]
-            )
-
-            # Executor self-loop for EXECUTE messages
-            edges.append({"from": executor_id, "to": executor_id, "type": "DECISION", "condition": {"type": "EXECUTE"}, "description": "EXECUTE"})
-
-        # Add advisor to END for goal completion
-        edges.append({"from": "advisor", "to": "END", "type": "DECISION", "condition": {"type": "STATUS"}, "description": "STATUS"})
-
-        return {"nodes": nodes, "edges": edges, "anchor_node": "advisor"}
-
-    def _update_single_agent_roles(self, base_roles: List[Dict]) -> List[Dict]:
-        """Update roles for single-agent scenario"""
-        # For single-agent, we only need the executor role with base name
-        return [role for role in base_roles if role["name"] == "executor"]
-
-    def _update_multi_agent_roles(self, base_roles: List[Dict], participants: Dict) -> List[Dict]:
-        """Update roles for multi-agent scenario - keep base role names only"""
+        # Apply topology-specific role configurations
         updated_roles = []
-
         for base_role in base_roles:
             role_name = base_role["name"]
             if role_name in participants:
-                # Always keep the base role name (no numbering)
-                # Multiple nodes will point to the same role via role_index
+                # Apply topology-specific message permissions
+                if role_name in topology_config.message_permissions:
+                    permissions = topology_config.message_permissions[role_name]
+                    # Convert MessagePermissions object to dictionary format
+                    base_role["message_permissions"] = {
+                        "send": [mt.name for mt in permissions.send],
+                        "receive": [mt.name for mt in permissions.receive],
+                    }
+
                 updated_roles.append(base_role.copy())
 
         return updated_roles

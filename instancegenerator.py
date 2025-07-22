@@ -6,6 +6,8 @@ from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 from clemcore.clemgame.instances import GameInstanceGenerator
+from src.topologies.factory import TopologyFactory
+from src.topologies.base import TopologyType
 import copy
 
 
@@ -151,9 +153,19 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
         return experiment_config.get("participants", {})
 
     def _create_graph_config(self, experiment_name: str, participants: dict) -> dict:
-        """Create graph configuration based on experiment type and participants."""
-        # For now, return empty graph as mentioned that graph generation is handled elsewhere
-        return {}
+        """Create graph configuration using topology factory."""
+        experiment_config = self.unified_config["experiments"][experiment_name]
+        topology_type = experiment_config.get("topology_type", "star")
+
+        # Determine topology type
+        if len(participants) == 1 and "executor" in participants:
+            topology_type = "single"
+
+        # Create topology instance
+        topology = TopologyFactory.create_topology(TopologyType(topology_type))
+
+        # Generate graph using topology
+        return topology.generate_graph(participants)
 
     def _merge_task_config_with_game_config(self, task_config: dict, game_config: dict) -> dict:
         """Merge task configuration with game-specific configuration."""
@@ -297,7 +309,7 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
 
     def validate_participants(self, participants: dict):
         """
-        Validate participants configuration ensuring count == len(domains).
+        Validate participants configuration using topology-specific validation.
 
         Args:
             participants: Dictionary with participant configuration
@@ -307,6 +319,7 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
         Raises:
             ValueError: If validation fails
         """
+        # Basic validation for all topologies
         for role_name, config in participants.items():
             count = config.get("count", 0)
             domains = config.get("domains", [])
@@ -317,81 +330,14 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
             if count < 1:
                 raise ValueError(f"Role '{role_name}': count must be at least 1")
 
-        # Star topology specific validation
-        if "advisor" not in participants:
-            raise ValueError("Star topology requires an 'advisor' role")
+        # Determine topology type and use topology-specific validation
+        if len(participants) == 1 and "executor" in participants:
+            topology_type = TopologyType.SINGLE
+        else:
+            topology_type = TopologyType.STAR
 
-        if participants["advisor"]["count"] != 1:
-            raise ValueError("Star topology requires exactly 1 advisor")
-
-        if "executor" not in participants:
-            raise ValueError("Star topology requires at least one 'executor' role")
-
-    def generate_star_topology_graph(self, participants: dict):
-        """
-        Generate a star topology graph based on participant configuration.
-
-        Args:
-            participants: Dictionary with participant configuration
-                         e.g., {"advisor": {"count": 1, "domains": ["task coordination"]},
-                               "executor": {"count": 2, "domains": ["web automation", "file management"]}}
-
-        Returns:
-            Dict: Complete graph configuration for star topology
-        """
-        self.validate_participants(participants)
-        # NOTE: assumption is that there is only one advisor and multiple executors
-        executor_count = participants["executor"]["count"]
-
-        # Create nodes
-        nodes = [{"id": "START", "type": "START"}, {"id": "advisor", "type": "PLAYER", "role_index": 0}]
-
-        # Add executor nodes
-        for i in range(executor_count):
-            executor_id = f"executor_{i + 1}" if executor_count > 1 else "executor"
-            nodes.append(
-                {
-                    "id": executor_id,
-                    "type": "PLAYER",
-                    "role_index": 1,  # All executors use the same role template
-                }
-            )
-
-        nodes.append({"id": "END", "type": "END"})
-
-        # Create edges for star topology with task flow: advisor -> executor -> advisor -> goal completion
-        edges = [
-            # Start with advisor (advisor initiates the task)
-            {"from": "START", "to": "advisor", "type": "STANDARD", "description": ""}
-        ]
-
-        # Add bidirectional communication between advisor and each executor
-        for i in range(executor_count):
-            executor_id = f"executor_{i + 1}" if executor_count > 1 else "executor"
-
-            # Advisor to executor (sends tasks/requests/responses)
-            edges.extend(
-                [
-                    {"from": "advisor", "to": executor_id, "type": "DECISION", "condition": {"type": "REQUEST"}, "description": "REQUEST"},
-                    {"from": "advisor", "to": executor_id, "type": "DECISION", "condition": {"type": "RESPONSE"}, "description": "RESPONSE"},
-                ]
-            )
-
-            # Executor to advisor (reports completion, asks questions)
-            edges.extend(
-                [
-                    {"from": executor_id, "to": "advisor", "type": "DECISION", "condition": {"type": "REQUEST"}, "description": "REQUEST"},
-                    {"from": executor_id, "to": "advisor", "type": "DECISION", "condition": {"type": "RESPONSE"}, "description": "RESPONSE"},
-                ]
-            )
-
-            # Executor self-loop for EXECUTE actions (performing the actual tasks)
-            edges.append({"from": executor_id, "to": executor_id, "type": "DECISION", "condition": {"type": "EXECUTE"}, "description": "EXECUTE"})
-
-        # Advisor completes the goal (STATUS to END)
-        edges.append({"from": "advisor", "to": "END", "type": "DECISION", "condition": {"type": "STATUS"}, "description": "STATUS"})
-
-        return {"nodes": nodes, "edges": edges, "anchor_node": "advisor"}
+        topology = TopologyFactory.create_topology(topology_type)
+        topology.validate_participants(participants)
 
     def should_include_dynamic_domain_info(self, participants: dict):
         """

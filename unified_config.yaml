@@ -52,6 +52,7 @@ experiments:
   single_agent_a11y_tree_l1:
     environment_type: "osworld"
     observation_type: "a11y_tree"
+    topology_type: "single"
     participants:
       executor:
         count: 1
@@ -60,6 +61,7 @@ experiments:
   single_agent_screenshot_a11y_tree_l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
     participants:
       executor:
         count: 1
@@ -68,6 +70,7 @@ experiments:
   single_agent_screenshot_l1:
     environment_type: "osworld"
     observation_type: "screenshot"
+    topology_type: "single"
     participants:
       executor:
         count: 1
@@ -77,6 +80,7 @@ experiments:
   multi_agent_star_screenshot_l1:
     environment_type: "osworld"
     observation_type: "screenshot"
+    topology_type: "star"
     participants:
       advisor:
         count: 1
@@ -88,6 +92,7 @@ experiments:
   multi_agent_star_screenshot_a11y_tree_l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
     participants:
       advisor:
         count: 1
@@ -100,6 +105,7 @@ experiments:
   single_agent_a11y_tree_l2:
     environment_type: "osworld"
     observation_type: "a11y_tree"
+    topology_type: "single"
     participants:
       executor:
         count: 1
@@ -108,6 +114,7 @@ experiments:
   single_agent_screenshot_a11y_tree_l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
     participants:
       executor:
         count: 1
@@ -116,6 +123,7 @@ experiments:
   single_agent_screenshot_l2:
     environment_type: "osworld"
     observation_type: "screenshot"
+    topology_type: "single"
     participants:
       executor:
         count: 1
@@ -125,6 +133,7 @@ experiments:
   multi_agent_star_screenshot_l2:
     environment_type: "osworld"
     observation_type: "screenshot"
+    topology_type: "star"
     participants:
       advisor:
         count: 1
@@ -136,6 +145,7 @@ experiments:
   multi_agent_star_screenshot_a11y_tree_l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
     participants:
       advisor:
         count: 1
