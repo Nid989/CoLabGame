@@ -2,6 +2,7 @@ import os
 import json
 import re
 import logging
+import shutil
 from typing import Dict, List, Optional, Union, Tuple, Any
 from PIL import Image
 from pathlib import Path
@@ -1013,7 +1014,9 @@ class ComputerGameScorer(GameScorer):
 
         if self.image_manager_s3_prefix:
             data_dir = os.path.join(interactions_dir, "images")
-            os.makedirs(data_dir, exist_ok=True)
+            if os.path.exists(data_dir):
+                shutil.rmtree(data_dir)
+            os.makedirs(data_dir)
             try:
                 downloaded_files = self.s3_manager.download_directory(
                     bucket_name=self.s3_bucket, s3_prefix=self.image_manager_s3_prefix, local_dir=data_dir
@@ -1044,23 +1047,9 @@ class ComputerGameScorer(GameScorer):
         self.log_episode_score(metrics.METRIC_REQUEST_COUNT_PARSED, request_count_parsed)
         self.log_episode_score(metrics.METRIC_REQUEST_COUNT_VIOLATED, request_count_violated)
 
-        # Step 4: Calculate and log Efficiency and Robustness ratios
-        if request_count > 0:
-            efficiency = request_count_parsed / request_count
-            robustness = 1 - (request_count_violated / request_count)
-        else:
-            efficiency = 0
-            robustness = 0
-
-        self.log_episode_score("Efficiency", efficiency)
-        self.log_episode_score("Robustness", robustness)
-
-        # Step 5: Calculate and log the final BENCH_SCORE
-        # The harmonic mean is only valid if the game was a success
-        if success and (efficiency + robustness) > 0:
-            bench_score = (2 * efficiency * robustness) / (efficiency + robustness) * 100
-        else:
-            bench_score = 0
+        # Step 4: Calculate and log the final BENCH_SCORE
+        # BENCH_SCORE equals success * 100
+        bench_score = success * 100
 
         self.log_episode_score(metrics.BENCH_SCORE, bench_score)
 
@@ -1070,15 +1059,6 @@ class ComputerGameScorer(GameScorer):
             p_parsed = stats.get("parsed", 0)
             p_violated = stats.get("violated", 0)
 
-            if p_requests > 0:
-                p_efficiency = p_parsed / p_requests
-                p_robustness = 1 - (p_violated / p_requests)
-            else:
-                p_efficiency = 0
-                p_robustness = 0
-
-            self.log_episode_score(f"{player_id}_Efficiency", p_efficiency)
-            self.log_episode_score(f"{player_id}_Robustness", p_robustness)
             self.log_episode_score(f"{player_id}_{metrics.METRIC_REQUEST_COUNT}", p_requests)
             self.log_episode_score(f"{player_id}_{metrics.METRIC_REQUEST_COUNT_PARSED}", p_parsed)
             self.log_episode_score(f"{player_id}_{metrics.METRIC_REQUEST_COUNT_VIOLATED}", p_violated)

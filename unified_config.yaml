@@ -5,32 +5,51 @@
 task_generation:
   experiments:
     shared:
-      default_code_maintenance:
+      shared_code_maintenance_l1:
         sampling:
           - category: "code_maintenance"
             levels: [1]
-            instances_per_task: 5
+            instances_per_task: 1
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "default_code_maintenance"
+          session_name: "shared_code_maintenance_l1"
+      shared_code_maintenance_l2:
+        sampling:
+          - category: "code_maintenance"
+            levels: [2]
+            instances_per_task: 1
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared_code_maintenance_l2"
 
     individual:
-      single_agent_a11y_tree:
-        use_shared: "default_code_maintenance"
-      single_agent_screenshot_a11y_tree:
-        use_shared: "default_code_maintenance"
-      single_agent_screenshot:
-        use_shared: "default_code_maintenance"
-      multi_agent_star_screenshot:
-        use_shared: "default_code_maintenance"
-      multi_agent_star_screenshot_a11y_tree:
-        use_shared: "default_code_maintenance"
+      single_agent_a11y_tree_l1:
+        use_shared: "shared_code_maintenance_l1"
+      single_agent_screenshot_a11y_tree_l1:
+        use_shared: "shared_code_maintenance_l1"
+      single_agent_screenshot_l1:
+        use_shared: "shared_code_maintenance_l1"
+      multi_agent_star_screenshot_l1:
+        use_shared: "shared_code_maintenance_l1"
+      multi_agent_star_screenshot_a11y_tree_l1:
+        use_shared: "shared_code_maintenance_l1"
+      single_agent_a11y_tree_l2:
+        use_shared: "shared_code_maintenance_l2"
+      single_agent_screenshot_a11y_tree_l2:
+        use_shared: "shared_code_maintenance_l2"
+      single_agent_screenshot_l2:
+        use_shared: "shared_code_maintenance_l2"
+      multi_agent_star_screenshot_l2:
+        use_shared: "shared_code_maintenance_l2"
+      multi_agent_star_screenshot_a11y_tree_l2:
+        use_shared: "shared_code_maintenance_l2"
 
 # Experiment Configuration
 experiments:
-  # Single Agent Experiments
-  single_agent_a11y_tree:
+  # Single Agent Experiments (Level 1)
+  single_agent_a11y_tree_l1:
     environment_type: "osworld"
     observation_type: "a11y_tree"
     participants:
@@ -38,7 +57,7 @@ experiments:
         count: 1
         domains: []
     
-  single_agent_screenshot_a11y_tree:
+  single_agent_screenshot_a11y_tree_l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     participants:
@@ -46,7 +65,7 @@ experiments:
         count: 1
         domains: []
     
-  single_agent_screenshot:
+  single_agent_screenshot_l1:
     environment_type: "osworld"
     observation_type: "screenshot"
     participants:
@@ -54,8 +73,8 @@ experiments:
         count: 1
         domains: []
 
-  # Multi-Agent Experiments
-  multi_agent_star_screenshot:
+  # Multi-Agent Experiments (Level 1)
+  multi_agent_star_screenshot_l1:
     environment_type: "osworld"
     observation_type: "screenshot"
     participants:
@@ -64,9 +83,9 @@ experiments:
         domains: ["task coordination"]
       executor:
         count: 2
-        domains: ["web automation", "file management"]
+        domains: ["web automation", "file management"] # TODO: change domains to something meaningful in context of Ubuntu environment.
     
-  multi_agent_star_screenshot_a11y_tree:
+  multi_agent_star_screenshot_a11y_tree_l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     participants:
@@ -76,6 +95,55 @@ experiments:
       executor:
         count: 2
         domains: ["web automation", "file management"]
+
+  # Single Agent Experiments (Level 2)
+  single_agent_a11y_tree_l2:
+    environment_type: "osworld"
+    observation_type: "a11y_tree"
+    participants:
+      executor:
+        count: 1
+        domains: []
+    
+  single_agent_screenshot_a11y_tree_l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    participants:
+      executor:
+        count: 1
+        domains: []
+    
+  single_agent_screenshot_l2:
+    environment_type: "osworld"
+    observation_type: "screenshot"
+    participants:
+      executor:
+        count: 1
+        domains: []
+
+  # Multi-Agent Experiments (Level 1, 2)
+  multi_agent_star_screenshot_l2:
+    environment_type: "osworld"
+    observation_type: "screenshot"
+    participants:
+      advisor:
+        count: 1
+        domains: ["task coordination"]
+      executor:
+        count: 2
+        domains: ["web automation", "file management"] # TODO: change domains to something meaningful in context of Ubuntu environment.
+    
+  multi_agent_star_screenshot_a11y_tree_l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    participants:
+      advisor:
+        count: 1
+        domains: ["task coordination"]
+      executor:
+        count: 2
+        domains: ["web automation", "file management"]
+
 
 # System Configuration
 system:
@@ -83,7 +151,7 @@ system:
   screen_width: 1920
   screen_height: 1080
   max_rounds: 10
-  max_transitions_per_round: 10
+  max_transitions_per_round: 20
   player_consecutive_violation_limit: 3
   player_total_violation_limit: 5
-  sliding_window_size: 3 
+  sliding_window_size: null

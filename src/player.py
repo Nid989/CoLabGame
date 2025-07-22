@@ -91,7 +91,7 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         # Default memory configuration - what to forget
         default_memory_config = {
             "forget_observations": False,  # Split and forget observation details
-            "forget_images": True,  # Forget images
+            "forget_images": False,  # Forget images
             "forget_goals": False,  # Remember goals
             "forget_requests": False,  # Remember requests
             "forget_responses": False,  # Remember responses
