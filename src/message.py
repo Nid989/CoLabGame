@@ -21,6 +21,7 @@ MEMORY_COMPONENT_MAPPING = {
     "request": "forget_requests",
     "response": "forget_responses",
     "tagged_content": "forget_tagged_content",
+    "blackboard": "forget_blackboard",
 }
 
 
@@ -32,6 +33,7 @@ class MessageType(Enum):
     RESPONSE = auto()
     STATUS = auto()
     TASK = auto()
+    WRITE_BOARD = auto()
 
     @classmethod
     def requires_to(cls) -> Set["MessageType"]:
@@ -178,6 +180,7 @@ class MessageState:
         request: Optional request string
         response: Optional response string
         tagged_content: Optional dictionary of tag-content pairs (e.g., {'note': 'text'})
+        blackboard: Optional list of blackboard entry dictionaries
     """
 
     observation: Optional[Dict[str, Union[str, Image.Image, Dict]]] = None
@@ -186,6 +189,7 @@ class MessageState:
     request: Optional[str] = None
     response: Optional[str] = None
     tagged_content: Optional[Dict[str, str]] = None
+    blackboard: Optional[List[Dict]] = None
 
     def reset(self, preserve: Optional[List[str]] = None):
         """Reset specified fields to None, preserving others.
@@ -223,6 +227,8 @@ class MessageState:
                     raise ValueError("Tagged content must be Dict[str, str]")
                 elif field == "observation" and not isinstance(value, dict):
                     raise ValueError("Observation must be a dictionary")
+                elif field == "blackboard" and not isinstance(value, list):
+                    raise ValueError("Blackboard must be a list of dictionaries")
                 elif field in {
                     "plan",
                     "task",
@@ -288,6 +294,7 @@ class PlayerContextFormatter:
         self.add_handler("request", self._format_request)
         self.add_handler("response", self._format_response)
         self.add_handler("tagged_content", self._format_tagged_content)
+        self.add_handler("blackboard", self._format_blackboard)
 
     def add_handler(self, component_name: str, handler_function):
         """Register a handler function for a specific component type.
@@ -351,6 +358,7 @@ class PlayerContextFormatter:
                 "request",
                 "response",
                 "tagged_content",
+                "blackboard",
             },
             "environment": {
                 "observation",
@@ -359,6 +367,7 @@ class PlayerContextFormatter:
                 "request",
                 "response",
                 "tagged_content",
+                "blackboard",
             },
         }
         valid_components = set(MessageState.__dataclass_fields__)
@@ -559,34 +568,20 @@ class PlayerContextFormatter:
         formatted_parts = [f"## {tag}\n{content}" for tag, content in tagged_content.items()]
         return {"content": "\n\n".join(formatted_parts), "image": []}
 
-
-class PipeStage:
-    """Defines an individual processing stage within a parser pipeline."""
-
-    def __init__(self, processor_func, output_field=None, description=""):
-        self.processor_func = processor_func
-        self.output_field = output_field
-        self.description = description
-
-    def execute(self, content, message_state):
-        """Execute the processing step.
+    def _format_blackboard(self, blackboard: List[Dict]) -> Dict:
+        """Format blackboard entries for context display.
 
         Args:
-            content: The input content to process
-            message_state: MessageState instance to update
+            blackboard: List of blackboard entry dictionaries
 
         Returns:
-            Any: The result of the processor function execution
-
-        Raises:
-            Exception: If the processor function fails
+            Dict: Dictionary with 'content' and 'image' keys
         """
-        is_bound_method = hasattr(self.processor_func, "__self__") and self.processor_func.__self__ is not None
-        try:
-            result = self.processor_func(content)
-        except Exception as e:
-            logger.error(f"{'Bound' if is_bound_method else 'Unbound'} processor function failed: {str(e)}")
-            raise
-        if self.output_field and hasattr(message_state, self.output_field):
-            message_state.update(**{self.output_field: result})
-        return result
+        if not blackboard:
+            return {"content": "", "image": []}
+
+        formatted_entries = []
+        for entry in blackboard:
+            formatted_entries.append(f"### {entry['agent_id']}\n{entry['content']}")
+
+        return {"content": "## Blackboard History\n" + "\n".join(formatted_entries), "image": []}

@@ -169,6 +169,10 @@ class PromptTemplateManager:
         # Determine if this is a multi-agent scenario
         is_multi_agent = participants is not None and len(participants.keys()) > 1
 
+        # Check for blackboard topology
+        if participants and "agent" in participants:
+            return "blackboard_agent_prompt.j2"
+
         # Try role-specific template first
         if base_role == "advisor":
             if is_multi_agent:

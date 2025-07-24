@@ -7,6 +7,7 @@ from typing import Dict, Type
 from .base import BaseTopology, TopologyType
 from .single import SingleTopology
 from .star import StarTopology
+from .blackboard import BlackboardTopology
 
 
 class TopologyFactory:
@@ -15,7 +16,7 @@ class TopologyFactory:
     _topologies: Dict[TopologyType, Type[BaseTopology]] = {
         TopologyType.SINGLE: SingleTopology,
         TopologyType.STAR: StarTopology,
-        # TopologyType.BLACKBOARD: BlackboardTopology,  # Future
+        TopologyType.BLACKBOARD: BlackboardTopology,
     }
 
     @classmethod

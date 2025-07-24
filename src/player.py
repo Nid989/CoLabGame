@@ -88,7 +88,7 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
             message_permissions: MessagePermissions instance for this role, or None for defaults.
             memory_config: Dictionary controlling what content should be forgotten after each turn.
         """
-        # Default memory configuration - what to forget
+        # Default memory configuration
         default_memory_config = {
             "forget_observations": False,  # Split and forget observation details
             "forget_images": False,  # Forget images
@@ -98,6 +98,7 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
             "forget_plans": False,  # Remember plans
             "forget_tasks": False,  # Remember tasks
             "forget_tagged_content": False,  # Remember tagged content
+            "forget_blackboard": False,  # Remember blackboard history
         }
 
         # Merge with user-provided config

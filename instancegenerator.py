@@ -48,27 +48,44 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
     def _validate_unified_config(self, config: dict) -> None:
         """Validate the unified configuration format."""
 
-        # Required top-level keys
-        required_keys = ["task_generation", "experiments", "system"]
+        # Validate all top-level sections exist
+        required_sections = ["task_generation", "experiments", "system", "roles"]
+        for section in required_sections:
+            if section not in config:
+                raise ValueError(f"Missing required section: {section}")
+
+        # Validate each section with dedicated methods
+        self._validate_task_generation(config["task_generation"])
+        self._validate_experiments(config["experiments"])
+        self._validate_system(config["system"])
+        self._validate_roles(config["roles"], config["experiments"])
+
+    def _validate_required_keys(self, data: dict, required_keys: list, context: str) -> None:
+        """Generic validation for required keys."""
         for key in required_keys:
-            if key not in config:
-                raise ValueError(f"Missing required key: {key}")
+            if key not in data:
+                raise ValueError(f"{context} missing required key: {key}")
 
-        # Validate task generation configuration
-        task_gen = config["task_generation"]
-        if "experiments" not in task_gen:
-            raise ValueError("task_generation must contain 'experiments' section")
+    def _validate_data_type(self, data: any, expected_type: type, context: str) -> None:
+        """Generic validation for data types."""
+        if not isinstance(data, expected_type):
+            raise ValueError(f"{context} must be {expected_type.__name__}, got {type(data).__name__}")
 
-        # Validate experiments configuration
-        experiments = config["experiments"]
+    def _validate_task_generation(self, task_gen: dict) -> None:
+        """Validate task generation configuration."""
+        self._validate_required_keys(task_gen, ["experiments"], "task_generation")
+
+    def _validate_experiments(self, experiments: dict) -> None:
+        """Validate experiments configuration."""
         for exp_name, exp_config in experiments.items():
-            required_exp_keys = ["environment_type", "observation_type", "participants"]
-            for key in required_exp_keys:
-                if key not in exp_config:
-                    raise ValueError(f"Experiment '{exp_name}' missing required key: {key}")
+            self._validate_required_keys(exp_config, ["environment_type", "observation_type", "participants"], f"Experiment '{exp_name}'")
 
-        # Validate system configuration
-        system = config["system"]
+            # Validate topology_type if present
+            if "topology_type" in exp_config:
+                self._validate_data_type(exp_config["topology_type"], str, f"Experiment '{exp_name}' topology_type")
+
+    def _validate_system(self, system: dict) -> None:
+        """Validate system configuration."""
         required_system_keys = [
             "vm_path",
             "screen_width",
@@ -78,9 +95,94 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
             "player_consecutive_violation_limit",
             "player_total_violation_limit",
         ]
-        for key in required_system_keys:
-            if key not in system:
-                raise ValueError(f"System config missing required key: {key}")
+        self._validate_required_keys(system, required_system_keys, "System config")
+
+    def _validate_roles(self, roles: dict, experiments: dict) -> None:
+        """Validate roles section with topology consistency."""
+        # Get used topologies
+        used_topologies = self._extract_used_topologies(experiments)
+
+        # Validate topology implementations exist
+        self._validate_topology_types(used_topologies)
+
+        # Validate role configurations for each used topology
+        for topology in used_topologies:
+            self._validate_topology_roles(roles, topology)
+
+        # Validate consistency between roles and experiments
+        self._validate_topology_consistency(roles, experiments)
+
+    def _extract_used_topologies(self, experiments: dict) -> set:
+        """Extract topology types used in experiments."""
+        used_topologies = set()
+        for exp_config in experiments.values():
+            if "topology_type" in exp_config:
+                used_topologies.add(exp_config["topology_type"])
+        return used_topologies
+
+    def _validate_topology_types(self, used_topologies: set) -> None:
+        """Validate that all used topology types have implementations."""
+        from src.topologies.factory import TopologyFactory
+
+        # Get available topologies from factory
+        available_topologies = TopologyFactory.get_available_topologies()
+        available_topology_names = [t.value for t in available_topologies]
+
+        # Check each used topology has an implementation
+        for topology in used_topologies:
+            if topology not in available_topology_names:
+                raise ValueError(
+                    f"Topology '{topology}' is used in experiments but has no implementation. Available topologies: {available_topology_names}"
+                )
+
+    def _validate_topology_roles(self, roles: dict, topology: str) -> None:
+        """Validate roles for a specific topology."""
+        if topology not in roles:
+            raise ValueError(f"Missing roles configuration for topology: {topology}")
+
+        topology_roles = roles[topology]
+        self._validate_data_type(topology_roles, dict, f"Roles for {topology} topology")
+
+        for role_name, role_config in topology_roles.items():
+            self._validate_role_config(role_config, role_name, topology)
+
+    def _validate_role_config(self, role_config: dict, role_name: str, topology: str) -> None:
+        """Validate individual role configuration."""
+        required_fields = ["name", "handler_type", "message_permissions", "allowed_components", "receives_goal"]
+        self._validate_required_keys(role_config, required_fields, f"Role {role_name} in {topology} topology")
+
+        # Validate message_permissions structure
+        self._validate_message_permissions(role_config["message_permissions"], role_name, topology)
+
+    def _validate_message_permissions(self, message_permissions: dict, role_name: str, topology: str) -> None:
+        """Validate message permissions structure."""
+        self._validate_data_type(message_permissions, dict, f"Role {role_name} in {topology} topology message_permissions")
+
+        for perm_type in ["send", "receive"]:
+            if perm_type not in message_permissions:
+                raise ValueError(f"Role {role_name} in {topology} topology: message_permissions missing '{perm_type}' key")
+            self._validate_data_type(
+                message_permissions[perm_type], list, f"Role {role_name} in {topology} topology: message_permissions['{perm_type}']"
+            )
+
+    def _validate_topology_consistency(self, roles: dict, experiments: dict) -> None:
+        """Validate consistency between roles and experiments."""
+        for exp_name, exp_config in experiments.items():
+            if "topology_type" in exp_config:
+                topology = exp_config["topology_type"]
+                participants = exp_config.get("participants", {})
+
+                # Check that participants match role definitions
+                self._validate_participants_roles_consistency(participants, roles.get(topology, {}), exp_name)
+
+    def _validate_participants_roles_consistency(self, participants: dict, topology_roles: dict, exp_name: str) -> None:
+        """Validate that participant roles exist in topology definition."""
+        for participant_role in participants.keys():
+            if participant_role not in topology_roles:
+                raise ValueError(
+                    f"Experiment '{exp_name}' uses participant role '{participant_role}' "
+                    f"but this role is not defined in the topology roles configuration"
+                )
 
     def _create_output_directory(self, experiment_name: str) -> str:
         """Create and return the output directory path for an experiment."""
@@ -180,6 +282,7 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
     def _create_experiment_config(self, experiment_name: str, observation_type: str) -> dict:
         """Create experiment configuration with system settings."""
         system_config = self.unified_config["system"]
+        experiment_config = self.unified_config["experiments"][experiment_name]
 
         return {
             "headless": False,
@@ -195,52 +298,18 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
             "player_consecutive_violation_limit": system_config["player_consecutive_violation_limit"],
             "player_total_violation_limit": system_config["player_total_violation_limit"],
             "sliding_window_size": system_config.get("sliding_window_size"),
+            "topology_type": experiment_config.get("topology_type", "star"),
         }
 
-    def _create_single_agent_templates(self):
-        """Create templates for single-agent scenarios."""
-        return {
-            "roles": self._create_single_agent_roles(),
-            "graph": {},  # Empty - will be generated dynamically based on participants
-        }
+    def _create_agent_templates(self, topology_type: str):
+        """Create templates for agent scenarios using configuration."""
+        roles_config = self.unified_config.get("roles", {})
 
-    def _create_multi_agent_templates(self):
-        """Create templates for multi-agent star topology scenarios."""
-        return {
-            "roles": self._create_multi_agent_roles(),
-            "graph": {},  # Empty - will be generated dynamically based on participants
-        }
+        if topology_type not in roles_config:
+            raise ValueError(f"Unknown topology type: {topology_type}")
 
-    def _create_single_agent_roles(self):
-        """Create executor role configuration for single-agent scenarios."""
-        return [
-            {
-                "name": "executor",
-                "handler_type": "environment",
-                "message_permissions": {"send": ["EXECUTE", "STATUS"], "receive": []},
-                "allowed_components": ["observation"],
-                "receives_goal": True,
-            }
-        ]
-
-    def _create_multi_agent_roles(self):
-        """Create advisor and executor role configurations for multi-agent scenarios."""
-        return [
-            {
-                "name": "advisor",
-                "handler_type": "standard",
-                "message_permissions": {"send": ["REQUEST", "RESPONSE", "STATUS"], "receive": ["REQUEST", "RESPONSE"]},
-                "allowed_components": ["request", "response"],
-                "receives_goal": True,
-            },
-            {
-                "name": "executor",
-                "handler_type": "environment",
-                "message_permissions": {"send": ["EXECUTE", "REQUEST", "RESPONSE"], "receive": ["REQUEST", "RESPONSE"]},
-                "allowed_components": ["observation", "request", "response"],
-                "receives_goal": False,
-            },
-        ]
+        topology_roles = roles_config[topology_type]
+        return {"roles": list(topology_roles.values()), "graph": {}}
 
     def on_generate(self, **kwargs):
         """
@@ -271,10 +340,7 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
 
             # Determine templates (single or multi-agent)
             participants = experiment_config["participants"]
-            if len(participants) == 1 and "executor" in participants:
-                experiment["templates"] = self._create_single_agent_templates()
-            else:
-                experiment["templates"] = self._create_multi_agent_templates()
+            experiment["templates"] = self._create_agent_templates(experiment_config["topology_type"])
 
             # Get the list of task configurations for this experiment
             task_gen_instruction = individual_task_configs.get(experiment_name)
@@ -306,38 +372,6 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
 
             experiment["config"] = self._create_experiment_config(experiment_name, experiment_config["observation_type"])
         print("INFO: Finished generating all experiments.")
-
-    def validate_participants(self, participants: dict):
-        """
-        Validate participants configuration using topology-specific validation.
-
-        Args:
-            participants: Dictionary with participant configuration
-                         e.g., {"advisor": {"count": 1, "domains": ["task coordination"]},
-                               "executor": {"count": 2, "domains": ["web automation", "file management"]}}
-
-        Raises:
-            ValueError: If validation fails
-        """
-        # Basic validation for all topologies
-        for role_name, config in participants.items():
-            count = config.get("count", 0)
-            domains = config.get("domains", [])
-
-            if count != len(domains):
-                raise ValueError(f"Role '{role_name}': count ({count}) must equal number of domains ({len(domains)})")
-
-            if count < 1:
-                raise ValueError(f"Role '{role_name}': count must be at least 1")
-
-        # Determine topology type and use topology-specific validation
-        if len(participants) == 1 and "executor" in participants:
-            topology_type = TopologyType.SINGLE
-        else:
-            topology_type = TopologyType.STAR
-
-        topology = TopologyFactory.create_topology(topology_type)
-        topology.validate_participants(participants)
 
     def should_include_dynamic_domain_info(self, participants: dict):
         """

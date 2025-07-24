@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Any
+from typing import Callable, Dict, Any, List
 
 from .base import Registry
 from ..osworld import preprocess_observation
@@ -94,3 +94,26 @@ def process_additional(additional: Dict[str, str], game_config: Dict) -> Dict[st
         Processed additional content dictionary
     """
     return additional
+
+
+@processors.register("blackboard")
+def process_blackboard(blackboard: List[Dict], game_config: Dict) -> List[Dict]:
+    """Process raw blackboard entries from BlackboardManager into standardized format
+    Args:
+        blackboard: List of blackboard entry dictionaries
+        game_config: Dictionary containing game configuration
+    Returns:
+        Processed blackboard entries list
+    """
+    # Validate blackboard entries structure
+    if not isinstance(blackboard, list):
+        raise ValueError("Blackboard must be a list")
+
+    # Ensure each entry has required fields
+    for entry in blackboard:
+        if not isinstance(entry, dict):
+            raise ValueError("Blackboard entries must be dictionaries")
+        if "agent_id" not in entry or "content" not in entry:
+            raise ValueError("Blackboard entries must have 'agent_id' and 'content' fields")
+
+    return blackboard

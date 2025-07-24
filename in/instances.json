@@ -4,11 +4,11 @@
             "name": "single_agent_a11y_tree_l1",
             "game_instances": [
                 {
-                    "game_id": "d9cd8770-a3ce-44a7-a05c-1e4a5878ce27",
+                    "game_id": "ccc56f5e-2cf9-4c1a-898b-f5e582196fc0",
                     "task_config": {
-                        "id": "27ab63f5-a83c-450f-a17f-63e68bbf17cb",
+                        "id": "01264e91-0649-4492-ab69-aeebba571335",
                         "snapshot": "vscode",
-                        "instruction": "Fix the syntax error in the file 'task_handle_04.py' and run it. The program should print the message without errors.",
+                        "instruction": "Fix the syntax error in the file 'task_handle_01.py' and run it. The program should print the message without errors.",
                         "source": "",
                         "config": [
                             {
@@ -16,8 +16,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040216/27ab63f5-a83c-450f-a17f-63e68bbf17cb/task_handle_04.py",
-                                            "path": "/home/user/Desktop/task_handle_04.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/01264e91-0649-4492-ab69-aeebba571335/task_handle_01.py",
+                                            "path": "/home/user/Desktop/task_handle_01.py"
                                         }
                                     ]
                                 }
@@ -35,7 +35,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_handle_04.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_handle_01.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -43,7 +43,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040216/27ab63f5-a83c-450f-a17f-63e68bbf17cb/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/01264e91-0649-4492-ab69-aeebba571335/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -61,11 +61,11 @@
                     }
                 },
                 {
-                    "game_id": "85c33b23-5fab-4115-884e-c28cfd6542a9",
+                    "game_id": "c385ad81-a72e-4f5f-9632-192927829b57",
                     "task_config": {
-                        "id": "eddeb7d8-0868-4696-aea6-bb17be221372",
+                        "id": "582d3505-0e2f-4e1d-a733-d3d129eb36b3",
                         "snapshot": "vscode",
-                        "instruction": "In the file 'task_calc_01.py', change the value of 'taskcode_result_1' from 46 to 84, then run the program.",
+                        "instruction": "In the file 'task_manage_03.py', change the value of 'taskcode_code_9' from 31 to 92, then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -73,8 +73,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/eddeb7d8-0868-4696-aea6-bb17be221372/task_calc_01.py",
-                                            "path": "/home/user/Desktop/task_calc_01.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/582d3505-0e2f-4e1d-a733-d3d129eb36b3/task_manage_03.py",
+                                            "path": "/home/user/Desktop/task_manage_03.py"
                                         }
                                     ]
                                 }
@@ -92,7 +92,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_calc_01.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_manage_03.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -100,7 +100,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/eddeb7d8-0868-4696-aea6-bb17be221372/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/582d3505-0e2f-4e1d-a733-d3d129eb36b3/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -118,11 +118,11 @@
                     }
                 },
                 {
-                    "game_id": "c133b852-a4cb-45f7-bbeb-fdd3ab69cd9f",
+                    "game_id": "5b8b0726-0dd6-4a44-8333-7258d340a30b",
                     "task_config": {
-                        "id": "2c7552b6-923f-4795-9dea-7173ef04a4a4",
+                        "id": "638a73ff-8ef2-4e92-b198-930e83761477",
                         "snapshot": "vscode",
-                        "instruction": "In the file 'task_process_09.py', uncomment the line that is commented out (remove the # symbol), then run the program.",
+                        "instruction": "In the file 'task_calc_12.py', uncomment the line that is commented out (remove the # symbol), then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -130,8 +130,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/2c7552b6-923f-4795-9dea-7173ef04a4a4/task_process_09.py",
-                                            "path": "/home/user/Desktop/task_process_09.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/638a73ff-8ef2-4e92-b198-930e83761477/task_calc_12.py",
+                                            "path": "/home/user/Desktop/task_calc_12.py"
                                         }
                                     ]
                                 }
@@ -149,7 +149,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_process_09.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_calc_12.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -157,7 +157,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/2c7552b6-923f-4795-9dea-7173ef04a4a4/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/638a73ff-8ef2-4e92-b198-930e83761477/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -175,11 +175,11 @@
                     }
                 },
                 {
-                    "game_id": "0b994988-d4dc-478f-a8f5-21e661cf3160",
+                    "game_id": "e36e8496-87b5-408f-a153-b533825059eb",
                     "task_config": {
-                        "id": "ace0e13a-3037-428f-8f0e-ab7ae8effe91",
+                        "id": "95de4732-20ea-487a-b4bf-6ba886ddb615",
                         "snapshot": "vscode",
-                        "instruction": "Fix the capitalization error in 'task_calc_16.py' and run the program. Python keywords should be lowercase.",
+                        "instruction": "Fix the capitalization error in 'task_process_18.py' and run the program. Python keywords should be lowercase.",
                         "source": "",
                         "config": [
                             {
@@ -187,8 +187,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/ace0e13a-3037-428f-8f0e-ab7ae8effe91/task_calc_16.py",
-                                            "path": "/home/user/Desktop/task_calc_16.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/95de4732-20ea-487a-b4bf-6ba886ddb615/task_process_18.py",
+                                            "path": "/home/user/Desktop/task_process_18.py"
                                         }
                                     ]
                                 }
@@ -206,7 +206,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_calc_16.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_process_18.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -214,7 +214,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/ace0e13a-3037-428f-8f0e-ab7ae8effe91/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/95de4732-20ea-487a-b4bf-6ba886ddb615/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -266,18 +266,19 @@
                 "max_transitions_per_round": 20,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": null
+                "sliding_window_size": null,
+                "topology_type": "single"
             }
         },
         {
             "name": "single_agent_screenshot_a11y_tree_l1",
             "game_instances": [
                 {
-                    "game_id": "c7144435-3991-4953-af4c-1bdb7599149a",
+                    "game_id": "edb1ccec-44e5-4950-bdfe-c7c2193b51dc",
                     "task_config": {
-                        "id": "27ab63f5-a83c-450f-a17f-63e68bbf17cb",
+                        "id": "01264e91-0649-4492-ab69-aeebba571335",
                         "snapshot": "vscode",
-                        "instruction": "Fix the syntax error in the file 'task_handle_04.py' and run it. The program should print the message without errors.",
+                        "instruction": "Fix the syntax error in the file 'task_handle_01.py' and run it. The program should print the message without errors.",
                         "source": "",
                         "config": [
                             {
@@ -285,8 +286,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040216/27ab63f5-a83c-450f-a17f-63e68bbf17cb/task_handle_04.py",
-                                            "path": "/home/user/Desktop/task_handle_04.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/01264e91-0649-4492-ab69-aeebba571335/task_handle_01.py",
+                                            "path": "/home/user/Desktop/task_handle_01.py"
                                         }
                                     ]
                                 }
@@ -304,7 +305,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_handle_04.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_handle_01.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -312,7 +313,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040216/27ab63f5-a83c-450f-a17f-63e68bbf17cb/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/01264e91-0649-4492-ab69-aeebba571335/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -330,11 +331,11 @@
                     }
                 },
                 {
-                    "game_id": "2a6de1f4-49f8-41df-b963-8fe1ecbef0fb",
+                    "game_id": "4d79944e-7c7b-4917-a8d2-afc3d48cd797",
                     "task_config": {
-                        "id": "eddeb7d8-0868-4696-aea6-bb17be221372",
+                        "id": "582d3505-0e2f-4e1d-a733-d3d129eb36b3",
                         "snapshot": "vscode",
-                        "instruction": "In the file 'task_calc_01.py', change the value of 'taskcode_result_1' from 46 to 84, then run the program.",
+                        "instruction": "In the file 'task_manage_03.py', change the value of 'taskcode_code_9' from 31 to 92, then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -342,8 +343,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/eddeb7d8-0868-4696-aea6-bb17be221372/task_calc_01.py",
-                                            "path": "/home/user/Desktop/task_calc_01.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/582d3505-0e2f-4e1d-a733-d3d129eb36b3/task_manage_03.py",
+                                            "path": "/home/user/Desktop/task_manage_03.py"
                                         }
                                     ]
                                 }
@@ -361,7 +362,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_calc_01.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_manage_03.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -369,7 +370,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/eddeb7d8-0868-4696-aea6-bb17be221372/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/582d3505-0e2f-4e1d-a733-d3d129eb36b3/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -387,11 +388,11 @@
                     }
                 },
                 {
-                    "game_id": "e8d36f18-20be-4ca6-9370-4f0ca9d41b08",
+                    "game_id": "4bccd1d8-c583-4990-a173-b5529c9ce850",
                     "task_config": {
-                        "id": "2c7552b6-923f-4795-9dea-7173ef04a4a4",
+                        "id": "638a73ff-8ef2-4e92-b198-930e83761477",
                         "snapshot": "vscode",
-                        "instruction": "In the file 'task_process_09.py', uncomment the line that is commented out (remove the # symbol), then run the program.",
+                        "instruction": "In the file 'task_calc_12.py', uncomment the line that is commented out (remove the # symbol), then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -399,8 +400,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/2c7552b6-923f-4795-9dea-7173ef04a4a4/task_process_09.py",
-                                            "path": "/home/user/Desktop/task_process_09.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/638a73ff-8ef2-4e92-b198-930e83761477/task_calc_12.py",
+                                            "path": "/home/user/Desktop/task_calc_12.py"
                                         }
                                     ]
                                 }
@@ -418,7 +419,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_process_09.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_calc_12.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -426,7 +427,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/2c7552b6-923f-4795-9dea-7173ef04a4a4/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/638a73ff-8ef2-4e92-b198-930e83761477/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -444,11 +445,11 @@
                     }
                 },
                 {
-                    "game_id": "d607601e-518f-4584-8d31-db87ca6b21ac",
+                    "game_id": "565724e5-7c39-40ff-8a70-bee4add033fc",
                     "task_config": {
-                        "id": "ace0e13a-3037-428f-8f0e-ab7ae8effe91",
+                        "id": "95de4732-20ea-487a-b4bf-6ba886ddb615",
                         "snapshot": "vscode",
-                        "instruction": "Fix the capitalization error in 'task_calc_16.py' and run the program. Python keywords should be lowercase.",
+                        "instruction": "Fix the capitalization error in 'task_process_18.py' and run the program. Python keywords should be lowercase.",
                         "source": "",
                         "config": [
                             {
@@ -456,8 +457,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/ace0e13a-3037-428f-8f0e-ab7ae8effe91/task_calc_16.py",
-                                            "path": "/home/user/Desktop/task_calc_16.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/95de4732-20ea-487a-b4bf-6ba886ddb615/task_process_18.py",
+                                            "path": "/home/user/Desktop/task_process_18.py"
                                         }
                                     ]
                                 }
@@ -475,7 +476,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_calc_16.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_process_18.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -483,7 +484,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/ace0e13a-3037-428f-8f0e-ab7ae8effe91/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/95de4732-20ea-487a-b4bf-6ba886ddb615/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -535,18 +536,19 @@
                 "max_transitions_per_round": 20,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": null
+                "sliding_window_size": null,
+                "topology_type": "single"
             }
         },
         {
             "name": "single_agent_screenshot_l1",
             "game_instances": [
                 {
-                    "game_id": "a4653730-b6da-47c2-ae41-bc36611d06c0",
+                    "game_id": "be54b169-a29c-40d3-9c9b-aaf3b7874090",
                     "task_config": {
-                        "id": "27ab63f5-a83c-450f-a17f-63e68bbf17cb",
+                        "id": "01264e91-0649-4492-ab69-aeebba571335",
                         "snapshot": "vscode",
-                        "instruction": "Fix the syntax error in the file 'task_handle_04.py' and run it. The program should print the message without errors.",
+                        "instruction": "Fix the syntax error in the file 'task_handle_01.py' and run it. The program should print the message without errors.",
                         "source": "",
                         "config": [
                             {
@@ -554,8 +556,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040216/27ab63f5-a83c-450f-a17f-63e68bbf17cb/task_handle_04.py",
-                                            "path": "/home/user/Desktop/task_handle_04.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/01264e91-0649-4492-ab69-aeebba571335/task_handle_01.py",
+                                            "path": "/home/user/Desktop/task_handle_01.py"
                                         }
                                     ]
                                 }
@@ -573,7 +575,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_handle_04.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_handle_01.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -581,7 +583,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040216/27ab63f5-a83c-450f-a17f-63e68bbf17cb/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/01264e91-0649-4492-ab69-aeebba571335/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -599,11 +601,11 @@
                     }
                 },
                 {
-                    "game_id": "6bb37164-8983-4117-a3fd-1748e7657249",
+                    "game_id": "008a95c4-9d24-4392-b7fa-523fc8ee8e3a",
                     "task_config": {
-                        "id": "eddeb7d8-0868-4696-aea6-bb17be221372",
+                        "id": "582d3505-0e2f-4e1d-a733-d3d129eb36b3",
                         "snapshot": "vscode",
-                        "instruction": "In the file 'task_calc_01.py', change the value of 'taskcode_result_1' from 46 to 84, then run the program.",
+                        "instruction": "In the file 'task_manage_03.py', change the value of 'taskcode_code_9' from 31 to 92, then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -611,8 +613,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/eddeb7d8-0868-4696-aea6-bb17be221372/task_calc_01.py",
-                                            "path": "/home/user/Desktop/task_calc_01.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/582d3505-0e2f-4e1d-a733-d3d129eb36b3/task_manage_03.py",
+                                            "path": "/home/user/Desktop/task_manage_03.py"
                                         }
                                     ]
                                 }
@@ -630,7 +632,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_calc_01.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_manage_03.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -638,7 +640,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/eddeb7d8-0868-4696-aea6-bb17be221372/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/582d3505-0e2f-4e1d-a733-d3d129eb36b3/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -656,11 +658,11 @@
                     }
                 },
                 {
-                    "game_id": "5a7d4b95-468b-40a1-b29b-3cdafd531ac3",
+                    "game_id": "e8eae327-13ac-4b06-9709-c25514243bf6",
                     "task_config": {
-                        "id": "2c7552b6-923f-4795-9dea-7173ef04a4a4",
+                        "id": "638a73ff-8ef2-4e92-b198-930e83761477",
                         "snapshot": "vscode",
-                        "instruction": "In the file 'task_process_09.py', uncomment the line that is commented out (remove the # symbol), then run the program.",
+                        "instruction": "In the file 'task_calc_12.py', uncomment the line that is commented out (remove the # symbol), then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -668,8 +670,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/2c7552b6-923f-4795-9dea-7173ef04a4a4/task_process_09.py",
-                                            "path": "/home/user/Desktop/task_process_09.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/638a73ff-8ef2-4e92-b198-930e83761477/task_calc_12.py",
+                                            "path": "/home/user/Desktop/task_calc_12.py"
                                         }
                                     ]
                                 }
@@ -687,7 +689,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_process_09.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_calc_12.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -695,7 +697,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/2c7552b6-923f-4795-9dea-7173ef04a4a4/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/638a73ff-8ef2-4e92-b198-930e83761477/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -713,11 +715,11 @@
                     }
                 },
                 {
-                    "game_id": "8bbcbfa1-c711-40c0-86c2-9e00c95ca6ef",
+                    "game_id": "b8d49f53-788d-4250-96e0-019f38731e45",
                     "task_config": {
-                        "id": "ace0e13a-3037-428f-8f0e-ab7ae8effe91",
+                        "id": "95de4732-20ea-487a-b4bf-6ba886ddb615",
                         "snapshot": "vscode",
-                        "instruction": "Fix the capitalization error in 'task_calc_16.py' and run the program. Python keywords should be lowercase.",
+                        "instruction": "Fix the capitalization error in 'task_process_18.py' and run the program. Python keywords should be lowercase.",
                         "source": "",
                         "config": [
                             {
@@ -725,8 +727,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/ace0e13a-3037-428f-8f0e-ab7ae8effe91/task_calc_16.py",
-                                            "path": "/home/user/Desktop/task_calc_16.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/95de4732-20ea-487a-b4bf-6ba886ddb615/task_process_18.py",
+                                            "path": "/home/user/Desktop/task_process_18.py"
                                         }
                                     ]
                                 }
@@ -744,7 +746,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_calc_16.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_process_18.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -752,7 +754,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/ace0e13a-3037-428f-8f0e-ab7ae8effe91/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/95de4732-20ea-487a-b4bf-6ba886ddb615/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -804,18 +806,19 @@
                 "max_transitions_per_round": 20,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": null
+                "sliding_window_size": null,
+                "topology_type": "single"
             }
         },
         {
             "name": "multi_agent_star_screenshot_l1",
             "game_instances": [
                 {
-                    "game_id": "972bd819-ee36-47df-b502-0365a72ebe62",
+                    "game_id": "305d6e97-1a95-492a-b5e0-83d4bda3873e",
                     "task_config": {
-                        "id": "27ab63f5-a83c-450f-a17f-63e68bbf17cb",
+                        "id": "01264e91-0649-4492-ab69-aeebba571335",
                         "snapshot": "vscode",
-                        "instruction": "Fix the syntax error in the file 'task_handle_04.py' and run it. The program should print the message without errors.",
+                        "instruction": "Fix the syntax error in the file 'task_handle_01.py' and run it. The program should print the message without errors.",
                         "source": "",
                         "config": [
                             {
@@ -823,8 +826,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040216/27ab63f5-a83c-450f-a17f-63e68bbf17cb/task_handle_04.py",
-                                            "path": "/home/user/Desktop/task_handle_04.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/01264e91-0649-4492-ab69-aeebba571335/task_handle_01.py",
+                                            "path": "/home/user/Desktop/task_handle_01.py"
                                         }
                                     ]
                                 }
@@ -842,7 +845,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_handle_04.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_handle_01.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -850,7 +853,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040216/27ab63f5-a83c-450f-a17f-63e68bbf17cb/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/01264e91-0649-4492-ab69-aeebba571335/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -877,11 +880,11 @@
                     }
                 },
                 {
-                    "game_id": "7b7493fa-8c7d-468a-be1d-214fbb906b52",
+                    "game_id": "ffc3b253-a95c-4d8e-aac1-578ae3a0b533",
                     "task_config": {
-                        "id": "eddeb7d8-0868-4696-aea6-bb17be221372",
+                        "id": "582d3505-0e2f-4e1d-a733-d3d129eb36b3",
                         "snapshot": "vscode",
-                        "instruction": "In the file 'task_calc_01.py', change the value of 'taskcode_result_1' from 46 to 84, then run the program.",
+                        "instruction": "In the file 'task_manage_03.py', change the value of 'taskcode_code_9' from 31 to 92, then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -889,8 +892,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/eddeb7d8-0868-4696-aea6-bb17be221372/task_calc_01.py",
-                                            "path": "/home/user/Desktop/task_calc_01.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/582d3505-0e2f-4e1d-a733-d3d129eb36b3/task_manage_03.py",
+                                            "path": "/home/user/Desktop/task_manage_03.py"
                                         }
                                     ]
                                 }
@@ -908,7 +911,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_calc_01.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_manage_03.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -916,7 +919,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/eddeb7d8-0868-4696-aea6-bb17be221372/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/582d3505-0e2f-4e1d-a733-d3d129eb36b3/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -943,11 +946,11 @@
                     }
                 },
                 {
-                    "game_id": "98027b63-fb78-4eda-ad3e-fcc47761654b",
+                    "game_id": "837f8a07-dfa8-4362-86a4-53d85df4f285",
                     "task_config": {
-                        "id": "2c7552b6-923f-4795-9dea-7173ef04a4a4",
+                        "id": "638a73ff-8ef2-4e92-b198-930e83761477",
                         "snapshot": "vscode",
-                        "instruction": "In the file 'task_process_09.py', uncomment the line that is commented out (remove the # symbol), then run the program.",
+                        "instruction": "In the file 'task_calc_12.py', uncomment the line that is commented out (remove the # symbol), then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -955,8 +958,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/2c7552b6-923f-4795-9dea-7173ef04a4a4/task_process_09.py",
-                                            "path": "/home/user/Desktop/task_process_09.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/638a73ff-8ef2-4e92-b198-930e83761477/task_calc_12.py",
+                                            "path": "/home/user/Desktop/task_calc_12.py"
                                         }
                                     ]
                                 }
@@ -974,7 +977,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_process_09.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_calc_12.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -982,7 +985,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/2c7552b6-923f-4795-9dea-7173ef04a4a4/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/638a73ff-8ef2-4e92-b198-930e83761477/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -1009,11 +1012,11 @@
                     }
                 },
                 {
-                    "game_id": "a0dcece9-9d08-4db6-a506-c2ba3d15d051",
+                    "game_id": "30fb0123-195f-4246-9e86-5e2ef4c24061",
                     "task_config": {
-                        "id": "ace0e13a-3037-428f-8f0e-ab7ae8effe91",
+                        "id": "95de4732-20ea-487a-b4bf-6ba886ddb615",
                         "snapshot": "vscode",
-                        "instruction": "Fix the capitalization error in 'task_calc_16.py' and run the program. Python keywords should be lowercase.",
+                        "instruction": "Fix the capitalization error in 'task_process_18.py' and run the program. Python keywords should be lowercase.",
                         "source": "",
                         "config": [
                             {
@@ -1021,8 +1024,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/ace0e13a-3037-428f-8f0e-ab7ae8effe91/task_calc_16.py",
-                                            "path": "/home/user/Desktop/task_calc_16.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/95de4732-20ea-487a-b4bf-6ba886ddb615/task_process_18.py",
+                                            "path": "/home/user/Desktop/task_process_18.py"
                                         }
                                     ]
                                 }
@@ -1040,7 +1043,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_calc_16.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_process_18.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -1048,7 +1051,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/ace0e13a-3037-428f-8f0e-ab7ae8effe91/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/95de4732-20ea-487a-b4bf-6ba886ddb615/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -1135,18 +1138,19 @@
                 "max_transitions_per_round": 20,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": null
+                "sliding_window_size": null,
+                "topology_type": "star"
             }
         },
         {
             "name": "multi_agent_star_screenshot_a11y_tree_l1",
             "game_instances": [
                 {
-                    "game_id": "48255d45-a8a9-4e70-a95a-1b37b945edcf",
+                    "game_id": "14bb9074-caf5-4197-9bf2-bc4aff0dbafd",
                     "task_config": {
-                        "id": "27ab63f5-a83c-450f-a17f-63e68bbf17cb",
+                        "id": "01264e91-0649-4492-ab69-aeebba571335",
                         "snapshot": "vscode",
-                        "instruction": "Fix the syntax error in the file 'task_handle_04.py' and run it. The program should print the message without errors.",
+                        "instruction": "Fix the syntax error in the file 'task_handle_01.py' and run it. The program should print the message without errors.",
                         "source": "",
                         "config": [
                             {
@@ -1154,8 +1158,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040216/27ab63f5-a83c-450f-a17f-63e68bbf17cb/task_handle_04.py",
-                                            "path": "/home/user/Desktop/task_handle_04.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/01264e91-0649-4492-ab69-aeebba571335/task_handle_01.py",
+                                            "path": "/home/user/Desktop/task_handle_01.py"
                                         }
                                     ]
                                 }
@@ -1173,7 +1177,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_handle_04.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_handle_01.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -1181,7 +1185,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040216/27ab63f5-a83c-450f-a17f-63e68bbf17cb/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/01264e91-0649-4492-ab69-aeebba571335/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -1195,24 +1199,24 @@
                         "advisor": {
                             "count": 1,
                             "domains": [
-                                "Task orchestration & delegation"
+                                "task coordination"
                             ]
                         },
                         "executor": {
                             "count": 2,
                             "domains": [
-                                "Issue detection",
-                                "Issue fix & validation"
+                                "web automation",
+                                "file management"
                             ]
                         }
                     }
                 },
                 {
-                    "game_id": "7e8d31bb-163f-4693-bc47-06bf328c0c95",
+                    "game_id": "ad6b98c0-1dfb-439c-9151-5baa50ffc937",
                     "task_config": {
-                        "id": "eddeb7d8-0868-4696-aea6-bb17be221372",
+                        "id": "582d3505-0e2f-4e1d-a733-d3d129eb36b3",
                         "snapshot": "vscode",
-                        "instruction": "In the file 'task_calc_01.py', change the value of 'taskcode_result_1' from 46 to 84, then run the program.",
+                        "instruction": "In the file 'task_manage_03.py', change the value of 'taskcode_code_9' from 31 to 92, then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -1220,8 +1224,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/eddeb7d8-0868-4696-aea6-bb17be221372/task_calc_01.py",
-                                            "path": "/home/user/Desktop/task_calc_01.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/582d3505-0e2f-4e1d-a733-d3d129eb36b3/task_manage_03.py",
+                                            "path": "/home/user/Desktop/task_manage_03.py"
                                         }
                                     ]
                                 }
@@ -1239,7 +1243,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_calc_01.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_manage_03.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -1247,7 +1251,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/eddeb7d8-0868-4696-aea6-bb17be221372/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/582d3505-0e2f-4e1d-a733-d3d129eb36b3/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -1261,24 +1265,24 @@
                         "advisor": {
                             "count": 1,
                             "domains": [
-                                "Task orchestration & delegation"
+                                "task coordination"
                             ]
                         },
                         "executor": {
                             "count": 2,
                             "domains": [
-                                "Issue detection",
-                                "Issue fix & validation"
+                                "web automation",
+                                "file management"
                             ]
                         }
                     }
                 },
                 {
-                    "game_id": "173b2301-94cf-418c-93d6-c5772d4c93a0",
+                    "game_id": "29c9ff9f-7f43-421d-9007-feb5121d9f6e",
                     "task_config": {
-                        "id": "2c7552b6-923f-4795-9dea-7173ef04a4a4",
+                        "id": "638a73ff-8ef2-4e92-b198-930e83761477",
                         "snapshot": "vscode",
-                        "instruction": "In the file 'task_process_09.py', uncomment the line that is commented out (remove the # symbol), then run the program.",
+                        "instruction": "In the file 'task_calc_12.py', uncomment the line that is commented out (remove the # symbol), then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -1286,8 +1290,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/2c7552b6-923f-4795-9dea-7173ef04a4a4/task_process_09.py",
-                                            "path": "/home/user/Desktop/task_process_09.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/638a73ff-8ef2-4e92-b198-930e83761477/task_calc_12.py",
+                                            "path": "/home/user/Desktop/task_calc_12.py"
                                         }
                                     ]
                                 }
@@ -1305,7 +1309,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_process_09.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_calc_12.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -1313,7 +1317,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/2c7552b6-923f-4795-9dea-7173ef04a4a4/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/638a73ff-8ef2-4e92-b198-930e83761477/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -1327,24 +1331,24 @@
                         "advisor": {
                             "count": 1,
                             "domains": [
-                                "Task orchestration & delegation"
+                                "task coordination"
                             ]
                         },
                         "executor": {
                             "count": 2,
                             "domains": [
-                                "Issue detection",
-                                "Issue fix & validation"
+                                "web automation",
+                                "file management"
                             ]
                         }
                     }
                 },
                 {
-                    "game_id": "9ef363e9-87cd-49b2-b8cf-64ac8426885c",
+                    "game_id": "ddfeb37e-b4e8-420a-8f46-c51aafb6835c",
                     "task_config": {
-                        "id": "ace0e13a-3037-428f-8f0e-ab7ae8effe91",
+                        "id": "95de4732-20ea-487a-b4bf-6ba886ddb615",
                         "snapshot": "vscode",
-                        "instruction": "Fix the capitalization error in 'task_calc_16.py' and run the program. Python keywords should be lowercase.",
+                        "instruction": "Fix the capitalization error in 'task_process_18.py' and run the program. Python keywords should be lowercase.",
                         "source": "",
                         "config": [
                             {
@@ -1352,8 +1356,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/ace0e13a-3037-428f-8f0e-ab7ae8effe91/task_calc_16.py",
-                                            "path": "/home/user/Desktop/task_calc_16.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/95de4732-20ea-487a-b4bf-6ba886ddb615/task_process_18.py",
+                                            "path": "/home/user/Desktop/task_process_18.py"
                                         }
                                     ]
                                 }
@@ -1371,7 +1375,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_calc_16.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_process_18.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -1379,7 +1383,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/ace0e13a-3037-428f-8f0e-ab7ae8effe91/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/95de4732-20ea-487a-b4bf-6ba886ddb615/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -1393,14 +1397,14 @@
                         "advisor": {
                             "count": 1,
                             "domains": [
-                                "Task orchestration & delegation"
+                                "task coordination"
                             ]
                         },
                         "executor": {
                             "count": 2,
                             "domains": [
-                                "Issue detection",
-                                "Issue fix & validation"
+                                "web automation",
+                                "file management"
                             ]
                         }
                     }
@@ -1466,18 +1470,19 @@
                 "max_transitions_per_round": 20,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": null
+                "sliding_window_size": null,
+                "topology_type": "star"
             }
         },
         {
             "name": "single_agent_a11y_tree_l2",
             "game_instances": [
                 {
-                    "game_id": "60562bff-fd45-4fd5-b6b7-ea7769d35399",
+                    "game_id": "c01474a7-0375-4b8b-a64c-78ace530452e",
                     "task_config": {
-                        "id": "bc205e08-786c-470e-8416-baf3755eb45e",
+                        "id": "2af29adb-9776-4350-8713-00989f901fa4",
                         "snapshot": "vscode",
-                        "instruction": "Fix all the syntax errors in 'task_handle_05.py' and run the program. There are 2-3 errors to fix.",
+                        "instruction": "Fix all the syntax errors in 'task_handle_03.py' and run the program. There are 2-3 errors to fix.",
                         "source": "",
                         "config": [
                             {
@@ -1495,8 +1500,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/bc205e08-786c-470e-8416-baf3755eb45e/task_handle_05.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_handle_05.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/2af29adb-9776-4350-8713-00989f901fa4/task_handle_03.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_handle_03.py"
                                         }
                                     ]
                                 }
@@ -1511,14 +1516,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Saving Results\nPositive value: 32"
+                                    "expected": "Hello World\nPositive value: 46"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_handle_05.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_handle_03.py"
                                 ]
                             }
                         }
@@ -1531,11 +1537,11 @@
                     }
                 },
                 {
-                    "game_id": "0383ffae-3129-4c17-8af3-ace7178152d6",
+                    "game_id": "648584ad-5812-4ac7-a20b-8c466ab4f077",
                     "task_config": {
-                        "id": "0f99d344-dd6f-4cba-bd69-41c87e85b9f3",
+                        "id": "5eddd836-2c63-48df-9f23-340760cb2580",
                         "snapshot": "vscode",
-                        "instruction": "Complete the function 'process_value' in 'task_process_16.py' by replacing the TODO comment with the correct calculation, then run the program.",
+                        "instruction": "Complete the function 'format_info' in 'task_manage_17.py' by replacing the TODO comment with the correct calculation, then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -1553,8 +1559,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/0f99d344-dd6f-4cba-bd69-41c87e85b9f3/task_process_16.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_process_16.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/5eddd836-2c63-48df-9f23-340760cb2580/task_manage_17.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_manage_17.py"
                                         }
                                     ]
                                 }
@@ -1569,14 +1575,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Result: 75"
+                                    "expected": "Result: 88"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_process_16.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_manage_17.py"
                                 ]
                             }
                         }
@@ -1589,11 +1596,11 @@
                     }
                 },
                 {
-                    "game_id": "e6acb35a-4834-43c0-a07f-4e9a85b7c135",
+                    "game_id": "9e8de2f7-366d-49e3-8e83-69b25d325f49",
                     "task_config": {
-                        "id": "ae1a578b-9688-4c24-8297-477eea017b26",
+                        "id": "f356cbc8-1915-4910-986a-870dfd063bc9",
                         "snapshot": "vscode",
-                        "instruction": "Update the value of 'threshold' from 22 to 9 in 'config_display_07.ini', then run 'task_handle_09.py' to verify the change.",
+                        "instruction": "Update the value of 'threshold' from 24 to 9 in 'config_process_16.ini', then run 'task_handle_11.py' to verify the change.",
                         "source": "",
                         "config": [
                             {
@@ -1611,12 +1618,12 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/ae1a578b-9688-4c24-8297-477eea017b26/task_handle_09.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_handle_09.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/f356cbc8-1915-4910-986a-870dfd063bc9/task_handle_11.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_handle_11.py"
                                         },
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/ae1a578b-9688-4c24-8297-477eea017b26/config_display_07.ini",
-                                            "path": "/home/user/Desktop/coding_tasks/config_display_07.ini"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/f356cbc8-1915-4910-986a-870dfd063bc9/config_process_16.ini",
+                                            "path": "/home/user/Desktop/coding_tasks/config_process_16.ini"
                                         }
                                     ]
                                 }
@@ -1634,14 +1641,15 @@
                             "result": [
                                 {
                                     "type": "vm_file",
-                                    "path": "/home/user/Desktop/coding_tasks/config_display_07.ini",
-                                    "dest": "config_display_07.ini"
+                                    "path": "/home/user/Desktop/coding_tasks/config_process_16.ini",
+                                    "dest": "config_process_16.ini"
                                 },
                                 {
                                     "type": "vm_command_line",
                                     "command": [
-                                        "python",
-                                        "/home/user/Desktop/coding_tasks/task_handle_09.py"
+                                        "/bin/bash",
+                                        "-c",
+                                        "cd /home/user/Desktop/coding_tasks && python task_handle_11.py"
                                     ]
                                 }
                             ],
@@ -1672,11 +1680,11 @@
                     }
                 },
                 {
-                    "game_id": "88e6b31f-1815-40b0-bebd-1b448cdf0f33",
+                    "game_id": "20df9988-9ccc-4835-a2e3-bfa379a7a024",
                     "task_config": {
-                        "id": "da6b01b7-95b6-4d57-9442-0913c0dde6c2",
+                        "id": "8f8efe14-a767-403b-99ac-447fe3fb41b9",
                         "snapshot": "vscode",
-                        "instruction": "Add a print statement to 'task_display_15.py' that displays both the message and count in the format 'Message: [value], Count: [number]', then run the program.",
+                        "instruction": "Add a print statement to 'task_display_02.py' that displays both the message and count in the format 'Message: [value], Count: [number]', then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -1694,8 +1702,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/da6b01b7-95b6-4d57-9442-0913c0dde6c2/task_display_15.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_display_15.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111320/8f8efe14-a767-403b-99ac-447fe3fb41b9/task_display_02.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_display_02.py"
                                         }
                                     ]
                                 }
@@ -1710,14 +1718,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Message: Saving Results, Count: 40"
+                                    "expected": "Message: Starting Program, Count: 14"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_display_15.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_display_02.py"
                                 ]
                             }
                         }
@@ -1764,18 +1773,19 @@
                 "max_transitions_per_round": 20,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": null
+                "sliding_window_size": null,
+                "topology_type": "single"
             }
         },
         {
-            "name": "single_agent_screenshot_a11y_tree_l2_extra_info",
+            "name": "single_agent_screenshot_a11y_tree_l2",
             "game_instances": [
                 {
-                    "game_id": "c6f30755-0f9d-4848-a02a-426a21232460",
+                    "game_id": "7819f05d-ac29-4324-8d12-ae4a16d087e1",
                     "task_config": {
-                        "id": "bc205e08-786c-470e-8416-baf3755eb45e",
+                        "id": "2af29adb-9776-4350-8713-00989f901fa4",
                         "snapshot": "vscode",
-                        "instruction": "Fix all the syntax errors in 'task_handle_05.py' and run the program. There are 2-3 errors to fix. Note: Do not use VScode or any other IDE to solve the task, just use the terminal.",
+                        "instruction": "Fix all the syntax errors in 'task_handle_03.py' and run the program. There are 2-3 errors to fix.",
                         "source": "",
                         "config": [
                             {
@@ -1793,8 +1803,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/bc205e08-786c-470e-8416-baf3755eb45e/task_handle_05.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_handle_05.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/2af29adb-9776-4350-8713-00989f901fa4/task_handle_03.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_handle_03.py"
                                         }
                                     ]
                                 }
@@ -1809,14 +1819,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Saving Results\nPositive value: 32"
+                                    "expected": "Hello World\nPositive value: 46"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_handle_05.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_handle_03.py"
                                 ]
                             }
                         }
@@ -1829,11 +1840,11 @@
                     }
                 },
                 {
-                    "game_id": "f223a5ab-de69-4a60-addb-9c82ce5cbc38",
+                    "game_id": "844b2aa7-ac18-42e1-90b9-c57dae9923b0",
                     "task_config": {
-                        "id": "0f99d344-dd6f-4cba-bd69-41c87e85b9f3",
+                        "id": "5eddd836-2c63-48df-9f23-340760cb2580",
                         "snapshot": "vscode",
-                        "instruction": "Complete the function 'process_value' in 'task_process_16.py' by replacing the TODO comment with the correct calculation, then run the program. Note: Do not use VScode or any other IDE to solve the task, just use the terminal.",
+                        "instruction": "Complete the function 'format_info' in 'task_manage_17.py' by replacing the TODO comment with the correct calculation, then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -1851,8 +1862,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/0f99d344-dd6f-4cba-bd69-41c87e85b9f3/task_process_16.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_process_16.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/5eddd836-2c63-48df-9f23-340760cb2580/task_manage_17.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_manage_17.py"
                                         }
                                     ]
                                 }
@@ -1867,14 +1878,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Result: 75"
+                                    "expected": "Result: 88"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_process_16.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_manage_17.py"
                                 ]
                             }
                         }
@@ -1887,11 +1899,11 @@
                     }
                 },
                 {
-                    "game_id": "b82e3786-bb2e-4df3-ab91-50f9182c1e44",
+                    "game_id": "2a286fca-c7c2-4e19-98b1-6044fdaa42b7",
                     "task_config": {
-                        "id": "ae1a578b-9688-4c24-8297-477eea017b26",
+                        "id": "f356cbc8-1915-4910-986a-870dfd063bc9",
                         "snapshot": "vscode",
-                        "instruction": "Update the value of 'threshold' from 22 to 9 in 'config_display_07.ini', then run 'task_handle_09.py' to verify the change. Note: Do not use VScode or any other IDE to solve the task, just use the terminal.",
+                        "instruction": "Update the value of 'threshold' from 24 to 9 in 'config_process_16.ini', then run 'task_handle_11.py' to verify the change.",
                         "source": "",
                         "config": [
                             {
@@ -1909,12 +1921,12 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/ae1a578b-9688-4c24-8297-477eea017b26/task_handle_09.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_handle_09.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/f356cbc8-1915-4910-986a-870dfd063bc9/task_handle_11.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_handle_11.py"
                                         },
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/ae1a578b-9688-4c24-8297-477eea017b26/config_display_07.ini",
-                                            "path": "/home/user/Desktop/coding_tasks/config_display_07.ini"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/f356cbc8-1915-4910-986a-870dfd063bc9/config_process_16.ini",
+                                            "path": "/home/user/Desktop/coding_tasks/config_process_16.ini"
                                         }
                                     ]
                                 }
@@ -1932,14 +1944,15 @@
                             "result": [
                                 {
                                     "type": "vm_file",
-                                    "path": "/home/user/Desktop/coding_tasks/config_display_07.ini",
-                                    "dest": "config_display_07.ini"
+                                    "path": "/home/user/Desktop/coding_tasks/config_process_16.ini",
+                                    "dest": "config_process_16.ini"
                                 },
                                 {
                                     "type": "vm_command_line",
                                     "command": [
-                                        "python",
-                                        "/home/user/Desktop/coding_tasks/task_handle_09.py"
+                                        "/bin/bash",
+                                        "-c",
+                                        "cd /home/user/Desktop/coding_tasks && python task_handle_11.py"
                                     ]
                                 }
                             ],
@@ -1970,11 +1983,11 @@
                     }
                 },
                 {
-                    "game_id": "399b211f-1b68-45e7-a7e5-09d1755e49ec",
+                    "game_id": "bcfc7ac3-8110-43cc-87ec-3d132a648d53",
                     "task_config": {
-                        "id": "da6b01b7-95b6-4d57-9442-0913c0dde6c2",
+                        "id": "8f8efe14-a767-403b-99ac-447fe3fb41b9",
                         "snapshot": "vscode",
-                        "instruction": "Add a print statement to 'task_display_15.py' that displays both the message and count in the format 'Message: [value], Count: [number]', then run the program. Note: Do not use VScode or any other IDE to solve the task, just use the terminal.",
+                        "instruction": "Add a print statement to 'task_display_02.py' that displays both the message and count in the format 'Message: [value], Count: [number]', then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -1992,8 +2005,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/da6b01b7-95b6-4d57-9442-0913c0dde6c2/task_display_15.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_display_15.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111320/8f8efe14-a767-403b-99ac-447fe3fb41b9/task_display_02.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_display_02.py"
                                         }
                                     ]
                                 }
@@ -2008,14 +2021,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Message: Saving Results, Count: 40"
+                                    "expected": "Message: Starting Program, Count: 14"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_display_15.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_display_02.py"
                                 ]
                             }
                         }
@@ -2062,18 +2076,19 @@
                 "max_transitions_per_round": 20,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": null
+                "sliding_window_size": null,
+                "topology_type": "single"
             }
         },
         {
             "name": "single_agent_screenshot_l2",
             "game_instances": [
                 {
-                    "game_id": "f7221aee-03da-4d84-8e4c-4b11f0ce63a9",
+                    "game_id": "788841d3-dfca-4617-a9a4-6964ca66494c",
                     "task_config": {
-                        "id": "bc205e08-786c-470e-8416-baf3755eb45e",
+                        "id": "2af29adb-9776-4350-8713-00989f901fa4",
                         "snapshot": "vscode",
-                        "instruction": "Fix all the syntax errors in 'task_handle_05.py' and run the program. There are 2-3 errors to fix.",
+                        "instruction": "Fix all the syntax errors in 'task_handle_03.py' and run the program. There are 2-3 errors to fix.",
                         "source": "",
                         "config": [
                             {
@@ -2091,8 +2106,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/bc205e08-786c-470e-8416-baf3755eb45e/task_handle_05.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_handle_05.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/2af29adb-9776-4350-8713-00989f901fa4/task_handle_03.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_handle_03.py"
                                         }
                                     ]
                                 }
@@ -2107,14 +2122,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Saving Results\nPositive value: 32"
+                                    "expected": "Hello World\nPositive value: 46"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_handle_05.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_handle_03.py"
                                 ]
                             }
                         }
@@ -2127,11 +2143,11 @@
                     }
                 },
                 {
-                    "game_id": "994cb48a-0b17-4fc7-8e5d-df3b4547669c",
+                    "game_id": "97afc67b-9f2c-43ba-bc52-0b4b58b9d3bf",
                     "task_config": {
-                        "id": "0f99d344-dd6f-4cba-bd69-41c87e85b9f3",
+                        "id": "5eddd836-2c63-48df-9f23-340760cb2580",
                         "snapshot": "vscode",
-                        "instruction": "Complete the function 'process_value' in 'task_process_16.py' by replacing the TODO comment with the correct calculation, then run the program.",
+                        "instruction": "Complete the function 'format_info' in 'task_manage_17.py' by replacing the TODO comment with the correct calculation, then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -2149,8 +2165,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/0f99d344-dd6f-4cba-bd69-41c87e85b9f3/task_process_16.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_process_16.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/5eddd836-2c63-48df-9f23-340760cb2580/task_manage_17.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_manage_17.py"
                                         }
                                     ]
                                 }
@@ -2165,14 +2181,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Result: 75"
+                                    "expected": "Result: 88"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_process_16.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_manage_17.py"
                                 ]
                             }
                         }
@@ -2185,11 +2202,11 @@
                     }
                 },
                 {
-                    "game_id": "ac978fcf-8280-4d66-8a23-c20cba64fdf3",
+                    "game_id": "e405a6bb-31fa-4cff-b04f-e6a7f9462fa6",
                     "task_config": {
-                        "id": "ae1a578b-9688-4c24-8297-477eea017b26",
+                        "id": "f356cbc8-1915-4910-986a-870dfd063bc9",
                         "snapshot": "vscode",
-                        "instruction": "Update the value of 'threshold' from 22 to 9 in 'config_display_07.ini', then run 'task_handle_09.py' to verify the change.",
+                        "instruction": "Update the value of 'threshold' from 24 to 9 in 'config_process_16.ini', then run 'task_handle_11.py' to verify the change.",
                         "source": "",
                         "config": [
                             {
@@ -2207,12 +2224,12 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/ae1a578b-9688-4c24-8297-477eea017b26/task_handle_09.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_handle_09.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/f356cbc8-1915-4910-986a-870dfd063bc9/task_handle_11.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_handle_11.py"
                                         },
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/ae1a578b-9688-4c24-8297-477eea017b26/config_display_07.ini",
-                                            "path": "/home/user/Desktop/coding_tasks/config_display_07.ini"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/f356cbc8-1915-4910-986a-870dfd063bc9/config_process_16.ini",
+                                            "path": "/home/user/Desktop/coding_tasks/config_process_16.ini"
                                         }
                                     ]
                                 }
@@ -2230,14 +2247,15 @@
                             "result": [
                                 {
                                     "type": "vm_file",
-                                    "path": "/home/user/Desktop/coding_tasks/config_display_07.ini",
-                                    "dest": "config_display_07.ini"
+                                    "path": "/home/user/Desktop/coding_tasks/config_process_16.ini",
+                                    "dest": "config_process_16.ini"
                                 },
                                 {
                                     "type": "vm_command_line",
                                     "command": [
-                                        "python",
-                                        "/home/user/Desktop/coding_tasks/task_handle_09.py"
+                                        "/bin/bash",
+                                        "-c",
+                                        "cd /home/user/Desktop/coding_tasks && python task_handle_11.py"
                                     ]
                                 }
                             ],
@@ -2268,11 +2286,11 @@
                     }
                 },
                 {
-                    "game_id": "ddf4dc22-16c9-4e9a-9b59-3b1473e3c8fd",
+                    "game_id": "7cd4fcc0-9ae1-4dba-a83e-78ee7bccce88",
                     "task_config": {
-                        "id": "da6b01b7-95b6-4d57-9442-0913c0dde6c2",
+                        "id": "8f8efe14-a767-403b-99ac-447fe3fb41b9",
                         "snapshot": "vscode",
-                        "instruction": "Add a print statement to 'task_display_15.py' that displays both the message and count in the format 'Message: [value], Count: [number]', then run the program.",
+                        "instruction": "Add a print statement to 'task_display_02.py' that displays both the message and count in the format 'Message: [value], Count: [number]', then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -2290,8 +2308,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/da6b01b7-95b6-4d57-9442-0913c0dde6c2/task_display_15.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_display_15.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111320/8f8efe14-a767-403b-99ac-447fe3fb41b9/task_display_02.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_display_02.py"
                                         }
                                     ]
                                 }
@@ -2306,14 +2324,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Message: Saving Results, Count: 40"
+                                    "expected": "Message: Starting Program, Count: 14"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_display_15.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_display_02.py"
                                 ]
                             }
                         }
@@ -2360,18 +2379,19 @@
                 "max_transitions_per_round": 20,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": null
+                "sliding_window_size": null,
+                "topology_type": "single"
             }
         },
         {
             "name": "multi_agent_star_screenshot_l2",
             "game_instances": [
                 {
-                    "game_id": "06b2828d-0209-4c05-939b-1db94c944d65",
+                    "game_id": "6c8f244d-ca7e-4255-8e16-653b6af3e80a",
                     "task_config": {
-                        "id": "bc205e08-786c-470e-8416-baf3755eb45e",
+                        "id": "2af29adb-9776-4350-8713-00989f901fa4",
                         "snapshot": "vscode",
-                        "instruction": "Fix all the syntax errors in 'task_handle_05.py' and run the program. There are 2-3 errors to fix.",
+                        "instruction": "Fix all the syntax errors in 'task_handle_03.py' and run the program. There are 2-3 errors to fix.",
                         "source": "",
                         "config": [
                             {
@@ -2389,8 +2409,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/bc205e08-786c-470e-8416-baf3755eb45e/task_handle_05.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_handle_05.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/2af29adb-9776-4350-8713-00989f901fa4/task_handle_03.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_handle_03.py"
                                         }
                                     ]
                                 }
@@ -2405,14 +2425,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Saving Results\nPositive value: 32"
+                                    "expected": "Hello World\nPositive value: 46"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_handle_05.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_handle_03.py"
                                 ]
                             }
                         }
@@ -2434,11 +2455,11 @@
                     }
                 },
                 {
-                    "game_id": "a42c8562-1df7-45ed-a042-5330b009b46d",
+                    "game_id": "b73a78b8-a2c2-4bf7-b312-f147e884a92f",
                     "task_config": {
-                        "id": "0f99d344-dd6f-4cba-bd69-41c87e85b9f3",
+                        "id": "5eddd836-2c63-48df-9f23-340760cb2580",
                         "snapshot": "vscode",
-                        "instruction": "Complete the function 'process_value' in 'task_process_16.py' by replacing the TODO comment with the correct calculation, then run the program.",
+                        "instruction": "Complete the function 'format_info' in 'task_manage_17.py' by replacing the TODO comment with the correct calculation, then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -2456,8 +2477,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/0f99d344-dd6f-4cba-bd69-41c87e85b9f3/task_process_16.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_process_16.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/5eddd836-2c63-48df-9f23-340760cb2580/task_manage_17.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_manage_17.py"
                                         }
                                     ]
                                 }
@@ -2472,14 +2493,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Result: 75"
+                                    "expected": "Result: 88"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_process_16.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_manage_17.py"
                                 ]
                             }
                         }
@@ -2501,11 +2523,11 @@
                     }
                 },
                 {
-                    "game_id": "70b91ad0-816d-469a-8467-3eda2131ff8d",
+                    "game_id": "d7bea821-aba3-4f9d-961c-31790ea869b8",
                     "task_config": {
-                        "id": "ae1a578b-9688-4c24-8297-477eea017b26",
+                        "id": "f356cbc8-1915-4910-986a-870dfd063bc9",
                         "snapshot": "vscode",
-                        "instruction": "Update the value of 'threshold' from 22 to 9 in 'config_display_07.ini', then run 'task_handle_09.py' to verify the change.",
+                        "instruction": "Update the value of 'threshold' from 24 to 9 in 'config_process_16.ini', then run 'task_handle_11.py' to verify the change.",
                         "source": "",
                         "config": [
                             {
@@ -2523,12 +2545,12 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/ae1a578b-9688-4c24-8297-477eea017b26/task_handle_09.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_handle_09.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/f356cbc8-1915-4910-986a-870dfd063bc9/task_handle_11.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_handle_11.py"
                                         },
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/ae1a578b-9688-4c24-8297-477eea017b26/config_display_07.ini",
-                                            "path": "/home/user/Desktop/coding_tasks/config_display_07.ini"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/f356cbc8-1915-4910-986a-870dfd063bc9/config_process_16.ini",
+                                            "path": "/home/user/Desktop/coding_tasks/config_process_16.ini"
                                         }
                                     ]
                                 }
@@ -2546,14 +2568,15 @@
                             "result": [
                                 {
                                     "type": "vm_file",
-                                    "path": "/home/user/Desktop/coding_tasks/config_display_07.ini",
-                                    "dest": "config_display_07.ini"
+                                    "path": "/home/user/Desktop/coding_tasks/config_process_16.ini",
+                                    "dest": "config_process_16.ini"
                                 },
                                 {
                                     "type": "vm_command_line",
                                     "command": [
-                                        "python",
-                                        "/home/user/Desktop/coding_tasks/task_handle_09.py"
+                                        "/bin/bash",
+                                        "-c",
+                                        "cd /home/user/Desktop/coding_tasks && python task_handle_11.py"
                                     ]
                                 }
                             ],
@@ -2593,11 +2616,11 @@
                     }
                 },
                 {
-                    "game_id": "be083274-bcf6-4db8-abc3-7f57ff4653ab",
+                    "game_id": "38c90b24-b9ef-479f-bf4b-f4b6616aec2d",
                     "task_config": {
-                        "id": "da6b01b7-95b6-4d57-9442-0913c0dde6c2",
+                        "id": "8f8efe14-a767-403b-99ac-447fe3fb41b9",
                         "snapshot": "vscode",
-                        "instruction": "Add a print statement to 'task_display_15.py' that displays both the message and count in the format 'Message: [value], Count: [number]', then run the program. Note: Do not use VScode or any other IDE to solve the task, just use the terminal.",
+                        "instruction": "Add a print statement to 'task_display_02.py' that displays both the message and count in the format 'Message: [value], Count: [number]', then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -2615,8 +2638,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/da6b01b7-95b6-4d57-9442-0913c0dde6c2/task_display_15.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_display_15.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111320/8f8efe14-a767-403b-99ac-447fe3fb41b9/task_display_02.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_display_02.py"
                                         }
                                     ]
                                 }
@@ -2631,14 +2654,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Message: Saving Results, Count: 40"
+                                    "expected": "Message: Starting Program, Count: 14"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_display_15.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_display_02.py"
                                 ]
                             }
                         }
@@ -2720,18 +2744,19 @@
                 "max_transitions_per_round": 20,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": null
+                "sliding_window_size": null,
+                "topology_type": "star"
             }
         },
         {
-            "name": "multi_agent_star_screenshot_a11y_tree_l2_extra_info",
+            "name": "multi_agent_star_screenshot_a11y_tree_l2",
             "game_instances": [
                 {
-                    "game_id": "31c5769f-bd3d-401c-85f7-2c707a212851",
+                    "game_id": "396d62f6-6975-4a3c-974e-e179fa99cf57",
                     "task_config": {
-                        "id": "bc205e08-786c-470e-8416-baf3755eb45e",
+                        "id": "2af29adb-9776-4350-8713-00989f901fa4",
                         "snapshot": "vscode",
-                        "instruction": "Fix all the syntax errors in 'task_handle_05.py' and run the program. There are 2-3 errors to fix. Note: Do not use VScode or any other IDE to solve the task, just use the terminal.",
+                        "instruction": "Fix all the syntax errors in 'task_handle_03.py' and run the program. There are 2-3 errors to fix.",
                         "source": "",
                         "config": [
                             {
@@ -2749,8 +2774,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/bc205e08-786c-470e-8416-baf3755eb45e/task_handle_05.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_handle_05.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/2af29adb-9776-4350-8713-00989f901fa4/task_handle_03.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_handle_03.py"
                                         }
                                     ]
                                 }
@@ -2765,14 +2790,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Saving Results\nPositive value: 32"
+                                    "expected": "Hello World\nPositive value: 46"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_handle_05.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_handle_03.py"
                                 ]
                             }
                         }
@@ -2781,24 +2807,24 @@
                         "advisor": {
                             "count": 1,
                             "domains": [
-                                "Task orchestration & delegation"
+                                "task coordination"
                             ]
                         },
                         "executor": {
                             "count": 2,
                             "domains": [
-                                "Issue detection",
-                                "Issue fix & validation"
+                                "web automation",
+                                "file management"
                             ]
                         }
                     }
                 },
                 {
-                    "game_id": "4057faf4-75bd-4e75-b38d-1c7381eabe41",
+                    "game_id": "9bb488cf-3655-47d7-afea-3598532ede1b",
                     "task_config": {
-                        "id": "0f99d344-dd6f-4cba-bd69-41c87e85b9f3",
+                        "id": "5eddd836-2c63-48df-9f23-340760cb2580",
                         "snapshot": "vscode",
-                        "instruction": "Complete the function 'process_value' in 'task_process_16.py' by replacing the TODO comment with the correct calculation, then run the program. Note: Do not use VScode or any other IDE to solve the task, just use the terminal.",
+                        "instruction": "Complete the function 'format_info' in 'task_manage_17.py' by replacing the TODO comment with the correct calculation, then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -2816,8 +2842,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/0f99d344-dd6f-4cba-bd69-41c87e85b9f3/task_process_16.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_process_16.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/5eddd836-2c63-48df-9f23-340760cb2580/task_manage_17.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_manage_17.py"
                                         }
                                     ]
                                 }
@@ -2832,14 +2858,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Result: 75"
+                                    "expected": "Result: 88"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_process_16.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_manage_17.py"
                                 ]
                             }
                         }
@@ -2848,24 +2875,24 @@
                         "advisor": {
                             "count": 1,
                             "domains": [
-                                "Task orchestration & delegation"
+                                "task coordination"
                             ]
                         },
                         "executor": {
                             "count": 2,
                             "domains": [
-                                "Issue detection",
-                                "Issue fix & validation"
+                                "web automation",
+                                "file management"
                             ]
                         }
                     }
                 },
                 {
-                    "game_id": "feb12305-3f16-483e-9d3b-ea7600fd608c",
+                    "game_id": "37bf08fa-5432-4d7c-b808-a5f45db8c53b",
                     "task_config": {
-                        "id": "ae1a578b-9688-4c24-8297-477eea017b26",
+                        "id": "f356cbc8-1915-4910-986a-870dfd063bc9",
                         "snapshot": "vscode",
-                        "instruction": "Update the value of 'threshold' from 22 to 9 in 'config_display_07.ini', then run 'task_handle_09.py' to verify the change. Note: Do not use VScode or any other IDE to solve the task, just use the terminal.",
+                        "instruction": "Update the value of 'threshold' from 24 to 9 in 'config_process_16.ini', then run 'task_handle_11.py' to verify the change.",
                         "source": "",
                         "config": [
                             {
@@ -2883,12 +2910,12 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/ae1a578b-9688-4c24-8297-477eea017b26/task_handle_09.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_handle_09.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/f356cbc8-1915-4910-986a-870dfd063bc9/task_handle_11.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_handle_11.py"
                                         },
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/ae1a578b-9688-4c24-8297-477eea017b26/config_display_07.ini",
-                                            "path": "/home/user/Desktop/coding_tasks/config_display_07.ini"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/f356cbc8-1915-4910-986a-870dfd063bc9/config_process_16.ini",
+                                            "path": "/home/user/Desktop/coding_tasks/config_process_16.ini"
                                         }
                                     ]
                                 }
@@ -2906,14 +2933,15 @@
                             "result": [
                                 {
                                     "type": "vm_file",
-                                    "path": "/home/user/Desktop/coding_tasks/config_display_07.ini",
-                                    "dest": "config_display_07.ini"
+                                    "path": "/home/user/Desktop/coding_tasks/config_process_16.ini",
+                                    "dest": "config_process_16.ini"
                                 },
                                 {
                                     "type": "vm_command_line",
                                     "command": [
-                                        "python",
-                                        "/home/user/Desktop/coding_tasks/task_handle_09.py"
+                                        "/bin/bash",
+                                        "-c",
+                                        "cd /home/user/Desktop/coding_tasks && python task_handle_11.py"
                                     ]
                                 }
                             ],
@@ -2940,24 +2968,24 @@
                         "advisor": {
                             "count": 1,
                             "domains": [
-                                "Task orchestration & delegation"
+                                "task coordination"
                             ]
                         },
                         "executor": {
                             "count": 2,
                             "domains": [
-                                "Issue detection",
-                                "Issue fix & validation"
+                                "web automation",
+                                "file management"
                             ]
                         }
                     }
                 },
                 {
-                    "game_id": "c4b6d33d-99cc-4b0d-9ded-8813dc11283a",
+                    "game_id": "bff6e99e-aa56-47c2-b945-ae2b827fc3ab",
                     "task_config": {
-                        "id": "da6b01b7-95b6-4d57-9442-0913c0dde6c2",
+                        "id": "8f8efe14-a767-403b-99ac-447fe3fb41b9",
                         "snapshot": "vscode",
-                        "instruction": "Add a print statement to 'task_display_15.py' that displays both the message and count in the format 'Message: [value], Count: [number]', then run the program. Note: Do not use VScode or any other IDE to solve the task, just use the terminal.",
+                        "instruction": "Add a print statement to 'task_display_02.py' that displays both the message and count in the format 'Message: [value], Count: [number]', then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -2975,8 +3003,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040218/da6b01b7-95b6-4d57-9442-0913c0dde6c2/task_display_15.py",
-                                            "path": "/home/user/Desktop/coding_tasks/task_display_15.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111320/8f8efe14-a767-403b-99ac-447fe3fb41b9/task_display_02.py",
+                                            "path": "/home/user/Desktop/coding_tasks/task_display_02.py"
                                         }
                                     ]
                                 }
@@ -2991,14 +3019,15 @@
                             "expected": {
                                 "type": "rule",
                                 "rules": {
-                                    "expected": "Message: Saving Results, Count: 40"
+                                    "expected": "Message: Starting Program, Count: 14"
                                 }
                             },
                             "result": {
                                 "type": "vm_command_line",
                                 "command": [
-                                    "python",
-                                    "/home/user/Desktop/coding_tasks/task_display_15.py"
+                                    "/bin/bash",
+                                    "-c",
+                                    "cd /home/user/Desktop/coding_tasks && python task_display_02.py"
                                 ]
                             }
                         }
@@ -3007,14 +3036,14 @@
                         "advisor": {
                             "count": 1,
                             "domains": [
-                                "Task orchestration & delegation"
+                                "task coordination"
                             ]
                         },
                         "executor": {
                             "count": 2,
                             "domains": [
-                                "Issue detection",
-                                "Issue fix & validation"
+                                "web automation",
+                                "file management"
                             ]
                         }
                     }
@@ -3080,18 +3109,19 @@
                 "max_transitions_per_round": 20,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": null
+                "sliding_window_size": null,
+                "topology_type": "star"
             }
         },
         {
-            "name": "single_agent_screenshot_a11y_tree_l1_extra_info_sliding_window",
+            "name": "multi_agent_blackboard_screenshot_l1",
             "game_instances": [
                 {
-                    "game_id": "c7144435-3991-4953-af4c-1bdb7599149a",
+                    "game_id": "c2336087-cec7-4532-aec1-9dd6c2c88738",
                     "task_config": {
-                        "id": "27ab63f5-a83c-450f-a17f-63e68bbf17cb",
+                        "id": "01264e91-0649-4492-ab69-aeebba571335",
                         "snapshot": "vscode",
-                        "instruction": "Fix the syntax error in the file 'task_handle_04.py' and run it. The program should print the message without errors. Note: Do not use VScode or any other IDE to solve the task, just use the terminal.",
+                        "instruction": "Fix the syntax error in the file 'task_handle_01.py' and run it. The program should print the message without errors.",
                         "source": "",
                         "config": [
                             {
@@ -3099,8 +3129,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040216/27ab63f5-a83c-450f-a17f-63e68bbf17cb/task_handle_04.py",
-                                            "path": "/home/user/Desktop/task_handle_04.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/01264e91-0649-4492-ab69-aeebba571335/task_handle_01.py",
+                                            "path": "/home/user/Desktop/task_handle_01.py"
                                         }
                                     ]
                                 }
@@ -3118,7 +3148,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_handle_04.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_handle_01.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -3126,7 +3156,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040216/27ab63f5-a83c-450f-a17f-63e68bbf17cb/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/01264e91-0649-4492-ab69-aeebba571335/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -3138,17 +3168,21 @@
                     },
                     "participants": {
                         "executor": {
-                            "count": 1,
-                            "domains": []
+                            "count": 3,
+                            "domains": [
+                                "web automation",
+                                "file management",
+                                "task coordination"
+                            ]
                         }
                     }
                 },
                 {
-                    "game_id": "2a6de1f4-49f8-41df-b963-8fe1ecbef0fb",
+                    "game_id": "d67e5a77-01f3-4794-a1e5-fef1fdb932f5",
                     "task_config": {
-                        "id": "eddeb7d8-0868-4696-aea6-bb17be221372",
+                        "id": "582d3505-0e2f-4e1d-a733-d3d129eb36b3",
                         "snapshot": "vscode",
-                        "instruction": "In the file 'task_calc_01.py', change the value of 'taskcode_result_1' from 46 to 84, then run the program. Note: Do not use VScode or any other IDE to solve the task, just use the terminal.",
+                        "instruction": "In the file 'task_manage_03.py', change the value of 'taskcode_code_9' from 31 to 92, then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -3156,8 +3190,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/eddeb7d8-0868-4696-aea6-bb17be221372/task_calc_01.py",
-                                            "path": "/home/user/Desktop/task_calc_01.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/582d3505-0e2f-4e1d-a733-d3d129eb36b3/task_manage_03.py",
+                                            "path": "/home/user/Desktop/task_manage_03.py"
                                         }
                                     ]
                                 }
@@ -3175,7 +3209,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_calc_01.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_manage_03.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -3183,7 +3217,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/eddeb7d8-0868-4696-aea6-bb17be221372/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/582d3505-0e2f-4e1d-a733-d3d129eb36b3/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -3195,17 +3229,21 @@
                     },
                     "participants": {
                         "executor": {
-                            "count": 1,
-                            "domains": []
+                            "count": 3,
+                            "domains": [
+                                "web automation",
+                                "file management",
+                                "task coordination"
+                            ]
                         }
                     }
                 },
                 {
-                    "game_id": "e8d36f18-20be-4ca6-9370-4f0ca9d41b08",
+                    "game_id": "249cff58-f09e-4f2f-b377-20e8e76de8e4",
                     "task_config": {
-                        "id": "2c7552b6-923f-4795-9dea-7173ef04a4a4",
+                        "id": "638a73ff-8ef2-4e92-b198-930e83761477",
                         "snapshot": "vscode",
-                        "instruction": "In the file 'task_process_09.py', uncomment the line that is commented out (remove the # symbol), then run the program. Note: Do not use VScode or any other IDE to solve the task, just use the terminal.",
+                        "instruction": "In the file 'task_calc_12.py', uncomment the line that is commented out (remove the # symbol), then run the program.",
                         "source": "",
                         "config": [
                             {
@@ -3213,8 +3251,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/2c7552b6-923f-4795-9dea-7173ef04a4a4/task_process_09.py",
-                                            "path": "/home/user/Desktop/task_process_09.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/638a73ff-8ef2-4e92-b198-930e83761477/task_calc_12.py",
+                                            "path": "/home/user/Desktop/task_calc_12.py"
                                         }
                                     ]
                                 }
@@ -3232,7 +3270,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_process_09.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_calc_12.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -3240,7 +3278,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/2c7552b6-923f-4795-9dea-7173ef04a4a4/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/638a73ff-8ef2-4e92-b198-930e83761477/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -3252,17 +3290,21 @@
                     },
                     "participants": {
                         "executor": {
-                            "count": 1,
-                            "domains": []
+                            "count": 3,
+                            "domains": [
+                                "web automation",
+                                "file management",
+                                "task coordination"
+                            ]
                         }
                     }
                 },
                 {
-                    "game_id": "d607601e-518f-4584-8d31-db87ca6b21ac",
+                    "game_id": "3e647506-fcb1-4a72-aa93-a1606bd30be6",
                     "task_config": {
-                        "id": "ace0e13a-3037-428f-8f0e-ab7ae8effe91",
+                        "id": "95de4732-20ea-487a-b4bf-6ba886ddb615",
                         "snapshot": "vscode",
-                        "instruction": "Fix the capitalization error in 'task_calc_16.py' and run the program. Python keywords should be lowercase. Note: Do not use VScode or any other IDE to solve the task, just use the terminal.",
+                        "instruction": "Fix the capitalization error in 'task_process_18.py' and run the program. Python keywords should be lowercase.",
                         "source": "",
                         "config": [
                             {
@@ -3270,8 +3312,8 @@
                                 "parameters": {
                                     "files": [
                                         {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/ace0e13a-3037-428f-8f0e-ab7ae8effe91/task_calc_16.py",
-                                            "path": "/home/user/Desktop/task_calc_16.py"
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/95de4732-20ea-487a-b4bf-6ba886ddb615/task_process_18.py",
+                                            "path": "/home/user/Desktop/task_process_18.py"
                                         }
                                     ]
                                 }
@@ -3289,7 +3331,7 @@
                                         "command": [
                                             "/bin/bash",
                                             "-c",
-                                            "cd /home/user/Desktop && python3 task_calc_16.py > output.txt 2>&1"
+                                            "cd /home/user/Desktop && python3 task_process_18.py > output.txt 2>&1"
                                         ]
                                     }
                                 }
@@ -3297,7 +3339,7 @@
                             "func": "compare_text_file",
                             "expected": {
                                 "type": "cloud_file",
-                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250718_040217/ace0e13a-3037-428f-8f0e-ab7ae8effe91/expected_output.txt",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/95de4732-20ea-487a-b4bf-6ba886ddb615/expected_output.txt",
                                 "dest": "expected_output.txt"
                             },
                             "result": {
@@ -3309,8 +3351,12 @@
                     },
                     "participants": {
                         "executor": {
-                            "count": 1,
-                            "domains": []
+                            "count": 3,
+                            "domains": [
+                                "web automation",
+                                "file management",
+                                "task coordination"
+                            ]
                         }
                     }
                 }
@@ -3324,12 +3370,302 @@
                         "message_permissions": {
                             "send": [
                                 "EXECUTE",
-                                "STATUS"
+                                "STATUS",
+                                "WRITE_BOARD"
                             ],
                             "receive": []
                         },
                         "allowed_components": [
-                            "observation"
+                            "observation",
+                            "board"
+                        ],
+                        "receives_goal": true
+                    }
+                ],
+                "graph": {}
+            },
+            "config": {
+                "headless": false,
+                "observation_type": "screenshot",
+                "action_space": "pyautogui",
+                "screen_width": 1920,
+                "screen_height": 1080,
+                "path_to_vm": "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx",
+                "sleep_after_execution": 0,
+                "max_retries": 2,
+                "max_rounds": 10,
+                "max_transitions_per_round": 20,
+                "player_consecutive_violation_limit": 3,
+                "player_total_violation_limit": 5,
+                "sliding_window_size": null,
+                "topology_type": "blackboard"
+            }
+        },
+        {
+            "name": "multi_agent_blackboard_screenshot_a11y_tree_l1",
+            "game_instances": [
+                {
+                    "game_id": "6e7b215c-ea7f-43fb-9b43-9ab294cea0b9",
+                    "task_config": {
+                        "id": "01264e91-0649-4492-ab69-aeebba571335",
+                        "snapshot": "vscode",
+                        "instruction": "Fix the syntax error in the file 'task_handle_01.py' and run it. The program should print the message without errors.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/01264e91-0649-4492-ab69-aeebba571335/task_handle_01.py",
+                                            "path": "/home/user/Desktop/task_handle_01.py"
+                                        }
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "/bin/bash",
+                                            "-c",
+                                            "cd /home/user/Desktop && python3 task_handle_01.py > output.txt 2>&1"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "func": "compare_text_file",
+                            "expected": {
+                                "type": "cloud_file",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/01264e91-0649-4492-ab69-aeebba571335/expected_output.txt",
+                                "dest": "expected_output.txt"
+                            },
+                            "result": {
+                                "type": "vm_file",
+                                "path": "/home/user/Desktop/output.txt",
+                                "dest": "actual_output.txt"
+                            }
+                        }
+                    },
+                    "participants": {
+                        "executor": {
+                            "count": 3,
+                            "domains": [
+                                "web automation",
+                                "file management",
+                                "task coordination"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "game_id": "93e1c1fd-fd14-4676-9d23-8e6dc0ac5807",
+                    "task_config": {
+                        "id": "582d3505-0e2f-4e1d-a733-d3d129eb36b3",
+                        "snapshot": "vscode",
+                        "instruction": "In the file 'task_manage_03.py', change the value of 'taskcode_code_9' from 31 to 92, then run the program.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/582d3505-0e2f-4e1d-a733-d3d129eb36b3/task_manage_03.py",
+                                            "path": "/home/user/Desktop/task_manage_03.py"
+                                        }
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "/bin/bash",
+                                            "-c",
+                                            "cd /home/user/Desktop && python3 task_manage_03.py > output.txt 2>&1"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "func": "compare_text_file",
+                            "expected": {
+                                "type": "cloud_file",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/582d3505-0e2f-4e1d-a733-d3d129eb36b3/expected_output.txt",
+                                "dest": "expected_output.txt"
+                            },
+                            "result": {
+                                "type": "vm_file",
+                                "path": "/home/user/Desktop/output.txt",
+                                "dest": "actual_output.txt"
+                            }
+                        }
+                    },
+                    "participants": {
+                        "executor": {
+                            "count": 3,
+                            "domains": [
+                                "web automation",
+                                "file management",
+                                "task coordination"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "game_id": "710710ec-7c9b-43e9-a28e-cbcc76d87931",
+                    "task_config": {
+                        "id": "638a73ff-8ef2-4e92-b198-930e83761477",
+                        "snapshot": "vscode",
+                        "instruction": "In the file 'task_calc_12.py', uncomment the line that is commented out (remove the # symbol), then run the program.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/638a73ff-8ef2-4e92-b198-930e83761477/task_calc_12.py",
+                                            "path": "/home/user/Desktop/task_calc_12.py"
+                                        }
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "/bin/bash",
+                                            "-c",
+                                            "cd /home/user/Desktop && python3 task_calc_12.py > output.txt 2>&1"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "func": "compare_text_file",
+                            "expected": {
+                                "type": "cloud_file",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111318/638a73ff-8ef2-4e92-b198-930e83761477/expected_output.txt",
+                                "dest": "expected_output.txt"
+                            },
+                            "result": {
+                                "type": "vm_file",
+                                "path": "/home/user/Desktop/output.txt",
+                                "dest": "actual_output.txt"
+                            }
+                        }
+                    },
+                    "participants": {
+                        "executor": {
+                            "count": 3,
+                            "domains": [
+                                "web automation",
+                                "file management",
+                                "task coordination"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "game_id": "9eec5f8c-b1d2-4fcf-a19f-54bc6e1db953",
+                    "task_config": {
+                        "id": "95de4732-20ea-487a-b4bf-6ba886ddb615",
+                        "snapshot": "vscode",
+                        "instruction": "Fix the capitalization error in 'task_process_18.py' and run the program. Python keywords should be lowercase.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/95de4732-20ea-487a-b4bf-6ba886ddb615/task_process_18.py",
+                                            "path": "/home/user/Desktop/task_process_18.py"
+                                        }
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "/bin/bash",
+                                            "-c",
+                                            "cd /home/user/Desktop && python3 task_process_18.py > output.txt 2>&1"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "func": "compare_text_file",
+                            "expected": {
+                                "type": "cloud_file",
+                                "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250724_111319/95de4732-20ea-487a-b4bf-6ba886ddb615/expected_output.txt",
+                                "dest": "expected_output.txt"
+                            },
+                            "result": {
+                                "type": "vm_file",
+                                "path": "/home/user/Desktop/output.txt",
+                                "dest": "actual_output.txt"
+                            }
+                        }
+                    },
+                    "participants": {
+                        "executor": {
+                            "count": 3,
+                            "domains": [
+                                "web automation",
+                                "file management",
+                                "task coordination"
+                            ]
+                        }
+                    }
+                }
+            ],
+            "environment_type": "osworld",
+            "templates": {
+                "roles": [
+                    {
+                        "name": "executor",
+                        "handler_type": "environment",
+                        "message_permissions": {
+                            "send": [
+                                "EXECUTE",
+                                "STATUS",
+                                "WRITE_BOARD"
+                            ],
+                            "receive": []
+                        },
+                        "allowed_components": [
+                            "observation",
+                            "board"
                         ],
                         "receives_goal": true
                     }
@@ -3349,7 +3685,8 @@
                 "max_transitions_per_round": 20,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": 3
+                "sliding_window_size": null,
+                "topology_type": "blackboard"
             }
         }
     ]

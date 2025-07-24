@@ -29,6 +29,7 @@ from src.utils.image_manager import ImageManager
 from src.utils.s3_manager import S3Manager
 from src.topologies.factory import TopologyFactory
 from src.topologies.base import TopologyType
+from src.utils.blackboard_manager import BlackboardManager
 
 load_dotenv()
 
@@ -97,11 +98,63 @@ class ComputerGame(NetworkDialogueGameMaster):
         """
         self.game_instance = game_instance
         self.environment_type = self.experiment["environment_type"].lower()
-        self._prepare_game_instance()
         self._prepare_game_config()
+        self._prepare_game_instance()
         self._initialize_formatter()
         self._initialize_environment()
         self._build_graph()
+        self._initialize_topology_specific_components()
+
+    def _initialize_topology_specific_components(self) -> None:
+        """Initialize topology-specific components and configurations.
+
+        This method handles initialization of components that are specific to different
+        topology types. Currently supports:
+        - BLACKBOARD: Initializes blackboard manager and agent list for round-robin
+
+        Future topology types can add their specific initialization logic here.
+        """
+        topology_type = self.game_config["topology_type"]
+
+        if topology_type == TopologyType.BLACKBOARD:
+            self.blackboard_manager = BlackboardManager()
+            self.current_agent_index = 0
+            self.agent_list = self._get_agent_list()
+        else:
+            self.blackboard_manager = None  # FIX: This is a hack to avoid errors when other topologies are added
+
+    def _prepare_game_config(self) -> None:
+        """Prepare game configuration dictionary"""
+        game_config = self.experiment["config"].copy()
+        observation_type = game_config.get("observation_type", "a11y_tree")
+        use_images = observation_type in ["screenshot", "screenshot_a11y_tree", "som"]
+        require_a11y_tree = observation_type in [
+            "a11y_tree",
+            "screenshot_a11y_tree",
+            "som",
+        ]
+        game_config.update({"use_images": use_images, "require_a11y_tree": require_a11y_tree})
+
+        # Always initialize ImageManager for archival purposes
+        aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+        aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        aws_region = os.getenv("AWS_REGION")
+        s3_bucket = os.getenv("S3_BUCKET_NAME")
+
+        if not all([aws_access_key_id, aws_secret_access_key, aws_region, s3_bucket]):
+            raise ValueError("Missing required S3 environment variables.")
+
+        game_config["image_manager"] = ImageManager(
+            game_id=self.game_instance["game_id"],
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            aws_region=aws_region,
+            s3_bucket=s3_bucket,
+        )
+        self.log_key("image_manager_s3_prefix", game_config["image_manager"].s3_prefix)
+
+        game_config["topology_type"] = TopologyType(game_config["topology_type"])
+        self.game_config = game_config
 
     def _prepare_game_instance(self) -> None:
         """Prepare the game instance by applying templates and replacing placeholders"""
@@ -128,34 +181,14 @@ class ComputerGame(NetworkDialogueGameMaster):
         Returns:
             Tuple[Dict, List[Dict]]: (graph_config, updated_roles)
         """
-        # Determine topology type
-        topology_type = self._determine_topology_type(participants)
-
         # Create topology instance
-        topology = TopologyFactory.create_topology(topology_type)
-
+        topology = TopologyFactory.create_topology(self.game_config["topology_type"])
         # Generate graph using topology
         graph_config = topology.generate_graph(participants)
-
         # Update roles based on topology
         updated_roles = self._update_roles_for_topology(base_roles, participants, topology)
 
         return graph_config, updated_roles
-
-    def _determine_topology_type(self, participants: Dict) -> TopologyType:
-        """Determine topology type from participants.
-
-        Args:
-            participants: Dictionary with participant configuration
-
-        Returns:
-            TopologyType: The determined topology type
-        """
-        if len(participants) == 1 and "executor" in participants:
-            return TopologyType.SINGLE
-        else:
-            # Default to star for multi-agent
-            return TopologyType.STAR
 
     def _update_roles_for_topology(self, base_roles: List[Dict], participants: Dict, topology) -> List[Dict]:
         """Update roles based on topology configuration.
@@ -188,36 +221,56 @@ class ComputerGame(NetworkDialogueGameMaster):
 
         return updated_roles
 
-    def _prepare_game_config(self) -> None:
-        """Prepare game configuration dictionary"""
-        game_config = self.experiment["config"].copy()
-        observation_type = game_config.get("observation_type", "a11y_tree")
-        use_images = observation_type in ["screenshot", "screenshot_a11y_tree", "som"]
-        require_a11y_tree = observation_type in [
-            "a11y_tree",
-            "screenshot_a11y_tree",
-            "som",
-        ]
-        game_config.update({"use_images": use_images, "require_a11y_tree": require_a11y_tree})
+    def _get_agent_list(self) -> List[str]:
+        """Get list of agent IDs for blackboard topology.
 
-        # Always initialize ImageManager for archival purposes
-        aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-        aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-        aws_region = os.getenv("AWS_REGION")
-        s3_bucket = os.getenv("S3_BUCKET_NAME")
+        Returns:
+            List of agent IDs in order
+        """
+        agent_list = []
+        participants = self.game_instance.get("participants", {})
 
-        if not all([aws_access_key_id, aws_secret_access_key, aws_region, s3_bucket]):
-            raise ValueError("Missing required S3 environment variables.")
+        for role_name, config in participants.items():
+            count = config["count"]
+            for i in range(count):
+                agent_id = f"{role_name}_{i + 1}" if count > 1 else role_name
+                agent_list.append(agent_id)
 
-        game_config["image_manager"] = ImageManager(
-            game_id=self.game_instance["game_id"],
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            aws_region=aws_region,
-            s3_bucket=s3_bucket,
-        )
-        self.log_key("image_manager_s3_prefix", game_config["image_manager"].s3_prefix)
-        self.game_config = game_config
+        return agent_list
+
+    def _get_next_agent(self) -> str:
+        """Get next agent in round-robin sequence.
+
+        Returns:
+            Next agent ID
+        """
+        if not hasattr(self, "agent_list") or not self.agent_list:
+            return None
+
+        next_agent = self.agent_list[self.current_agent_index]
+        self.current_agent_index = (self.current_agent_index + 1) % len(self.agent_list)
+        return next_agent
+
+    def _handle_write_board(self, player: RoleBasedPlayer, content: str) -> None:
+        """Handle WRITE_BOARD message for blackboard topology.
+
+        Args:
+            player: The player writing to the blackboard
+            content: Content to write to the blackboard
+        """
+        if self.blackboard_manager:
+            agent_id = player.name
+            self.blackboard_manager.write_content(agent_id, content)
+            self.log_to_self("blackboard_write", {"agent_id": agent_id, "content": content, "entry_count": self.blackboard_manager.get_entry_count()})
+
+    def _get_blackboard_context(self) -> None:
+        """Get blackboard context and store raw data in message state."""
+        if self.blackboard_manager:
+            # Get raw blackboard entries (not formatted)
+            raw_entries = self.blackboard_manager.get_history()
+
+            # Store raw entries in message state
+            self.message_state.update(blackboard=raw_entries)
 
     def _initialize_formatter(self) -> None:
         """Initialize the player context formatter with the current game configuration."""
@@ -411,7 +464,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         super()._on_before_game()
         assert self._current_node == self.anchor_node, "Current node must be the anchor node at game start"
         context = self.player_context_formatter.create_context_for(self.message_state, self._current_player)
-        self.message_state.reset(preserve=["observation"])
+        self.message_state.reset(preserve=["observation", "blackboard"])  # NOTE: do we actually need to preserve blackboard?
         if context is None:
             logger.debug("No context generated for player; skipping inital context setup.")
             return
@@ -817,6 +870,8 @@ class ComputerGame(NetworkDialogueGameMaster):
             self.message_state.update(request=content)
         elif message_type == MessageType.RESPONSE:
             self.message_state.update(response=content)
+        elif message_type == MessageType.WRITE_BOARD:
+            self._handle_write_board(player, content)
         else:
             raise GameError(reason=f"Unknown message type: {message_type}")
 
@@ -824,10 +879,23 @@ class ComputerGame(NetworkDialogueGameMaster):
         if self.transition.next_node:
             next_player = self.get_player_from_node(self.transition.next_node)
             if next_player:
+                # Get blackboard context and store in message state
+                self._get_blackboard_context()
                 formatted_context = self.player_context_formatter.create_context_for(self.message_state, next_player)
                 self._set_context_for(next_player, formatted_context)
-                self.message_state.reset(preserve=["observation"])
-                logger.info(f"Set context for next player at node {self.transition.next_node}")
+                self.message_state.reset(preserve=["observation", "blackboard"])
+
+                # Handle blackboard topology round-robin
+                if self.blackboard_manager and message_type == MessageType.WRITE_BOARD:
+                    # After WRITE_BOARD, move to next agent in round-robin
+                    next_agent = self._get_next_agent()
+                    if next_agent:
+                        next_player = self.get_player_by_role(next_agent)
+                        if next_player:
+                            # Get blackboard context for next agent
+                            self._get_blackboard_context()
+                            formatted_context = self.player_context_formatter.create_context_for(self.message_state, next_player)
+                            self._set_context_for(next_player, formatted_context)
 
         # A successful turn resets the consecutive violation counter for the current player
         player_id = str(self._current_player.name)

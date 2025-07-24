@@ -27,51 +27,25 @@ class StarTopology(BaseTopology):
         )
 
     def generate_graph(self, participants: Dict) -> Dict:
-        """Generate star topology graph.
-
-        Args:
-            participants: Dictionary with participant configuration
-
-        Returns:
-            Dict containing graph configuration with nodes, edges, and anchor_node
-        """
+        """Generate star topology graph with advisor as central coordinator."""
         self.validate_participants(participants)
-
         executor_count = participants["executor"]["count"]
-
-        # Create nodes
         nodes = [{"id": "START", "type": "START"}, {"id": "advisor", "type": "PLAYER", "role_index": 0}]
-
-        # Add executor nodes
-        for i in range(executor_count):
-            executor_id = f"executor_{i + 1}" if executor_count > 1 else "executor"
-            nodes.append({"id": executor_id, "type": "PLAYER", "role_index": 1})
-
+        executor_ids = [f"executor_{i + 1}" if executor_count > 1 else "executor" for i in range(executor_count)]
+        nodes.extend({"id": eid, "type": "PLAYER", "role_index": 1} for eid in executor_ids)
         nodes.append({"id": "END", "type": "END"})
-
-        # Create star topology edges
         edges = [{"from": "START", "to": "advisor", "type": "STANDARD", "description": ""}]
-
-        # Add bidirectional communication between advisor and each executor
-        for i in range(executor_count):
-            executor_id = f"executor_{i + 1}" if executor_count > 1 else "executor"
-
-            # Advisor ↔ Executor communication
+        for eid in executor_ids:
             edges.extend(
                 [
-                    {"from": "advisor", "to": executor_id, "type": "DECISION", "condition": {"type": "REQUEST"}, "description": "REQUEST"},
-                    {"from": "advisor", "to": executor_id, "type": "DECISION", "condition": {"type": "RESPONSE"}, "description": "RESPONSE"},
-                    {"from": executor_id, "to": "advisor", "type": "DECISION", "condition": {"type": "REQUEST"}, "description": "REQUEST"},
-                    {"from": executor_id, "to": "advisor", "type": "DECISION", "condition": {"type": "RESPONSE"}, "description": "RESPONSE"},
+                    {"from": "advisor", "to": eid, "type": "DECISION", "condition": {"type": "REQUEST"}, "description": "REQUEST"},
+                    {"from": "advisor", "to": eid, "type": "DECISION", "condition": {"type": "RESPONSE"}, "description": "RESPONSE"},
+                    {"from": eid, "to": "advisor", "type": "DECISION", "condition": {"type": "REQUEST"}, "description": "REQUEST"},
+                    {"from": eid, "to": "advisor", "type": "DECISION", "condition": {"type": "RESPONSE"}, "description": "RESPONSE"},
+                    {"from": eid, "to": eid, "type": "DECISION", "condition": {"type": "EXECUTE"}, "description": "EXECUTE"},
                 ]
             )
-
-            # Executor self-loop for EXECUTE
-            edges.append({"from": executor_id, "to": executor_id, "type": "DECISION", "condition": {"type": "EXECUTE"}, "description": "EXECUTE"})
-
-        # Advisor to END for goal completion
         edges.append({"from": "advisor", "to": "END", "type": "DECISION", "condition": {"type": "STATUS"}, "description": "STATUS"})
-
         return {"nodes": nodes, "edges": edges, "anchor_node": "advisor"}
 
     def validate_participants(self, participants: Dict) -> None:
