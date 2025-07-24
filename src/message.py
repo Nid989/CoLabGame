@@ -43,7 +43,7 @@ class MessageType(Enum):
     @classmethod
     def prohibits_to(cls) -> Set["MessageType"]:
         """Returns the set of message types that prohibit a 'to' field."""
-        return {cls.EXECUTE, cls.STATUS, cls.TASK}
+        return {cls.EXECUTE, cls.STATUS, cls.TASK, cls.WRITE_BOARD}
 
     @classmethod
     def from_string(cls, message_type_str: str) -> "MessageType":
@@ -582,6 +582,6 @@ class PlayerContextFormatter:
 
         formatted_entries = []
         for entry in blackboard:
-            formatted_entries.append(f"### {entry['agent_id']}\n{entry['content']}")
+            formatted_entries.append(f"### {entry['role_id']}\n{entry['content']}")
 
         return {"content": "## Blackboard History\n" + "\n".join(formatted_entries), "image": []}

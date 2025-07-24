@@ -166,7 +166,7 @@ experiments:
     participants:
       executor:
         count: 3
-        domains: ["Happy", "Sad", "Task Coordination"]
+        domains: ["Farmer", "Developer", "Task Coordination"]
     
   multi_agent_blackboard_screenshot_a11y_tree_l1:
     environment_type: "osworld"
@@ -175,7 +175,7 @@ experiments:
     participants:
       executor:
         count: 3
-        domains: ["Happy", "Sad", "Task Coordination"]
+        domains: ["Farmer", "Developer", "Task Coordination"]
 
 # System Configuration
 system:

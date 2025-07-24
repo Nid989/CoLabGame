@@ -11,7 +11,7 @@ from dataclasses import dataclass, asdict
 class BlackboardEntry:
     """Represents a single entry in the blackboard."""
 
-    agent_id: str
+    role_id: str
     content: str
     timestamp: float
     metadata: Optional[Dict] = None
@@ -28,15 +28,15 @@ class BlackboardManager:
         """Initialize empty blackboard."""
         self.entries: List[BlackboardEntry] = []
 
-    def write_content(self, agent_id: str, content: str, metadata: Optional[Dict] = None) -> None:
+    def write_content(self, role_id: str, content: str, metadata: Optional[Dict] = None) -> None:
         """Write content to the blackboard.
 
         Args:
-            agent_id: ID of the agent writing the content
+            role_id: ID of the role writing the content
             content: Content to write to the blackboard
             metadata: Optional metadata for the entry
         """
-        entry = BlackboardEntry(agent_id=agent_id, content=content, timestamp=time.time(), metadata=metadata or {})
+        entry = BlackboardEntry(role_id=role_id, content=content, timestamp=time.time(), metadata=metadata or {})
         self.entries.append(entry)
 
     def get_history(self) -> List[Dict]:

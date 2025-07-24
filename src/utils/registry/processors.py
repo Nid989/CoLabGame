@@ -113,7 +113,7 @@ def process_blackboard(blackboard: List[Dict], game_config: Dict) -> List[Dict]:
     for entry in blackboard:
         if not isinstance(entry, dict):
             raise ValueError("Blackboard entries must be dictionaries")
-        if "agent_id" not in entry or "content" not in entry:
-            raise ValueError("Blackboard entries must have 'agent_id' and 'content' fields")
+        if "role_id" not in entry or "content" not in entry:
+            raise ValueError("Blackboard entries must have 'role_id' and 'content' fields")
 
     return blackboard

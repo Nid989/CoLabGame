@@ -110,7 +110,7 @@ class ComputerGame(NetworkDialogueGameMaster):
 
         This method handles initialization of components that are specific to different
         topology types. Currently supports:
-        - BLACKBOARD: Initializes blackboard manager and agent list for round-robin
+        - BLACKBOARD: Initializes blackboard manager and node sequence for round-robin
 
         Future topology types can add their specific initialization logic here.
         """
@@ -118,8 +118,16 @@ class ComputerGame(NetworkDialogueGameMaster):
 
         if topology_type == TopologyType.BLACKBOARD:
             self.blackboard_manager = BlackboardManager()
-            self.current_agent_index = 0
-            self.agent_list = self._get_agent_list()
+
+            # Get node_sequence from graph metadata
+            graph_config = self.game_instance.get("graph", {})
+            self.node_sequence = graph_config.get("node_sequence", [])
+
+            # Write the goal to the blackboard
+            goal = self.game_instance.get("task_config", {}).get("instruction")
+            if goal:
+                self.blackboard_manager.write_content(role_id="Goal", content=goal)
+                self._get_blackboard_context()
         else:
             self.blackboard_manager = None  # FIX: This is a hack to avoid errors when other topologies are added
 
@@ -221,52 +229,40 @@ class ComputerGame(NetworkDialogueGameMaster):
 
         return updated_roles
 
-    def _get_agent_list(self) -> List[str]:
-        """Get list of agent IDs for blackboard topology.
+    def _get_next_node(self) -> str:
+        """Get next node in round-robin sequence based on current node.
 
         Returns:
-            List of agent IDs in order
+            Next node ID in the sequence
         """
-        agent_list = []
-        participants = self.game_instance.get("participants", {})
-
-        for role_name, config in participants.items():
-            count = config["count"]
-            for i in range(count):
-                agent_id = f"{role_name}_{i + 1}" if count > 1 else role_name
-                agent_list.append(agent_id)
-
-        return agent_list
-
-    def _get_next_agent(self) -> str:
-        """Get next agent in round-robin sequence.
-
-        Returns:
-            Next agent ID
-        """
-        if not hasattr(self, "agent_list") or not self.agent_list:
+        if not hasattr(self, "node_sequence") or not self.node_sequence:
             return None
 
-        # Calculate next agent index
-        next_index = (self.current_agent_index + 1) % len(self.agent_list)
-        next_agent = self.agent_list[next_index]
+        # Find current node's position in the sequence
+        try:
+            current_index = self.node_sequence.index(self._current_node)
+        except ValueError:
+            # Current node not in sequence, fallback to first node
+            logger.warning(f"Current node {self._current_node} not found in node_sequence, using first node")
+            return self.node_sequence[0] if self.node_sequence else None
 
-        # Update the index for next time
-        self.current_agent_index = next_index
+        # Calculate next node index (round-robin)
+        next_index = (current_index + 1) % len(self.node_sequence)
+        next_node = self.node_sequence[next_index]
 
-        return next_agent
+        return next_node
 
-    def _handle_write_board(self, player: RoleBasedPlayer, content: str) -> None:
-        """Handle WRITE_BOARD message for blackboard topology.
+    def _write_to_blackboard(self, player: RoleBasedPlayer, content: str) -> None:
+        """Write to the blackboard (WRITE_BOARD message).
 
         Args:
             player: The player writing to the blackboard
             content: Content to write to the blackboard
         """
         if self.blackboard_manager:
-            agent_id = player.name
-            self.blackboard_manager.write_content(agent_id, content)
-            self.log_to_self("blackboard_write", {"agent_id": agent_id, "content": content, "entry_count": self.blackboard_manager.get_entry_count()})
+            role_id = player.role
+            self.blackboard_manager.write_content(role_id, content)
+            self.log_to_self("blackboard_write", {"role_id": role_id, "content": content, "entry_count": self.blackboard_manager.get_entry_count()})
 
     def _get_blackboard_context(self) -> None:
         """Get blackboard context and store raw data in message state."""
@@ -880,7 +876,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         elif message_type == MessageType.RESPONSE:
             self.message_state.update(response=content)
         elif message_type == MessageType.WRITE_BOARD:
-            self._handle_write_board(player, content)
+            self._write_to_blackboard(player, content)
         else:
             raise GameError(reason=f"Unknown message type: {message_type}")
 
@@ -935,7 +931,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         """
         blackboard topology processing for message transitions.
 
-        For WRITE_BOARD, sets the 'to' field to the next agent in round-robin and logs the transition.
+        For WRITE_BOARD, sets the 'to' field to the next node in round-robin and logs the transition.
         For other message types, returns data unchanged.
 
         Args:
@@ -947,10 +943,10 @@ class ComputerGame(NetworkDialogueGameMaster):
             Dict: Data with topology-specific modifications.
         """
         if message_type == MessageType.WRITE_BOARD:
-            next_agent = self._get_next_agent()
-            if next_agent:
-                data["to"] = next_agent
-                logger.info(f"Blackboard: {player.name} wrote to board, transitioning to {next_agent}")
+            next_node = self._get_next_node()
+            if next_node:
+                data["to"] = next_node
+                logger.info(f"Blackboard: {player.name} at node {self._current_node} wrote to board, transitioning to {next_node}")
         return data
 
     def _handle_player_violation(self):

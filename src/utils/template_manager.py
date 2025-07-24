@@ -156,7 +156,11 @@ class PromptTemplateManager:
             return template.render(**context)
 
         # Prepare template context
-        context = self._prepare_template_context(role_config, observation_type, participants, node_id, goal)
+        # For blackboard topology executor, do not include goal in context
+        if template_name == "blackboard_topology_executor_prompt.j2":
+            context = self._prepare_template_context(role_config, observation_type, participants, node_id, goal=None)
+        else:
+            context = self._prepare_template_context(role_config, observation_type, participants, node_id, goal)
 
         # Render the template
         return template.render(**context)
