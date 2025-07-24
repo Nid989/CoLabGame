@@ -247,8 +247,13 @@ class ComputerGame(NetworkDialogueGameMaster):
         if not hasattr(self, "agent_list") or not self.agent_list:
             return None
 
-        next_agent = self.agent_list[self.current_agent_index]
-        self.current_agent_index = (self.current_agent_index + 1) % len(self.agent_list)
+        # Calculate next agent index
+        next_index = (self.current_agent_index + 1) % len(self.agent_list)
+        next_agent = self.agent_list[next_index]
+
+        # Update the index for next time
+        self.current_agent_index = next_index
+
         return next_agent
 
     def _handle_write_board(self, player: RoleBasedPlayer, content: str) -> None:
@@ -355,9 +360,8 @@ class ComputerGame(NetworkDialogueGameMaster):
                     if role_config.receives_goal:
                         goal = self.game_instance["task_config"]["instruction"]
                     role_config.initial_prompt = template_manager.generate_prompt(
-                        role_config, self.game_config.get("observation_type"), participants, node_id, goal
+                        role_config, self.game_config.get("observation_type"), participants, node_id, goal, self.game_config.get("topology_type")
                     )
-                    print(role_config.initial_prompt)
 
                 # Create player with message permissions
                 player = RoleBasedPlayer(
@@ -591,6 +595,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                 MessageType.RESPONSE,
                 MessageType.STATUS,
                 MessageType.TASK,
+                MessageType.WRITE_BOARD,
             }:
                 if not isinstance(data["content"], str):
                     return False, ParseError(
@@ -599,6 +604,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                     )
 
             logger.info("JSON message validated successfully")
+
             return True, message_type
 
         except Exception as e:
@@ -810,11 +816,14 @@ class ComputerGame(NetworkDialogueGameMaster):
         message_type = MessageType[data["type"]]
         content = data["content"]
 
-        # Step 2: Validate transition from current node
+        # Step 2: Apply topology-specific processing (NEW LAYER)
+        processed_data = self._apply_topology_processing(data, message_type, player)
+
+        # Step 3: Validate transition from current node
         current_node = self._current_node
         next_node = None
         from_role = player.role if hasattr(player, "role") else None
-        to_role = data.get("to") if "to" in data else None
+        to_role = processed_data.get("to") if "to" in processed_data else None
 
         if message_type == MessageType.STATUS:
             next_node = "END"
@@ -822,8 +831,8 @@ class ComputerGame(NetworkDialogueGameMaster):
             # First, check decision edges for a valid transition
             decision_edges = self._get_decision_edges(current_node)
             if decision_edges:
-                if "to" in data:
-                    target_node = data["to"]
+                if "to" in processed_data:
+                    target_node = processed_data["to"]
                     for to_node, condition in decision_edges:
                         if to_node == target_node and condition.validate(message_type.name, from_role, to_role):
                             next_node = target_node
@@ -853,12 +862,12 @@ class ComputerGame(NetworkDialogueGameMaster):
                         f"No valid transition (decision or standard) found for message type {message_type.name} from role {from_role} from node {current_node}"
                     )
 
-        # Step 3: Update game state with the validated transition
+        # Step 4: Update game state with the validated transition
         self._update_round_tracking(current_node, next_node)
         self.transition.next_node = next_node
         logger.info(f"Transitioned from {current_node} to {next_node} based on message type {message_type.name}")
 
-        # Step 4: Process message content based on type
+        # Step 5: Process message content based on type
         if message_type == MessageType.EXECUTE:
             observation = self._execute_actions(content)
             self.message_state.update(observation=observation)
@@ -875,7 +884,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         else:
             raise GameError(reason=f"Unknown message type: {message_type}")
 
-        # Step 5: Prepare context for the next player if transition occurred
+        # Step 6: Prepare context for the next player if transition occurred
         if self.transition.next_node:
             next_player = self.get_player_from_node(self.transition.next_node)
             if next_player:
@@ -884,18 +893,6 @@ class ComputerGame(NetworkDialogueGameMaster):
                 formatted_context = self.player_context_formatter.create_context_for(self.message_state, next_player)
                 self._set_context_for(next_player, formatted_context)
                 self.message_state.reset(preserve=["observation", "blackboard"])
-
-                # Handle blackboard topology round-robin
-                if self.blackboard_manager and message_type == MessageType.WRITE_BOARD:
-                    # After WRITE_BOARD, move to next agent in round-robin
-                    next_agent = self._get_next_agent()
-                    if next_agent:
-                        next_player = self.get_player_by_role(next_agent)
-                        if next_player:
-                            # Get blackboard context for next agent
-                            self._get_blackboard_context()
-                            formatted_context = self.player_context_formatter.create_context_for(self.message_state, next_player)
-                            self._set_context_for(next_player, formatted_context)
 
         # A successful turn resets the consecutive violation counter for the current player
         player_id = str(self._current_player.name)
@@ -906,6 +903,55 @@ class ComputerGame(NetworkDialogueGameMaster):
         current_round = self.current_round
         if current_round in self.round_stats and player_id in self.round_stats[current_round]["players"]:
             self.round_stats[current_round]["players"][player_id]["violated_streak"] = 0
+
+    def _apply_topology_processing(self, data: Dict, message_type: MessageType, player: RoleBasedPlayer) -> Dict:
+        """
+        Apply topology-specific processing to determine next node/agent.
+
+        This method serves as a router that delegates to topology-specific processors.
+        Each topology can implement its own logic for determining transitions.
+
+        Args:
+            data: Parsed JSON response data
+            message_type: Type of message being processed
+            player: Current player instance
+
+        Returns:
+            Dict: Modified data with topology-specific changes (e.g., added 'to' field)
+        """
+        topology_type = self.game_config.get("topology_type")
+
+        # Route to topology-specific processor
+        if topology_type == TopologyType.BLACKBOARD:
+            return self._process_blackboard_topology(data, message_type, player)
+        elif topology_type == TopologyType.STAR:
+            return data
+        elif topology_type == TopologyType.SINGLE:
+            return data
+        else:
+            raise GameError(reason=f"Unknown topology type: {topology_type}")
+
+    def _process_blackboard_topology(self, data: Dict, message_type: MessageType, player: RoleBasedPlayer) -> Dict:
+        """
+        blackboard topology processing for message transitions.
+
+        For WRITE_BOARD, sets the 'to' field to the next agent in round-robin and logs the transition.
+        For other message types, returns data unchanged.
+
+        Args:
+            data: Parsed JSON response data.
+            message_type: Type of message being processed.
+            player: Current player instance.
+
+        Returns:
+            Dict: Data with topology-specific modifications.
+        """
+        if message_type == MessageType.WRITE_BOARD:
+            next_agent = self._get_next_agent()
+            if next_agent:
+                data["to"] = next_agent
+                logger.info(f"Blackboard: {player.name} wrote to board, transitioning to {next_agent}")
+        return data
 
     def _handle_player_violation(self):
         """Handles the logic for player violations, including counting and checking abortion limits."""

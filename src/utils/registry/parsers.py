@@ -85,9 +85,7 @@ def process_content(
     target_field="actions",
     description="Parse and validate pyautogui actions for osworld environment",
 )
-def parse_osworld_pyautogui(
-    content: str, environment_type: str, action_space: Optional[str]
-) -> Tuple[bool, Optional[List[str]] | Exception]:
+def parse_osworld_pyautogui(content: str, environment_type: str, action_space: Optional[str]) -> Tuple[bool, Optional[List[str]] | Exception]:
     """
     Parse and validate pyautogui code actions
     Args:
@@ -103,16 +101,12 @@ def parse_osworld_pyautogui(
         )
 
     if not isinstance(content, str) or not content.strip():
-        return False, ParseError(
-            reason="PyAutoGUI content must be a non-empty string", response=content
-        )
+        return False, ParseError(reason="PyAutoGUI content must be a non-empty string", response=content)
 
     try:
         ast.parse(content)
     except SyntaxError as e:
-        return False, ParseError(
-            reason=f"Invalid Python syntax: {str(e)}", response=content
-        )
+        return False, ParseError(reason=f"Invalid Python syntax: {str(e)}", response=content)
 
     forbidden_functions = ["locateCenterOnScreen", "screenshot"]
     ast_tree = ast.parse(content)
@@ -125,9 +119,7 @@ def parse_osworld_pyautogui(
             and node.func.attr in forbidden_functions
         ):
             # Changed from GameError to RuleViolationError
-            return False, RuleViolationError(
-                reason=f"Forbidden function '{node.func.attr}' used", response=content
-            )
+            return False, RuleViolationError(reason=f"Forbidden function '{node.func.attr}' used", response=content)
 
     return True, [content.strip()]
 
@@ -154,11 +146,7 @@ def parse_osworld_computer13(
             reason=f"Invalid context: expected environment_type='osworld', action_space='computer13', got {environment_type}, {action_space}"
         )
 
-    if (
-        not isinstance(content, list)
-        or not content
-        or not all(isinstance(item, dict) for item in content)
-    ):
+    if not isinstance(content, list) or not content or not all(isinstance(item, dict) for item in content):
         return False, ParseError(
             reason="Computer13 content must be a non-empty list of dictionaries",
             response=str(content),
@@ -167,24 +155,16 @@ def parse_osworld_computer13(
     for obj in content:
         if "action_type" not in obj:
             # Changed from GameError to RuleViolationError
-            return False, RuleViolationError(
-                reason="Missing 'action_type' in action", response=str(obj)
-            )
+            return False, RuleViolationError(reason="Missing 'action_type' in action", response=str(obj))
 
         action_type = obj["action_type"]
         action_spec = next(
-            (
-                action
-                for action in COMPUTER13_ACTIONS
-                if action["action_type"] == action_type
-            ),
+            (action for action in COMPUTER13_ACTIONS if action["action_type"] == action_type),
             None,
         )
         if action_spec is None:
             # Changed from GameError to RuleViolationError
-            return False, RuleViolationError(
-                reason=f"Invalid 'action_type': {action_type}", response=str(obj)
-            )
+            return False, RuleViolationError(reason=f"Invalid 'action_type': {action_type}", response=str(obj))
 
         param_specs = action_spec["parameters"]
         for param, spec in param_specs.items():
@@ -238,9 +218,7 @@ def parse_osworld_computer13(
     target_field="actions",
     description="Parse and validate STATUS (DONE or FAIL) for osworld environment",
 )
-def parse_osworld_status(
-    content: str, environment_type: str, action_space: Optional[str]
-) -> Tuple[bool, Optional[List[str]] | Exception]:
+def parse_osworld_status(content: str, environment_type: str, action_space: Optional[str]) -> Tuple[bool, Optional[List[str]] | Exception]:
     """
     Parse and validate STATUS content (DONE or FAIL)
     Args:
@@ -251,20 +229,14 @@ def parse_osworld_status(
         Tuple of (success: bool, status: Optional[List[str]] | Exception)
     """
     if environment_type != "osworld":
-        return False, ParseError(
-            reason=f"Invalid context: expected environment_type='osworld', got {environment_type}"
-        )
+        return False, ParseError(reason=f"Invalid context: expected environment_type='osworld', got {environment_type}")
 
     if not isinstance(content, str) or not content.strip():
-        return False, ParseError(
-            reason="STATUS content must be a non-empty string", response=content
-        )
+        return False, ParseError(reason="STATUS content must be a non-empty string", response=content)
 
     status = content.strip()
     if status not in ["DONE", "FAIL"]:
-        return False, ParseError(
-            reason="Invalid status: must be DONE or FAIL", response=status
-        )
+        return False, ParseError(reason="Invalid status: must be DONE or FAIL", response=status)
 
     return True, [status]
 
@@ -274,9 +246,7 @@ def parse_osworld_status(
     target_field="request",
     description="Parse and validate REQUEST content for osworld environment",
 )
-def parse_osworld_request(
-    content: str, environment_type: str, action_space: Optional[str]
-) -> Tuple[bool, Optional[str] | Exception]:
+def parse_osworld_request(content: str, environment_type: str, action_space: Optional[str]) -> Tuple[bool, Optional[str] | Exception]:
     """
     Parse and validate REQUEST content
     Args:
@@ -287,14 +257,10 @@ def parse_osworld_request(
         Tuple of (success: bool, request: Optional[str] | Exception)
     """
     if environment_type != "osworld":
-        return False, ParseError(
-            reason=f"Invalid context: expected environment_type='osworld', got {environment_type}"
-        )
+        return False, ParseError(reason=f"Invalid context: expected environment_type='osworld', got {environment_type}")
 
     if not isinstance(content, str) or not content.strip():
-        return False, ParseError(
-            reason="REQUEST content must be a non-empty string", response=content
-        )
+        return False, ParseError(reason="REQUEST content must be a non-empty string", response=content)
 
     return True, content.strip()
 
@@ -304,9 +270,7 @@ def parse_osworld_request(
     target_field="response",
     description="Parse and validate RESPONSE content for osworld environment",
 )
-def parse_osworld_response(
-    content: str, environment_type: str, action_space: Optional[str]
-) -> Tuple[bool, Optional[str] | Exception]:
+def parse_osworld_response(content: str, environment_type: str, action_space: Optional[str]) -> Tuple[bool, Optional[str] | Exception]:
     """
     Parse and validate RESPONSE content
     Args:
@@ -317,13 +281,33 @@ def parse_osworld_response(
         Tuple of (success: bool, response: Optional[str] | Exception)
     """
     if environment_type != "osworld":
-        return False, ParseError(
-            reason=f"Invalid context: expected environment_type='osworld', got {environment_type}"
-        )
+        return False, ParseError(reason=f"Invalid context: expected environment_type='osworld', got {environment_type}")
 
     if not isinstance(content, str) or not content.strip():
-        return False, ParseError(
-            reason="RESPONSE content must be a non-empty string", response=content
-        )
+        return False, ParseError(reason="RESPONSE content must be a non-empty string", response=content)
+
+    return True, content.strip()
+
+
+@parsers.register(("WRITE_BOARD", "osworld", None))
+@parser_config(
+    target_field="write_board",
+    description="Parse and validate WRITE_BOARD content for osworld environment",
+)
+def parse_osworld_write_board(content: str, environment_type: str, action_space: Optional[str]) -> Tuple[bool, Optional[str] | Exception]:
+    """
+    Parse and validate WRITE_BOARD content
+    Args:
+        content: The content string
+        environment_type: The environment type (expected to be 'osworld')
+        action_space: The action space (ignored for WRITE_BOARD)
+    Returns:
+        Tuple of (success: bool, content: Optional[str] | Exception)
+    """
+    if environment_type != "osworld":
+        return False, ParseError(reason=f"Invalid context: expected environment_type='osworld', got {environment_type}")
+
+    if not isinstance(content, str) or not content.strip():
+        return False, ParseError(reason="WRITE_BOARD content must be a non-empty string", response=content)
 
     return True, content.strip()

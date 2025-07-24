@@ -9,6 +9,7 @@ from pathlib import Path
 import jinja2
 
 from src.message import MessagePermissions, MessageType, RoleConfig
+from src.topologies.base import TopologyType
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +128,7 @@ class PromptTemplateManager:
         participants: Optional[Dict] = None,
         node_id: Optional[str] = None,
         goal: Optional[str] = None,
+        topology_type: Optional[TopologyType] = None,
     ) -> str:
         """Generate a dynamic prompt based on role configuration.
 
@@ -136,12 +138,13 @@ class PromptTemplateManager:
             participants: Multi-agent participant configuration for dynamic context
             node_id: The specific node ID (e.g., 'executor_1', 'executor_2') for context
             goal: Optional goal string to be included in the prompt
+            topology_type: The topology type enum (e.g., TopologyType.BLACKBOARD, TopologyType.STAR)
 
         Returns:
             Generated prompt string
         """
-        # Determine template file based on role and handler type
-        template_name = self._get_template_name(role_config, participants)
+        # Determine template file based on role and topology type
+        template_name = self._get_template_name(role_config, topology_type)
 
         try:
             template = self.env.get_template(template_name)
@@ -158,37 +161,25 @@ class PromptTemplateManager:
         # Render the template
         return template.render(**context)
 
-    def _get_template_name(self, role_config: RoleConfig, participants: Optional[Dict] = None) -> str:
-        """Determine the appropriate template file name."""
+    def _get_template_name(self, role_config: RoleConfig, topology_type: Optional[TopologyType] = None) -> str:
+        """Determine the appropriate template file name based on role and topology type."""
         role_name = role_config.name
-        handler_type = role_config.handler_type
+        # handler_type = role_config.handler_type
 
         # Extract base role type (e.g., 'executor' from 'executor_1')
         base_role = role_name.split("_")[0] if "_" in role_name else role_name
 
-        # Determine if this is a multi-agent scenario
-        is_multi_agent = participants is not None and len(participants.keys()) > 1
-
-        # Check for blackboard topology
-        if participants and "agent" in participants:
-            return "blackboard_agent_prompt.j2"
-
-        # Try role-specific template first
-        if base_role == "advisor":
-            if is_multi_agent:
-                return "multi_agent_advisor_prompt.j2"
-            else:
-                return "advisor_prompt.j2"
-        elif base_role == "executor":
-            if is_multi_agent:
-                return "multi_agent_executor_prompt.j2"
-            elif handler_type == "environment":
-                return "single_agent_executor_prompt.j2"
-            else:
-                return "executor_standard_prompt.j2"
-        else:
-            # Generic role template
-            return "generic_role_prompt.j2"
+        # Topology-based template selection
+        if topology_type:
+            if topology_type == TopologyType.BLACKBOARD and base_role == "executor":
+                return "blackboard_topology_executor_prompt.j2"
+            elif topology_type == TopologyType.STAR:
+                if base_role == "advisor":
+                    return "star_topology_advisor_prompt.j2"
+                elif base_role == "executor":
+                    return "star_topology_executor_prompt.j2"
+            elif topology_type == TopologyType.SINGLE and base_role == "executor":
+                return "single_topology_executor_prompt.j2"
 
     def _get_base_template(self, role_config: RoleConfig) -> jinja2.Template:
         """Create a basic template if specific template not found."""

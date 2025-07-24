@@ -166,7 +166,7 @@ experiments:
     participants:
       executor:
         count: 3
-        domains: ["web automation", "file management", "task coordination"]
+        domains: ["Happy", "Sad", "Task Coordination"]
     
   multi_agent_blackboard_screenshot_a11y_tree_l1:
     environment_type: "osworld"
@@ -175,7 +175,7 @@ experiments:
     participants:
       executor:
         count: 3
-        domains: ["web automation", "file management", "task coordination"]
+        domains: ["Happy", "Sad", "Task Coordination"]
 
 # System Configuration
 system:
@@ -225,5 +225,5 @@ roles:
       message_permissions:
         send: ["EXECUTE", "STATUS", "WRITE_BOARD"]
         receive: []
-      allowed_components: ["observation", "board"]
+      allowed_components: ["observation", "blackboard"]
       receives_goal: true

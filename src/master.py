@@ -274,14 +274,23 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         Extend this method for game-specific functionality
 
         Raises:
-            ValueError: If START node has no standard edges.
+            ValueError: If START node has no standard edges or if anchor_node is not among connected nodes.
         """
-        standard_edges = [
-            (_, to_node) for _, to_node, edge_data in self.graph.out_edges("START", data=True) if edge_data.get("type") == EdgeType.STANDARD
+        connected_nodes = [
+            to_node for _, to_node, edge_data in self.graph.out_edges("START", data=True) if edge_data.get("type") == EdgeType.STANDARD
         ]
-        if not standard_edges:
+
+        if not connected_nodes:
             raise ValueError("No standard edges found from START node")
-        self._current_node = standard_edges[0][1]
+
+        if self.anchor_node is not None:
+            if self.anchor_node in connected_nodes:
+                self._current_node = self.anchor_node
+            else:
+                raise ValueError(f"Anchor node '{self.anchor_node}' is not among the connected nodes from START: {connected_nodes}")
+        else:
+            self._current_node = connected_nodes[0]
+
         self._current_player = self.get_player_from_node(self._current_node)
         self._update_round_tracking("START", self._current_node)
 

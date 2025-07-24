@@ -31,7 +31,8 @@ class BlackboardTopology(BaseTopology):
         total_executors = sum(config["count"] for config in participants.values())
         nodes = [{"id": "START", "type": "START"}]
         executor_ids = [f"executor_{i + 1}" for i in range(total_executors)]
-        nodes.extend({"id": eid, "type": "PLAYER", "role_index": i} for i, eid in enumerate(executor_ids))
+        # NOTE: blackboard topology utilizes one player-role i.e. `executor` and initializes it with different domains.
+        nodes.extend({"id": eid, "type": "PLAYER", "role_index": 0} for eid in executor_ids)
         nodes.append({"id": "END", "type": "END"})
         edges = [{"from": "START", "to": eid, "type": "STANDARD", "description": ""} for eid in executor_ids]
         for i, eid in enumerate(executor_ids):
