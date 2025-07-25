@@ -13,6 +13,7 @@ class TopologyType(Enum):
     SINGLE = "single"
     STAR = "star"
     BLACKBOARD = "blackboard"
+    MESH = "mesh"
 
 
 class TopologyConfig:

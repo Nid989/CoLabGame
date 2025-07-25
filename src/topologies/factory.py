@@ -8,6 +8,7 @@ from .base import BaseTopology, TopologyType
 from .single import SingleTopology
 from .star import StarTopology
 from .blackboard import BlackboardTopology
+from .mesh import MeshTopology
 
 
 class TopologyFactory:
@@ -17,6 +18,7 @@ class TopologyFactory:
         TopologyType.SINGLE: SingleTopology,
         TopologyType.STAR: StarTopology,
         TopologyType.BLACKBOARD: BlackboardTopology,
+        TopologyType.MESH: MeshTopology,
     }
 
     @classmethod

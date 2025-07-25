@@ -924,6 +924,8 @@ class ComputerGame(NetworkDialogueGameMaster):
             return data
         elif topology_type == TopologyType.SINGLE:
             return data
+        elif topology_type == TopologyType.MESH:
+            return self._process_mesh_topology(data, message_type, player)
         else:
             raise GameError(reason=f"Unknown topology type: {topology_type}")
 
@@ -947,6 +949,28 @@ class ComputerGame(NetworkDialogueGameMaster):
             if next_node:
                 data["to"] = next_node
                 logger.info(f"Blackboard: {player.name} at node {self._current_node} wrote to board, transitioning to {next_node}")
+        return data
+
+    def _process_mesh_topology(self, data: Dict, message_type: MessageType, player: RoleBasedPlayer) -> Dict:
+        """
+        Mesh topology processing for peer-to-peer message transitions.
+
+        Mesh topology allows flexible peer-to-peer communication where executors coordinate
+        their own handoffs through REQUEST/RESPONSE messages. No additional processing
+        is needed as 'to' fields are already set by the players for peer communication.
+
+        Args:
+            data: Parsed JSON response data.
+            message_type: Type of message being processed.
+            player: Current player instance.
+
+        Returns:
+            Dict: Data unchanged (mesh uses direct peer communication)
+        """
+        # For mesh topology, most messages don't need special processing
+        # REQUEST/RESPONSE already have 'to' field set by player decision
+        # EXECUTE and STATUS don't need 'to' field
+        logger.info(f"Mesh: {player.name} at node {self._current_node} sending {message_type.name} message")
         return data
 
     def _handle_player_violation(self):

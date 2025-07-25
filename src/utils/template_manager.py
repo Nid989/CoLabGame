@@ -184,6 +184,8 @@ class PromptTemplateManager:
                     return "star_topology_executor_prompt.j2"
             elif topology_type == TopologyType.SINGLE and base_role == "executor":
                 return "single_topology_executor_prompt.j2"
+            elif topology_type == TopologyType.MESH and base_role == "executor":
+                return "mesh_topology_executor_prompt.j2"
 
     def _get_base_template(self, role_config: RoleConfig) -> jinja2.Template:
         """Create a basic template if specific template not found."""
@@ -314,12 +316,21 @@ Proceed with your assigned responsibilities.
                         except (ValueError, IndexError):
                             pass
 
+                # For mesh topology, provide peer executor domain information
+                peer_domains = []
+                if executor_count > 1:
+                    domains = participants.get("executor", {}).get("domains", [])
+                    peer_domains = domains.copy()  # All domains for mesh
+
                 context.update(
                     {
                         "include_own_domain": executor_count > 1 and own_domain is not None,
                         "own_domain": own_domain,
                         "include_other_executors": executor_count > 1,
                         "total_executors": executor_count,
+                        # Mesh-specific: provide peer domain information
+                        "include_peer_domains": executor_count > 1 and len(peer_domains) > 0,
+                        "peer_domains": peer_domains,
                     }
                 )
 

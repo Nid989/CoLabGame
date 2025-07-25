@@ -49,6 +49,10 @@ task_generation:
         use_shared: "shared_code_maintenance_l1"
       multi_agent_blackboard_screenshot_a11y_tree_l1:
         use_shared: "shared_code_maintenance_l1"
+      multi_agent_mesh_screenshot_l1:
+        use_shared: "shared_code_maintenance_l1"
+      multi_agent_mesh_screenshot_a11y_tree_l1:
+        use_shared: "shared_code_maintenance_l1"
 
 # Experiment Configuration
 experiments:
@@ -177,6 +181,25 @@ experiments:
         count: 3
         domains: ["Farmer", "Developer", "Task Coordination"]
 
+  # Mesh Topology Experiments
+  multi_agent_mesh_screenshot_l1:
+    environment_type: "osworld"
+    observation_type: "screenshot"
+    topology_type: "mesh"
+    participants:
+      executor:
+        count: 3
+        domains: ["web automation", "file management", "system administration"]
+    
+  multi_agent_mesh_screenshot_a11y_tree_l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+    participants:
+      executor:
+        count: 3
+        domains: ["Thinker", "Python", "Orchestrator"]
+
 # System Configuration
 system:
   vm_path: "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx"
@@ -226,4 +249,14 @@ roles:
         send: ["EXECUTE", "STATUS", "WRITE_BOARD"]
         receive: []
       allowed_components: ["observation", "blackboard"]
+      receives_goal: true
+
+  mesh:
+    executor:
+      name: "executor"
+      handler_type: "environment"
+      message_permissions:
+        send: ["EXECUTE", "REQUEST", "RESPONSE", "STATUS"]
+        receive: ["REQUEST", "RESPONSE"]
+      allowed_components: ["observation", "request", "response"]
       receives_goal: true
