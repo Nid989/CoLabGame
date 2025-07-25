@@ -29,7 +29,6 @@ from src.utils.image_manager import ImageManager
 from src.utils.s3_manager import S3Manager
 from src.topologies.factory import TopologyFactory
 from src.topologies.base import TopologyType
-from src.utils.blackboard_manager import BlackboardManager
 
 load_dotenv()
 
@@ -108,28 +107,26 @@ class ComputerGame(NetworkDialogueGameMaster):
     def _initialize_topology_specific_components(self) -> None:
         """Initialize topology-specific components and configurations.
 
-        This method handles initialization of components that are specific to different
-        topology types. Currently supports:
-        - BLACKBOARD: Initializes blackboard manager and node sequence for round-robin
-
-        Future topology types can add their specific initialization logic here.
+        This method delegates to topology classes to initialize their specific components.
+        Each topology can set up any special components they need for their operation.
         """
         topology_type = self.game_config["topology_type"]
 
-        if topology_type == TopologyType.BLACKBOARD:
-            self.blackboard_manager = BlackboardManager()
+        # Create topology instance and delegate initialization
+        topology = TopologyFactory.create_topology(topology_type)
+        components = topology.initialize_game_components(self.game_instance, self.game_config)
 
-            # Get node_sequence from graph metadata
-            graph_config = self.game_instance.get("graph", {})
-            self.node_sequence = graph_config.get("node_sequence", [])
+        # Apply components to game state
+        for component_name, component_value in components.items():
+            setattr(self, component_name, component_value)
 
-            # Write the goal to the blackboard
-            goal = self.game_instance.get("task_config", {}).get("instruction")
-            if goal:
-                self.blackboard_manager.write_content(role_id="Goal", content=goal)
-                self._get_blackboard_context()
+        # Handle special post-initialization logic
+        if hasattr(self, "blackboard_manager") and self.blackboard_manager:
+            self._get_blackboard_context()
         else:
-            self.blackboard_manager = None  # FIX: This is a hack to avoid errors when other topologies are added
+            # Set default blackboard_manager to None for other topologies
+            if not hasattr(self, "blackboard_manager"):
+                self.blackboard_manager = None
 
     def _prepare_game_config(self) -> None:
         """Prepare game configuration dictionary"""
@@ -904,7 +901,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         """
         Apply topology-specific processing to determine next node/agent.
 
-        This method serves as a router that delegates to topology-specific processors.
+        This method delegates to topology-specific processors implemented in topology classes.
         Each topology can implement its own logic for determining transitions.
 
         Args:
@@ -917,61 +914,17 @@ class ComputerGame(NetworkDialogueGameMaster):
         """
         topology_type = self.game_config.get("topology_type")
 
-        # Route to topology-specific processor
-        if topology_type == TopologyType.BLACKBOARD:
-            return self._process_blackboard_topology(data, message_type, player)
-        elif topology_type == TopologyType.STAR:
-            return data
-        elif topology_type == TopologyType.SINGLE:
-            return data
-        elif topology_type == TopologyType.MESH:
-            return self._process_mesh_topology(data, message_type, player)
-        else:
-            raise GameError(reason=f"Unknown topology type: {topology_type}")
+        # Create topology instance and delegate processing
+        topology = TopologyFactory.create_topology(topology_type)
 
-    def _process_blackboard_topology(self, data: Dict, message_type: MessageType, player: RoleBasedPlayer) -> Dict:
-        """
-        blackboard topology processing for message transitions.
+        # Prepare game context for topology processing
+        game_context = {
+            "current_node": self._current_node,
+            "next_node_function": self._get_next_node,
+            "node_sequence": getattr(self, "node_sequence", []),
+        }
 
-        For WRITE_BOARD, sets the 'to' field to the next node in round-robin and logs the transition.
-        For other message types, returns data unchanged.
-
-        Args:
-            data: Parsed JSON response data.
-            message_type: Type of message being processed.
-            player: Current player instance.
-
-        Returns:
-            Dict: Data with topology-specific modifications.
-        """
-        if message_type == MessageType.WRITE_BOARD:
-            next_node = self._get_next_node()
-            if next_node:
-                data["to"] = next_node
-                logger.info(f"Blackboard: {player.name} at node {self._current_node} wrote to board, transitioning to {next_node}")
-        return data
-
-    def _process_mesh_topology(self, data: Dict, message_type: MessageType, player: RoleBasedPlayer) -> Dict:
-        """
-        Mesh topology processing for peer-to-peer message transitions.
-
-        Mesh topology allows flexible peer-to-peer communication where executors coordinate
-        their own handoffs through REQUEST/RESPONSE messages. No additional processing
-        is needed as 'to' fields are already set by the players for peer communication.
-
-        Args:
-            data: Parsed JSON response data.
-            message_type: Type of message being processed.
-            player: Current player instance.
-
-        Returns:
-            Dict: Data unchanged (mesh uses direct peer communication)
-        """
-        # For mesh topology, most messages don't need special processing
-        # REQUEST/RESPONSE already have 'to' field set by player decision
-        # EXECUTE and STATUS don't need 'to' field
-        logger.info(f"Mesh: {player.name} at node {self._current_node} sending {message_type.name} message")
-        return data
+        return topology.process_message(data, message_type, player, game_context)
 
     def _handle_player_violation(self):
         """Handles the logic for player violations, including counting and checking abortion limits."""

@@ -3,10 +3,13 @@ Mesh topology implementation with peer-to-peer communication and negotiated tran
 """
 
 import random
-from typing import Dict
+import logging
+from typing import Dict, Any, List
 
 from .base import BaseTopology, TopologyConfig, TopologyType
 from src.message import MessagePermissions, MessageType
+
+logger = logging.getLogger(__name__)
 
 
 class MeshTopology(BaseTopology):
@@ -92,3 +95,63 @@ class MeshTopology(BaseTopology):
             TopologyConfig instance for mesh topology
         """
         return self.config
+
+    def process_message(self, data: Dict, message_type: Any, player: Any, game_context: Dict) -> Dict:
+        """Process mesh topology message transitions.
+
+        Mesh topology allows flexible peer-to-peer communication where executors coordinate
+        their own handoffs through REQUEST/RESPONSE messages. No additional processing
+        is needed as 'to' fields are already set by the players for peer communication.
+
+        Args:
+            data: Parsed JSON response data
+            message_type: Type of message being processed
+            player: Current player instance
+            game_context: Dictionary containing game state context
+
+        Returns:
+            Dict: Data unchanged (mesh uses direct peer communication)
+        """
+        current_node = game_context.get("current_node")
+        logger.info(f"Mesh: {player.name} at node {current_node} sending {message_type.name} message")
+        return data
+
+    def get_template_name(self, role_name: str) -> str:
+        """Get template name for mesh topology roles.
+
+        Args:
+            role_name: Name of the role (e.g., 'executor_1')
+
+        Returns:
+            str: Template filename to use for this role
+        """
+        base_role = role_name.split("_")[0] if "_" in role_name else role_name
+
+        if base_role == "executor":
+            return "mesh_topology_executor_prompt.j2"
+        else:
+            # Fallback to default implementation
+            return super().get_template_name(role_name)
+
+    def validate_experiment_config(self, experiment_config: Dict) -> List[str]:
+        """Validate experiment configuration for mesh topology.
+
+        Args:
+            experiment_config: Dictionary containing experiment configuration
+
+        Returns:
+            List[str]: List of validation error messages (empty if valid)
+        """
+        errors = []
+        participants = experiment_config.get("participants", {})
+
+        # Check for at least one participant
+        if len(participants) < 1:
+            errors.append("Mesh topology requires at least 1 participant")
+
+        # Check total executor count across all participants
+        total_executors = sum(config.get("count", 0) for config in participants.values())
+        if total_executors < 2:
+            errors.append(f"Mesh topology requires at least 2 executors total for meaningful peer-to-peer communication, got {total_executors}")
+
+        return errors

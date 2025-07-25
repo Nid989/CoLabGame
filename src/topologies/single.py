@@ -2,10 +2,13 @@
 Single agent topology implementation.
 """
 
-from typing import Dict
+import logging
+from typing import Dict, Any, List
 
 from .base import BaseTopology, TopologyConfig, TopologyType
 from src.message import MessagePermissions, MessageType
+
+logger = logging.getLogger(__name__)
 
 
 class SingleTopology(BaseTopology):
@@ -67,3 +70,66 @@ class SingleTopology(BaseTopology):
             TopologyConfig instance for single agent topology
         """
         return self.config
+
+    def process_message(self, data: Dict, message_type: Any, player: Any, game_context: Dict) -> Dict:
+        """Process single agent topology message transitions.
+
+        Single agent topology uses simple self-transitions for EXECUTE messages
+        and standard transitions for STATUS. No additional processing is needed
+        as there's only one agent.
+
+        Args:
+            data: Parsed JSON response data
+            message_type: Type of message being processed
+            player: Current player instance
+            game_context: Dictionary containing game state context
+
+        Returns:
+            Dict: Data unchanged (single agent uses simple transitions)
+        """
+        # Single agent topology doesn't need special message processing
+        # Only EXECUTE (self-loop) and STATUS (to END) messages are used
+        return data
+
+    def get_template_name(self, role_name: str) -> str:
+        """Get template name for single topology roles.
+
+        Args:
+            role_name: Name of the role (e.g., 'executor')
+
+        Returns:
+            str: Template filename to use for this role
+        """
+        base_role = role_name.split("_")[0] if "_" in role_name else role_name
+
+        if base_role == "executor":
+            return "single_topology_executor_prompt.j2"
+        else:
+            # Fallback to default implementation
+            return super().get_template_name(role_name)
+
+    def validate_experiment_config(self, experiment_config: Dict) -> List[str]:
+        """Validate experiment configuration for single topology.
+
+        Args:
+            experiment_config: Dictionary containing experiment configuration
+
+        Returns:
+            List[str]: List of validation error messages (empty if valid)
+        """
+        errors = []
+        participants = experiment_config.get("participants", {})
+
+        # Check for exactly one participant type
+        if len(participants) != 1:
+            errors.append(f"Single topology requires exactly one participant type, got {len(participants)}")
+
+        # Check for executor participant
+        if "executor" not in participants:
+            errors.append("Single topology requires an 'executor' participant")
+        else:
+            executor_count = participants["executor"].get("count", 0)
+            if executor_count != 1:
+                errors.append(f"Single topology requires exactly 1 executor, got {executor_count}")
+
+        return errors

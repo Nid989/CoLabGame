@@ -175,6 +175,9 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
                 # Check that participants match role definitions
                 self._validate_participants_roles_consistency(participants, roles.get(topology, {}), exp_name)
 
+                # Use topology-specific validation
+                self._validate_experiment_with_topology(exp_name, exp_config)
+
     def _validate_participants_roles_consistency(self, participants: dict, topology_roles: dict, exp_name: str) -> None:
         """Validate that participant roles exist in topology definition."""
         for participant_role in participants.keys():
@@ -183,6 +186,29 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
                     f"Experiment '{exp_name}' uses participant role '{participant_role}' "
                     f"but this role is not defined in the topology roles configuration"
                 )
+
+    def _validate_experiment_with_topology(self, exp_name: str, exp_config: dict) -> None:
+        """Validate experiment configuration using topology-specific validation.
+
+        Args:
+            exp_name: Name of the experiment
+            exp_config: Experiment configuration dictionary
+
+        Raises:
+            ValueError: If topology validation fails
+        """
+        from src.topologies.factory import TopologyFactory
+        from src.topologies.base import TopologyType
+
+        topology_type = TopologyType(exp_config["topology_type"])
+        topology = TopologyFactory.create_topology(topology_type)
+
+        # Let topology validate its own configuration
+        errors = topology.validate_experiment_config(exp_config)
+        if errors:
+            error_msg = f"Experiment '{exp_name}' has topology validation errors:\n"
+            error_msg += "\n".join(f"  - {error}" for error in errors)
+            raise ValueError(error_msg)
 
     def _create_output_directory(self, experiment_name: str) -> str:
         """Create and return the output directory path for an experiment."""

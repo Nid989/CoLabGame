@@ -4,7 +4,10 @@ Base classes for topology management system.
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Dict
+from typing import Dict, Any, List
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TopologyType(Enum):
@@ -62,3 +65,68 @@ class BaseTopology(ABC):
             ValueError: If participant configuration is invalid for this topology
         """
         pass
+
+    def process_message(self, data: Dict, message_type: Any, player: Any, game_context: Dict) -> Dict:
+        """Process topology-specific message logic.
+
+        This method allows topologies to modify message data based on their specific
+        communication patterns and transition rules.
+
+        Args:
+            data: Parsed JSON response data
+            message_type: Type of message being processed
+            player: Current player instance
+            game_context: Dictionary containing game state context
+
+        Returns:
+            Dict: Modified data with topology-specific changes (e.g., added 'to' field)
+        """
+        # Default implementation: no processing
+        return data
+
+    def initialize_game_components(self, game_instance: Dict, game_config: Dict) -> Dict:
+        """Initialize topology-specific components.
+
+        This method allows topologies to set up any special components they need
+        for their operation (e.g., blackboard manager, coordination state).
+
+        Args:
+            game_instance: Dictionary containing game instance configuration
+            game_config: Dictionary containing game configuration
+
+        Returns:
+            Dict: Dictionary of component names to component instances
+        """
+        # Default implementation: no components
+        return {}
+
+    def get_template_name(self, role_name: str) -> str:
+        """Get template name for a specific role.
+
+        This method allows topologies to specify which template files should be used
+        for different roles in their topology.
+
+        Args:
+            role_name: Name of the role (e.g., 'advisor', 'executor_1')
+
+        Returns:
+            str: Template filename to use for this role
+        """
+        # Default implementation: construct template name from topology type and base role
+        base_role = role_name.split("_")[0] if "_" in role_name else role_name
+        return f"{self.get_config().topology_type.value}_topology_{base_role}_prompt.j2"
+
+    def validate_experiment_config(self, experiment_config: Dict) -> List[str]:
+        """Validate experiment configuration for this topology.
+
+        This method allows topologies to validate their specific configuration
+        requirements and return a list of validation errors.
+
+        Args:
+            experiment_config: Dictionary containing experiment configuration
+
+        Returns:
+            List[str]: List of validation error messages (empty if valid)
+        """
+        # Default implementation: no additional validation
+        return []

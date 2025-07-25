@@ -168,24 +168,17 @@ class PromptTemplateManager:
     def _get_template_name(self, role_config: RoleConfig, topology_type: Optional[TopologyType] = None) -> str:
         """Determine the appropriate template file name based on role and topology type."""
         role_name = role_config.name
-        # handler_type = role_config.handler_type
 
-        # Extract base role type (e.g., 'executor' from 'executor_1')
-        base_role = role_name.split("_")[0] if "_" in role_name else role_name
-
-        # Topology-based template selection
+        # Delegate to topology class for template selection
         if topology_type:
-            if topology_type == TopologyType.BLACKBOARD and base_role == "executor":
-                return "blackboard_topology_executor_prompt.j2"
-            elif topology_type == TopologyType.STAR:
-                if base_role == "advisor":
-                    return "star_topology_advisor_prompt.j2"
-                elif base_role == "executor":
-                    return "star_topology_executor_prompt.j2"
-            elif topology_type == TopologyType.SINGLE and base_role == "executor":
-                return "single_topology_executor_prompt.j2"
-            elif topology_type == TopologyType.MESH and base_role == "executor":
-                return "mesh_topology_executor_prompt.j2"
+            from src.topologies.factory import TopologyFactory
+
+            topology = TopologyFactory.create_topology(topology_type)
+            return topology.get_template_name(role_name)
+
+        # Fallback to default naming if no topology specified
+        base_role = role_name.split("_")[0] if "_" in role_name else role_name
+        return f"default_{base_role}_prompt.j2"
 
     def _get_base_template(self, role_config: RoleConfig) -> jinja2.Template:
         """Create a basic template if specific template not found."""
