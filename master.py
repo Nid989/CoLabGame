@@ -104,30 +104,6 @@ class ComputerGame(NetworkDialogueGameMaster):
         self._build_graph()
         self._initialize_topology_specific_components()
 
-    def _initialize_topology_specific_components(self) -> None:
-        """Initialize topology-specific components and configurations.
-
-        This method delegates to topology classes to initialize their specific components.
-        Each topology can set up any special components they need for their operation.
-        """
-        topology_type = self.game_config["topology_type"]
-
-        # Create topology instance and delegate initialization
-        topology = TopologyFactory.create_topology(topology_type)
-        components = topology.initialize_game_components(self.game_instance, self.game_config)
-
-        # Apply components to game state
-        for component_name, component_value in components.items():
-            setattr(self, component_name, component_value)
-
-        # Handle special post-initialization logic
-        if hasattr(self, "blackboard_manager") and self.blackboard_manager:
-            self._get_blackboard_context()
-        else:
-            # Set default blackboard_manager to None for other topologies
-            if not hasattr(self, "blackboard_manager"):
-                self.blackboard_manager = None
-
     def _prepare_game_config(self) -> None:
         """Prepare game configuration dictionary"""
         game_config = self.experiment["config"].copy()
@@ -226,50 +202,6 @@ class ComputerGame(NetworkDialogueGameMaster):
 
         return updated_roles
 
-    def _get_next_node(self) -> str:
-        """Get next node in round-robin sequence based on current node.
-
-        Returns:
-            Next node ID in the sequence
-        """
-        if not hasattr(self, "node_sequence") or not self.node_sequence:
-            return None
-
-        # Find current node's position in the sequence
-        try:
-            current_index = self.node_sequence.index(self._current_node)
-        except ValueError:
-            # Current node not in sequence, fallback to first node
-            logger.warning(f"Current node {self._current_node} not found in node_sequence, using first node")
-            return self.node_sequence[0] if self.node_sequence else None
-
-        # Calculate next node index (round-robin)
-        next_index = (current_index + 1) % len(self.node_sequence)
-        next_node = self.node_sequence[next_index]
-
-        return next_node
-
-    def _write_to_blackboard(self, player: RoleBasedPlayer, content: str) -> None:
-        """Write to the blackboard (WRITE_BOARD message).
-
-        Args:
-            player: The player writing to the blackboard
-            content: Content to write to the blackboard
-        """
-        if self.blackboard_manager:
-            role_id = player.role
-            self.blackboard_manager.write_content(role_id, content)
-            self.log_to_self("blackboard_write", {"role_id": role_id, "content": content, "entry_count": self.blackboard_manager.get_entry_count()})
-
-    def _get_blackboard_context(self) -> None:
-        """Get blackboard context and store raw data in message state."""
-        if self.blackboard_manager:
-            # Get raw blackboard entries (not formatted)
-            raw_entries = self.blackboard_manager.get_history()
-
-            # Store raw entries in message state
-            self.message_state.update(blackboard=raw_entries)
-
     def _initialize_formatter(self) -> None:
         """Initialize the player context formatter with the current game configuration."""
         self.player_context_formatter = PlayerContextFormatter(game_config=self.game_config)
@@ -356,6 +288,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                         role_config, self.game_config.get("observation_type"), participants, node_id, goal, self.game_config.get("topology_type")
                     )
 
+                print("sliding window size", self.game_config.get("sliding_window_size"))
                 # Create player with message permissions
                 player = RoleBasedPlayer(
                     self.player_models[0],
@@ -397,6 +330,62 @@ class ComputerGame(NetworkDialogueGameMaster):
         except Exception as e:
             raise RuntimeError(f"Failed to build interaction graph: {str(e)}") from e
 
+    def _initialize_topology_specific_components(self) -> None:
+        """Initialize topology-specific components and configurations.
+
+        This method delegates to topology classes to initialize their specific components.
+        Each topology can set up any special components they need for their operation.
+        """
+        topology_type = self.game_config["topology_type"]
+
+        # Create topology instance and delegate initialization
+        topology = TopologyFactory.create_topology(topology_type)
+        components = topology.initialize_game_components(self.game_instance, self.game_config)
+
+        # Apply components to game state
+        for component_name, component_value in components.items():
+            setattr(self, component_name, component_value)
+
+        # Handle special post-initialization logic
+        if hasattr(self, "blackboard_manager") and self.blackboard_manager:
+            self._get_blackboard_context()
+        else:
+            # Set default blackboard_manager to None for other topologies
+            if not hasattr(self, "blackboard_manager"):
+                self.blackboard_manager = None
+
+    def _get_next_node(self) -> str:
+        """Get next node in round-robin sequence based on current node.
+
+        Returns:
+            Next node ID in the sequence
+        """
+        if not hasattr(self, "node_sequence") or not self.node_sequence:
+            return None
+
+        # Find current node's position in the sequence
+        try:
+            current_index = self.node_sequence.index(self._current_node)
+        except ValueError:
+            # Current node not in sequence, fallback to first node
+            logger.warning(f"Current node {self._current_node} not found in node_sequence, using first node")
+            return self.node_sequence[0] if self.node_sequence else None
+
+        # Calculate next node index (round-robin)
+        next_index = (current_index + 1) % len(self.node_sequence)
+        next_node = self.node_sequence[next_index]
+
+        return next_node
+
+    def _get_blackboard_context(self) -> None:
+        """Get blackboard context and store raw data in message state."""
+        if self.blackboard_manager:
+            # Get raw blackboard entries (not formatted)
+            raw_entries = self.blackboard_manager.get_history()
+
+            # Store raw entries in message state
+            self.message_state.update(blackboard=raw_entries)
+
     def _does_game_proceed(self) -> bool:
         """Determine if the game should continue to the next turn.
 
@@ -405,10 +394,12 @@ class ComputerGame(NetworkDialogueGameMaster):
         """
         # Stop if a critical error has occurred.
         if self.aborted:
+            print("aborted", self.aborted)
             return False
 
         # Stop if the environment has signaled the game is over.
         if self.env_terminated:
+            print("env_terminated", self.env_terminated)
             self.log_to_self("info", "Environment signaled termination.")
             return False
 
@@ -926,6 +917,18 @@ class ComputerGame(NetworkDialogueGameMaster):
 
         return topology.process_message(data, message_type, player, game_context)
 
+    def _write_to_blackboard(self, player: RoleBasedPlayer, content: str) -> None:
+        """Write to the blackboard (WRITE_BOARD message).
+
+        Args:
+            player: The player writing to the blackboard
+            content: Content to write to the blackboard
+        """
+        if self.blackboard_manager:
+            role_id = player.role
+            self.blackboard_manager.write_content(role_id, content)
+            self.log_to_self("blackboard_write", {"role_id": role_id, "content": content, "entry_count": self.blackboard_manager.get_entry_count()})
+
     def _handle_player_violation(self):
         """Handles the logic for player violations, including counting and checking abortion limits."""
         self.request_count_violated += 1
@@ -982,14 +985,15 @@ class ComputerGame(NetworkDialogueGameMaster):
         Evaluates the environment, sets success/fail state, and logs episode metrics.
         """
         # Step 1: Evaluate the episode and set success/fail/score flags
-        if not self.aborted:
-            self._episode_score = float(self.env.evaluate())
-            self.success = self._episode_score == 1.0
-            self.fail = not self.success
-        else:
-            self._episode_score = 0.0
-            self.success = False
-            self.fail = True
+        # CHANGED: Episode score is now calculated independently of aborted state
+        # Previously: if not self.aborted: self._episode_score = float(self.env.evaluate()) else: self._episode_score = 0.0
+        # Now: Always evaluate environment to get true performance score
+        self._episode_score = float(self.env.evaluate())
+        self.success = self._episode_score == 1.0
+        self.fail = not self.success
+        print("episode_score", self._episode_score)
+        print("success", self.success)
+        print("fail", self.fail)
 
         # Step 2: Log all final summary data for the episode.
         log_keys = [

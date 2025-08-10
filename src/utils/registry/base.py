@@ -66,10 +66,7 @@ class Registry(Generic[T]):
         Returns:
             Dictionary mapping function IDs to their signatures.
         """
-        return {
-            func_id: str(inspect.signature(func))
-            for func_id, func in self._registry.items()
-        }
+        return {func_id: str(inspect.signature(func)) for func_id, func in self._registry.items()}
 
     def __iter__(self):
         """Makes the registry iterable, yielding function IDs.

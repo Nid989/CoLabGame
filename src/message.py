@@ -114,6 +114,22 @@ class MessagePermissions:
         defaults = {
             "advisor": cls(send=[MessageType.RESPONSE, MessageType.STATUS], receive=[MessageType.REQUEST]),
             "executor": cls(send=[MessageType.REQUEST, MessageType.EXECUTE], receive=[MessageType.RESPONSE]),
+            # New roles
+            # Hub acts as a coordinator; can both request and respond and emit status
+            "hub": cls(
+                send=[MessageType.REQUEST, MessageType.RESPONSE, MessageType.STATUS],
+                receive=[MessageType.REQUEST, MessageType.RESPONSE],
+            ),
+            # Spoke behaves like an executor but also can respond back with status of its task
+            "spoke": cls(
+                send=[MessageType.EXECUTE, MessageType.REQUEST, MessageType.RESPONSE],
+                receive=[MessageType.REQUEST, MessageType.RESPONSE],
+            ),
+            # Collaborator is peer-to-peer; can both request and respond
+            "collaborator": cls(
+                send=[MessageType.REQUEST, MessageType.RESPONSE],
+                receive=[MessageType.REQUEST, MessageType.RESPONSE],
+            ),
         }
 
         return defaults.get(base_role, cls(send=[MessageType.REQUEST, MessageType.RESPONSE], receive=[MessageType.REQUEST, MessageType.RESPONSE]))

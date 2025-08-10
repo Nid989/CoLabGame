@@ -24,9 +24,7 @@ class Environment(ABC):
         pass
 
     @abstractmethod
-    def step(
-        self, action: Any, sleep_time: float = 0.0
-    ) -> Tuple[Dict[str, Any], float, bool, Dict[str, Any]]:
+    def step(self, action: Any, sleep_time: float = 0.0) -> Tuple[Dict[str, Any], float, bool, Dict[str, Any]]:
         """Execute an action and advance the environment by one timestep.
 
         Args:
@@ -158,9 +156,7 @@ class OSWorldComputerEnvironment(Environment):
         """
         return self._env.reset(task_config or {})
 
-    def step(
-        self, action: Any, sleep_time: float = 0.0
-    ) -> Tuple[Dict[str, Any], float, bool, Dict[str, Any]]:
+    def step(self, action: Any, sleep_time: float = 0.0) -> Tuple[Dict[str, Any], float, bool, Dict[str, Any]]:
         """Execute an action in the OSWorld environment.
 
         Args:

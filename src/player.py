@@ -17,6 +17,15 @@ class RoleBasedMeta(type(Player)):
         "advisor": {
             "_custom_response": lambda self, context: f"Advisor response to {context['content']}"  # Placeholder
         },
+        "hub": {
+            "_custom_response": lambda self, context: f"Hub response to {context['content']}"  # Placeholder
+        },
+        "spoke": {
+            "_custom_response": lambda self, context: f"Spoke response to {context['content']}"  # Placeholder
+        },
+        "collaborator": {
+            "_custom_response": lambda self, context: f"Collaborator response to {context['content']}"  # Placeholder
+        },
     }
 
     def __call__(cls, model, role: str = "executor", *args, **kwargs):
@@ -91,7 +100,7 @@ class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):
         # Default memory configuration
         default_memory_config = {
             "forget_observations": False,  # Split and forget observation details
-            "forget_images": False,  # Forget images
+            "forget_images": True,  # Forget images
             "forget_goals": False,  # Remember goals
             "forget_requests": False,  # Remember requests
             "forget_responses": False,  # Remember responses

@@ -55,6 +55,34 @@
         }
     },
     {
+        "model_name": "claude-sonnet-4-20250514",
+        "model_id": "claude-sonnet-4-20250514",
+        "backend": "anthropic",
+        "release_date": "2025-05-14",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "en",
+            "es",
+            "fr",
+            "ja"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "Anthropic",
+            "url": "https://www.anthropic.com/legal/commercial-terms"
+        },
+        "model_config": {
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            },
+            "thinking_mode": true
+        }
+    },
+    {
         "model_name": "o3-mini-2025-01-31",
         "model_id": "o3-mini-2025-01-31",
         "backend": "openai",
@@ -309,10 +337,9 @@
             }
         }
     },
-
     {
-        "model_name": "gemini-2.5-pro",
-        "model_id": "gemini-2.5-pro",
+        "model_name": "gemini-2.5-flash",
+        "model_id": "gemini-2.5-flash",
         "backend": "google",
         "release_date": "2025-06-17",
         "open_weight": false,
@@ -363,6 +390,85 @@
             "url": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         "model_config": {
+            "reasoning_model": true,
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            }
+        }
+    },
+    {
+        "model_name": "gpt-5-2025-08-07",
+        "model_id": "gpt-5-2025-08-07",
+        "backend": "openai",
+        "release_date": "2025-08-07",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "ar",
+            "bn",
+            "zh",
+            "fr",
+            "de",
+            "hi",
+            "en",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "pt",
+            "es",
+            "sw",
+            "yo"
+        ],
+        "context_size": "200k",
+        "license": {
+            "name": "OpenAI",
+            "url": "https://openai.com/policies/row-terms-of-use/"
+        },
+        "model_config": {
+            "reasoning_model": true,
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            }
+        }
+    },
+    {
+        "model_name": "gpt-5-mini-2025-08-07",
+        "model_id": "gpt-5-mini-2025-08-07",
+        "backend": "openai",
+        "release_date": "2025-08-07",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "ar",
+            "bn",
+            "zh",
+            "fr",
+            "de",
+            "hi",
+            "en",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "pt",
+            "es",
+            "sw",
+            "yo"
+        ],
+        "context_size": "200k",
+        "license": {
+            "name": "OpenAI",
+            "url": "https://openai.com/policies/row-terms-of-use/"
+        },
+        "model_config": {
+            "reasoning_model": true,
             "multimodality": {
                 "single_image": true,
                 "multiple_images": true,

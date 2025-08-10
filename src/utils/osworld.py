@@ -119,28 +119,12 @@ def judge_node(node: ET, platform="ubuntu", check_image=False) -> bool:
             or node.get("{{{:}}}expandable".format(_state_ns), "false") == "true"
             or node.get("{{{:}}}checkable".format(_state_ns), "false") == "true"
         )
-        and (
-            node.get("name", "") != ""
-            or node.text is not None
-            and len(node.text) > 0
-            or check_image
-            and node.get("image", "false") == "true"
-        )
+        and (node.get("name", "") != "" or node.text is not None and len(node.text) > 0 or check_image and node.get("image", "false") == "true")
     )
 
-    coordinates: Tuple[int, int] = eval(
-        node.get("{{{:}}}screencoord".format(_component_ns), "(-1, -1)")
-    )
-    sizes: Tuple[int, int] = eval(
-        node.get("{{{:}}}size".format(_component_ns), "(-1, -1)")
-    )
-    keeps = (
-        keeps
-        and coordinates[0] >= 0
-        and coordinates[1] >= 0
-        and sizes[0] > 0
-        and sizes[1] > 0
-    )
+    coordinates: Tuple[int, int] = eval(node.get("{{{:}}}screencoord".format(_component_ns), "(-1, -1)"))
+    sizes: Tuple[int, int] = eval(node.get("{{{:}}}size".format(_component_ns), "(-1, -1)"))
+    keeps = keeps and coordinates[0] >= 0 and coordinates[1] >= 0 and sizes[0] > 0 and sizes[1] > 0
     return keeps
 
 
@@ -163,9 +147,7 @@ def filter_nodes(root: ET, platform="ubuntu", check_image=False):
     return filtered_nodes
 
 
-def draw_bounding_boxes(
-    nodes, image_file_content, down_sampling_ratio=1.0, platform="ubuntu"
-):
+def draw_bounding_boxes(nodes, image_file_content, down_sampling_ratio=1.0, platform="ubuntu"):
     """Draw bounding boxes around UI elements on an image.
     Args:
         nodes: XML nodes to draw boxes for
@@ -240,9 +222,7 @@ def draw_bounding_boxes(
 
                 # Check that bottom_right > coords (x1 >= x0, y1 >= y0)
                 if bottom_right[0] < coords[0] or bottom_right[1] < coords[1]:
-                    raise ValueError(
-                        f"Invalid coordinates or size, coords: {coords}, size: {size}"
-                    )
+                    raise ValueError(f"Invalid coordinates or size, coords: {coords}, size: {size}")
 
                 # Check if the area only contains one color
                 cropped_image = image.crop((*coords, *bottom_right))
@@ -257,17 +237,13 @@ def draw_bounding_boxes(
                     coords[0],
                     bottom_right[1],
                 )  # Adjust Y to be above the bottom right
-                text_bbox: Tuple[int, int, int, int] = draw.textbbox(
-                    text_position, str(index), font=font, anchor="lb"
-                )
+                text_bbox: Tuple[int, int, int, int] = draw.textbbox(text_position, str(index), font=font, anchor="lb")
                 # offset: int = bottom_right[1]-text_bbox[3]
                 # text_bbox = (text_bbox[0], text_bbox[1]+offset, text_bbox[2], text_bbox[3]+offset)
 
                 # draw.rectangle([text_position, (text_position[0] + 25, text_position[1] + 18)], fill='black')
                 draw.rectangle(text_bbox, fill="black")
-                draw.text(
-                    text_position, str(index), font=font, anchor="lb", fill="white"
-                )
+                draw.text(text_position, str(index), font=font, anchor="lb", fill="white")
 
                 # each mark is an x, y, w, h tuple
                 marks.append(
@@ -281,25 +257,13 @@ def draw_bounding_boxes(
                 drew_nodes.append(_node)
 
                 if _node.text:
-                    node_text = (
-                        _node.text
-                        if '"' not in _node.text
-                        else '"{:}"'.format(_node.text.replace('"', '""'))
-                    )
-                elif _node.get("{{{:}}}class".format(class_ns_windows), "").endswith(
-                    "EditWrapper"
-                ) and _node.get("{{{:}}}value".format(_value_ns)):
+                    node_text = _node.text if '"' not in _node.text else '"{:}"'.format(_node.text.replace('"', '""'))
+                elif _node.get("{{{:}}}class".format(class_ns_windows), "").endswith("EditWrapper") and _node.get("{{{:}}}value".format(_value_ns)):
                     node_text = _node.get("{{{:}}}value".format(_value_ns), "")
-                    node_text = (
-                        node_text
-                        if '"' not in node_text
-                        else '"{:}"'.format(node_text.replace('"', '""'))
-                    )
+                    node_text = node_text if '"' not in node_text else '"{:}"'.format(node_text.replace('"', '""'))
                 else:
                     node_text = '""'
-                text_information: str = "{:d}\t{:}\t{:}\t{:}".format(
-                    index, _node.tag, _node.get("name", ""), node_text
-                )
+                text_information: str = "{:d}\t{:}\t{:}\t{:}".format(index, _node.tag, _node.get("name", ""), node_text)
                 text_informations.append(text_information)
 
                 index += 1
@@ -347,28 +311,16 @@ def linearize_accessibility_tree(accessibility_tree, platform="ubuntu"):
         raise ValueError("Invalid platform, must be 'ubuntu' or 'windows'")
 
     filtered_nodes = filter_nodes(ET.fromstring(accessibility_tree), platform)
-    linearized_accessibility_tree = [
-        "tag\tname\ttext\tclass\tdescription\tposition (top-left x&y)\tsize (w&h)"
-    ]
+    linearized_accessibility_tree = ["tag\tname\ttext\tclass\tdescription\tposition (top-left x&y)\tsize (w&h)"]
 
     # Linearize the accessibility tree nodes into a table format
     for node in filtered_nodes:
         if node.text:
-            text = (
-                node.text
-                if '"' not in node.text
-                else '"{:}"'.format(node.text.replace('"', '""'))
-            )
+            text = node.text if '"' not in node.text else '"{:}"'.format(node.text.replace('"', '""'))
 
-        elif node.get("{{{:}}}class".format(class_ns_windows), "").endswith(
-            "EditWrapper"
-        ) and node.get("{{{:}}}value".format(_value_ns)):
+        elif node.get("{{{:}}}class".format(class_ns_windows), "").endswith("EditWrapper") and node.get("{{{:}}}value".format(_value_ns)):
             node_text = node.get("{{{:}}}value".format(_value_ns), "")
-            text = (
-                node_text
-                if '"' not in node_text
-                else '"{:}"'.format(node_text.replace('"', '""'))
-            )
+            text = node_text if '"' not in node_text else '"{:}"'.format(node_text.replace('"', '""'))
         else:
             text = '""'
 
@@ -414,13 +366,9 @@ def tag_screenshot(screenshot, accessibility_tree, platform="ubuntu"):
     Returns:
         Tuple of (marks, drew_nodes, tagged_screenshot, element_list)
     """
-    nodes = filter_nodes(
-        ET.fromstring(accessibility_tree), platform=platform, check_image=True
-    )
+    nodes = filter_nodes(ET.fromstring(accessibility_tree), platform=platform, check_image=True)
     # Make tag screenshot
-    marks, drew_nodes, element_list, tagged_screenshot = draw_bounding_boxes(
-        nodes, screenshot
-    )
+    marks, drew_nodes, element_list, tagged_screenshot = draw_bounding_boxes(nodes, screenshot)
 
     return marks, drew_nodes, tagged_screenshot, element_list
 
@@ -450,9 +398,7 @@ def preprocess_observation(
                 drew_nodes,
                 tagged_screenshot,
                 element_list,
-            ) = tag_screenshot(
-                observation["screenshot"], observation["accessibility_tree"], platform
-            )
+            ) = tag_screenshot(observation["screenshot"], observation["accessibility_tree"], platform)
             screenshot = tagged_screenshot
             # Add masks for later use in action parsing
             preprocessed_obs["masks"] = masks
@@ -461,13 +407,9 @@ def preprocess_observation(
         preprocessed_obs["screenshot"] = screenshot
 
     if observation_type in ["a11y_tree", "screenshot_a11y_tree", "som"]:
-        linearized_accessibility_tree = linearize_accessibility_tree(
-            accessibility_tree=observation["accessibility_tree"], platform=platform
-        )
+        linearized_accessibility_tree = linearize_accessibility_tree(accessibility_tree=observation["accessibility_tree"], platform=platform)
         if linearized_accessibility_tree and a11y_tree_max_tokens:
-            linearized_accessibility_tree = trim_accessibility_tree(
-                linearized_accessibility_tree, a11y_tree_max_tokens
-            )
+            linearized_accessibility_tree = trim_accessibility_tree(linearized_accessibility_tree, a11y_tree_max_tokens)
         preprocessed_obs["accessibility_tree"] = linearized_accessibility_tree
 
     return preprocessed_obs
