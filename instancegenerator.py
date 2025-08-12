@@ -15,6 +15,13 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
     """
     Generates instances for the computer game with different observation types.
     Creates experiments for single executor scenarios with various observation configurations.
+
+    Each generated game instance includes:
+    - game_id: Unique identifier for the game instance
+    - task_config: Framework configuration from task generation
+    - participants: Participant configuration for the experiment
+    - category: Task category extracted from the generation session
+    - task_type: Task type extracted from the generation session
     """
 
     def __init__(self, path: str):
@@ -48,8 +55,8 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
     def _validate_unified_config(self, config: dict) -> None:
         """Validate the unified configuration format."""
 
-        # Validate all top-level sections exist
-        required_sections = ["task_generation", "experiments", "system", "roles"]
+        # Validate all top-level sections exist (roles section removed - now handled by topology configs)
+        required_sections = ["task_generation", "experiments", "system"]
         for section in required_sections:
             if section not in config:
                 raise ValueError(f"Missing required section: {section}")
@@ -58,7 +65,7 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
         self._validate_task_generation(config["task_generation"])
         self._validate_experiments(config["experiments"])
         self._validate_system(config["system"])
-        self._validate_roles(config["roles"], config["experiments"])
+        # NOTE: Roles validation removed - roles are now defined in separate topology config files
 
     def _validate_required_keys(self, data: dict, required_keys: list, context: str) -> None:
         """Generic validation for required keys."""
@@ -262,19 +269,26 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
             print(f"FATAL: Error generating tasks for run '{run_name}': {str(e)}")
             raise
 
-    def _extract_framework_configs(self, session) -> list:
-        """Extract framework configs from GenerationSession."""
-        framework_configs = []
+    def _extract_task_information(self, session) -> list:
+        """Extract framework configs and task metadata from GenerationSession."""
+        task_information = []
 
         if not session.successful_tasks:
             print("Warning: No successful tasks generated in session")
-            return framework_configs
+            return task_information
 
         for task_package in session.successful_tasks:
-            framework_configs.append(task_package.framework_config)
+            task_info = {
+                "framework_config": task_package.framework_config,
+                "category": task_package.spec.category,
+                "task_type": task_package.spec.task_type,
+                "level": task_package.spec.level,
+                "instance": task_package.spec.instance,
+            }
+            task_information.append(task_info)
 
-        print(f"Extracted {len(framework_configs)} framework configs from session")
-        return framework_configs
+        print(f"Extracted {len(task_information)} task information packages from session")
+        return task_information
 
     def _create_participants_config(self, experiment_config: dict) -> dict:
         """Create participants configuration from experiment config."""
@@ -328,14 +342,11 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
         }
 
     def _create_agent_templates(self, topology_type: str):
-        """Create templates for agent scenarios using configuration."""
-        roles_config = self.unified_config.get("roles", {})
-
-        if topology_type not in roles_config:
-            raise ValueError(f"Unknown topology type: {topology_type}")
-
-        topology_roles = roles_config[topology_type]
-        return {"roles": list(topology_roles.values()), "graph": {}}
+        """Create empty templates since roles are now created dynamically in master.py."""
+        # NOTE: In the new dynamic system, roles are created dynamically in master.py
+        # based on topology configuration files, so we return empty templates here.
+        # The actual role creation happens in master.py using topology.load_game_instance_config()
+        return {"roles": [], "graph": {}}
 
     def on_generate(self, **kwargs):
         """
@@ -346,13 +357,13 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
         # Step 1: Pre-generate and cache all shared task configurations.
         task_gen_configs = self.unified_config.get("task_generation", {}).get("experiments", {})
         shared_configs = task_gen_configs.get("shared", {})
-        cached_shared_task_configs = {}
+        cached_shared_task_information = {}
 
         print("INFO: Generating shared task sets...")
         for shared_name, config in shared_configs.items():
             session_name = config.get("output", {}).get("session_name", shared_name)
             session = self._generate_tasks(config, f"shared__{session_name}")
-            cached_shared_task_configs[shared_name] = self._extract_framework_configs(session)
+            cached_shared_task_information[shared_name] = self._extract_task_information(session)
         print("INFO: Finished generating shared task sets.")
 
         # Step 2: Generate all experiments, reusing shared tasks where possible.
@@ -373,28 +384,31 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
             if not task_gen_instruction:
                 raise ValueError(f"Task generation configuration not found for experiment: {experiment_name}")
 
-            framework_configs = []
+            task_information_list = []
             if "use_shared" in task_gen_instruction:
                 shared_name = task_gen_instruction["use_shared"]
-                if shared_name not in cached_shared_task_configs:
+                if shared_name not in cached_shared_task_information:
                     raise ValueError(f"Experiment '{experiment_name}' references a non-existent or failed shared task set: '{shared_name}'")
                 print(f"INFO: Reusing shared task set '{shared_name}' for experiment '{experiment_name}'.")
-                framework_configs = cached_shared_task_configs[shared_name]
+                task_information_list = cached_shared_task_information[shared_name]
             else:
                 # This is an individual, non-shared task configuration
                 print(f"INFO: Generating individual tasks for experiment '{experiment_name}'.")
                 session = self._generate_tasks(task_gen_instruction, experiment_name)
-                framework_configs = self._extract_framework_configs(session)
+                task_information_list = self._extract_task_information(session)
 
             # Create final game instances for the experiment
-            for task_config in framework_configs:
+            for task_info in task_information_list:
                 game_id = str(uuid.uuid4())
                 game_instance = self.add_game_instance(experiment, game_id)
 
-                merged_task_config = self._merge_task_config_with_game_config(task_config, experiment_config)
+                merged_task_config = self._merge_task_config_with_game_config(task_info["framework_config"], experiment_config)
 
                 game_instance["task_config"] = merged_task_config
                 game_instance["participants"] = participants
+                # Add task metadata extracted from the generation session
+                game_instance["category"] = task_info["category"]
+                game_instance["task_type"] = task_info["task_type"]
 
             experiment["config"] = self._create_experiment_config(experiment_name, experiment_config["observation_type"])
         print("INFO: Finished generating all experiments.")

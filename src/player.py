@@ -17,15 +17,11 @@ class RoleBasedMeta(type(Player)):
         "advisor": {
             "_custom_response": lambda self, context: f"Advisor response to {context['content']}"  # Placeholder
         },
-        "hub": {
-            "_custom_response": lambda self, context: f"Hub response to {context['content']}"  # Placeholder
-        },
-        "spoke": {
-            "_custom_response": lambda self, context: f"Spoke response to {context['content']}"  # Placeholder
-        },
-        "collaborator": {
-            "_custom_response": lambda self, context: f"Collaborator response to {context['content']}"  # Placeholder
-        },
+        "hub": {"_custom_response": lambda self, context: f"Hub coordination response to {context['content']}"},
+        "spoke_w_execute": {"_custom_response": lambda self, context: f"Spoke (with execute) response to {context['content']}"},
+        "spoke_wo_execute": {"_custom_response": lambda self, context: f"Spoke (review-only) response to {context['content']}"},
+        "participant_w_execute": {"_custom_response": lambda self, context: f"Participant (with execute) response to {context['content']}"},
+        "participant_wo_execute": {"_custom_response": lambda self, context: f"Participant (coordination-only) response to {context['content']}"},
     }
 
     def __call__(cls, model, role: str = "executor", *args, **kwargs):
@@ -42,8 +38,9 @@ class RoleBasedMeta(type(Player)):
         Raises:
             ValueError: If the specified role is not supported.
         """
-        # Extract base role type for implementation lookup (e.g., 'executor_1' -> 'executor')
-        base_role = role.split("_")[0] if "_" in role else role
+        # Extract base role type for implementation lookup
+        # Handle compound role names like 'participant_w_execute_1' -> 'participant_w_execute'
+        base_role = cls._extract_base_role(role)
 
         if base_role not in cls._role_implementations:
             raise ValueError(f"Invalid base role: {base_role}. Must be one of {list(cls._role_implementations.keys())}")
@@ -68,6 +65,26 @@ class RoleBasedMeta(type(Player)):
     def register_role(mcs, role: str, implementations: Dict[str, Any]) -> None:
         """Register a new role with its method implementations"""
         mcs._role_implementations[role] = implementations
+
+    @classmethod
+    def _extract_base_role(cls, role: str) -> str:
+        """Extract the base role type from a role identifier.
+
+        This handles compound role names properly:
+        - 'executor_1' -> 'executor'
+        - 'participant_w_execute_1' -> 'participant_w_execute'
+        - 'spoke_wo_execute_2' -> 'spoke_wo_execute'
+        """
+        # List of known compound role names
+        compound_roles = ["participant_w_execute", "participant_wo_execute", "spoke_w_execute", "spoke_wo_execute"]
+
+        # Check if the role starts with any compound role name
+        for compound_role in compound_roles:
+            if role.startswith(compound_role):
+                return compound_role
+
+        # Fall back to simple extraction for simple roles like 'executor_1' -> 'executor'
+        return role.split("_")[0] if "_" in role else role
 
 
 class RoleBasedPlayer(Player, metaclass=RoleBasedMeta):

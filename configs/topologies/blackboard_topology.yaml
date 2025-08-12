@@ -1,0 +1,37 @@
+# Blackboard Topology Configuration
+# Shared memory with round-robin turn-taking
+
+topology_type: "blackboard"
+
+# Role definitions for blackboard topology
+role_definitions:
+  participant_w_execute:
+    message_permissions:
+      send: ["EXECUTE", "STATUS", "WRITE_BOARD"]
+      receive: []
+    allowed_components: ["observation", "blackboard"]
+    receives_goal: true
+    handler_type: "environment"
+    
+  participant_wo_execute:
+    message_permissions:
+      send: ["STATUS", "WRITE_BOARD"]
+      receive: []
+    allowed_components: ["blackboard"]
+    receives_goal: true
+    handler_type: "standard"
+
+# Default participant assignments (used when no specific mapping is provided)
+default_participant_assignments:
+  participant_w_execute:
+    count: 3
+    domains: ["development", "testing", "coordination"]
+
+# Validation rules
+validation_rules:
+  min_participants: 2
+  max_participants: 10
+
+# Legacy participant mapping (maps old format to new role assignments)
+legacy_mapping:
+  executor: "participant_w_execute"

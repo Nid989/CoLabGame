@@ -1,0 +1,28 @@
+# Single Topology Configuration
+# Single agent working alone
+
+topology_type: "single"
+
+# Role definitions for single topology
+role_definitions:
+  executor:
+    message_permissions:
+      send: ["EXECUTE", "STATUS"]
+      receive: []
+    allowed_components: ["observation"]
+    receives_goal: true
+    handler_type: "environment"
+
+# Default participant assignments (used when no specific mapping is provided)
+default_participant_assignments:
+  executor:
+    count: 1
+    domains: ["general_execution"]
+
+# Validation rules
+validation_rules:
+  executor_count: "exactly_1"
+
+# Legacy participant mapping (maps old format to new role assignments)
+legacy_mapping:
+  executor: "executor"

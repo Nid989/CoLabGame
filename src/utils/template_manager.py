@@ -59,14 +59,25 @@ class PromptTemplateManager:
             return preferred_type
         return message_types[0] if message_types else ""
 
-    def _generate_json_schema(self, permissions: MessagePermissions, role_name: str, participants: Optional[Dict] = None) -> str:
+    def _generate_json_schema(
+        self, permissions: MessagePermissions, role_name: str, participants: Optional[Dict] = None, graph_config: Optional[Dict] = None
+    ) -> str:
         """Generate a standard JSON schema for message format."""
         send_types = permissions.get_send_types_str()
         requires_to = [mt for mt in permissions.send if mt in MessageType.requires_to()]
 
-        # Build available target roles
+        # Build available target roles dynamically from graph configuration
         available_targets = []
-        if participants:
+
+        if graph_config and "nodes" in graph_config:
+            # Extract all player node IDs from the graph
+            for node in graph_config["nodes"]:
+                if node.get("type") == "PLAYER":
+                    node_id = node.get("id")
+                    if node_id and node_id != role_name:  # Exclude self
+                        available_targets.append(node_id)
+        elif participants:
+            # Fallback to participant-based logic for backward compatibility
             if "advisor" in participants:
                 available_targets.append("advisor")
             if "executor" in participants:
@@ -76,13 +87,12 @@ class PromptTemplateManager:
                 else:
                     for i in range(1, executor_count + 1):
                         available_targets.append(f"executor_{i}")
+            # Remove the current agent's ID from available targets
+            if role_name in available_targets:
+                available_targets.remove(role_name)
         else:
-            # Default targets
+            # Default targets as last resort
             available_targets = ["advisor", "executor"]
-
-        # Remove the current agent's ID from available targets
-        if role_name in available_targets:
-            available_targets.remove(role_name)
 
         # Build properties in logical order: type, from, to, content
         properties = {
@@ -129,6 +139,7 @@ class PromptTemplateManager:
         node_id: Optional[str] = None,
         goal: Optional[str] = None,
         topology_type: Optional[TopologyType] = None,
+        graph_config: Optional[Dict] = None,
     ) -> str:
         """Generate a dynamic prompt based on role configuration.
 
@@ -152,15 +163,15 @@ class PromptTemplateManager:
             logger.warning(f"Template {template_name} not found, falling back to base template")
             template = self._get_base_template(role_config)
             # For base template, we need to add the JSON schema to the context
-            context = self._prepare_template_context(role_config, observation_type, participants, node_id, goal)
+            context = self._prepare_template_context(role_config, observation_type, participants, node_id, goal, graph_config=graph_config)
             return template.render(**context)
 
         # Prepare template context
         # For blackboard topology executor, do not include goal in context
         if template_name == "blackboard_topology_executor_prompt.j2":
-            context = self._prepare_template_context(role_config, observation_type, participants, node_id, goal=None)
+            context = self._prepare_template_context(role_config, observation_type, participants, node_id, goal=None, graph_config=graph_config)
         else:
-            context = self._prepare_template_context(role_config, observation_type, participants, node_id, goal)
+            context = self._prepare_template_context(role_config, observation_type, participants, node_id, goal, graph_config=graph_config)
 
         # Render the template
         return template.render(**context)
@@ -228,7 +239,7 @@ You must respond using structured JSON messages. Each reply must contain **exact
 Proceed with your assigned responsibilities.
         """.strip()
 
-        return jinja2.Template(base_template)
+        return self.env.from_string(base_template)
 
     def _prepare_template_context(
         self,
@@ -237,6 +248,7 @@ Proceed with your assigned responsibilities.
         participants: Optional[Dict] = None,
         node_id: Optional[str] = None,
         goal: Optional[str] = None,
+        graph_config: Optional[Dict] = None,
     ) -> Dict:
         """Prepare context variables for template rendering."""
         permissions = role_config.message_permissions
@@ -279,55 +291,175 @@ Proceed with your assigned responsibilities.
             "allowed_components": role_config.allowed_components,
             "message_descriptions": message_descriptions,
             "observation_type": observation_type,
-            "json_schema": self._generate_json_schema(permissions, node_id or role_config.name, participants),
+            "json_schema": self._generate_json_schema(permissions, node_id or role_config.name, participants, graph_config),
             "goal": goal,
         }
 
-        # Add multi-agent context if participants provided
+        # Add dynamic multi-agent context if participants provided
         if participants:
-            # NOTE: assumption is that there is only one advisor and multiple executors
-            executor_count = participants.get("executor", {}).get("count", 0)
+            # Use dynamic topology-aware context building
+            self._add_dynamic_topology_context(context, base_role, node_id, participants, graph_config)
 
-            if base_role == "advisor":
-                context.update(
+        return context
+
+    def _add_dynamic_topology_context(
+        self, context: Dict, base_role: str, node_id: str, participants: Dict, graph_config: Optional[Dict] = None
+    ) -> None:
+        """Add dynamic topology-aware context variables."""
+        # Get the topology-specific role information
+        from src.player import RoleBasedMeta
+
+        # Extract actual base role using the same logic as RoleBasedPlayer
+        actual_base_role = RoleBasedMeta._extract_base_role(node_id or context["role_name"])
+
+        # Handle different topology types dynamically
+        if actual_base_role in ["hub", "advisor"]:
+            # Star topology hub/advisor context
+            self._add_hub_context(context, participants, graph_config)
+        elif actual_base_role in ["spoke_w_execute", "spoke_wo_execute", "executor"]:
+            # Star topology spoke/executor context
+            self._add_spoke_context(context, actual_base_role, node_id, participants, graph_config)
+        elif actual_base_role in ["participant_w_execute", "participant_wo_execute"]:
+            # Blackboard/Mesh topology participant context
+            self._add_participant_context(context, actual_base_role, node_id, participants, graph_config)
+
+    def _add_hub_context(self, context: Dict, participants: Dict, graph_config: Optional[Dict] = None) -> None:
+        """Add context for hub/advisor roles in star topology."""
+        executor_domains = []
+
+        # Try to get domain information from graph configuration first
+        if graph_config and "node_assignments" in graph_config:
+            node_assignments = graph_config["node_assignments"]
+            # Collect node_id and domain pairs from all spoke types
+            for role_type in ["spoke_w_execute", "spoke_wo_execute"]:
+                if role_type in node_assignments:
+                    for node_info in node_assignments[role_type]:
+                        node_id = node_info.get("node_id")
+                        domain = node_info.get("domain")
+                        if node_id and domain and domain != f"general_{role_type}":
+                            executor_domains.append({"node_id": node_id, "domain": domain})
+
+        # Fallback to participant information if graph config doesn't have domains
+        if not executor_domains:
+            # Check for new topology participants first
+            spoke_domains = []
+            for role_type in ["spoke_w_execute", "spoke_wo_execute"]:
+                if role_type in participants:
+                    spoke_domains.extend(participants[role_type].get("domains", []))
+
+            # Fallback to legacy executor participants
+            if not spoke_domains and "executor" in participants:
+                spoke_domains = participants["executor"].get("domains", [])
+
+            # Convert domain list to node_id/domain pairs with generic names
+            for i, domain in enumerate(spoke_domains):
+                executor_domains.append(
                     {
-                        "include_executor_domains": executor_count > 1,
-                        "executor_domains": participants.get("executor", {}).get("domains", []) if executor_count > 1 else [],
+                        "node_id": f"spoke_{i + 1}",  # Generic fallback names
+                        "domain": domain,
                     }
                 )
-            elif base_role == "executor":
-                # Find current executor's domain using node_id
-                own_domain = None
-                if executor_count > 1 and node_id:
-                    # Extract executor number from node_id (e.g., "executor_2" -> 2)
-                    if "_" in node_id:
+
+        context.update(
+            {
+                "include_executor_domains": len(executor_domains) > 0,
+                "executor_domains": executor_domains,
+            }
+        )
+
+    def _add_spoke_context(self, context: Dict, base_role: str, node_id: str, participants: Dict, graph_config: Optional[Dict] = None) -> None:
+        """Add context for spoke/executor roles in star topology."""
+        own_domain = None
+        total_participants = 0
+
+        # Try to get domain from graph configuration first
+        if graph_config and "node_assignments" in graph_config and node_id:
+            node_assignments = graph_config["node_assignments"]
+            # Search for this specific node's domain
+            for role_type, nodes in node_assignments.items():
+                for node_info in nodes:
+                    if node_info.get("node_id") == node_id:
+                        domain = node_info.get("domain")
+                        if domain and domain != f"general_{role_type}":
+                            own_domain = domain
+                        break
+                if own_domain:
+                    break
+
+            # Count total participants
+            for role_type in ["spoke_w_execute", "spoke_wo_execute"]:
+                if role_type in node_assignments:
+                    total_participants += len(node_assignments[role_type])
+
+        # Fallback to participant information
+        if not own_domain or total_participants == 0:
+            for participant_type, participant_info in participants.items():
+                if participant_type in ["executor", "spoke_w_execute", "spoke_wo_execute"]:
+                    domains = participant_info.get("domains", [])
+                    count = participant_info.get("count", 0)
+                    total_participants += count
+
+                    # Try to match node_id to domain
+                    if node_id and "_" in node_id and not own_domain:
                         try:
-                            executor_num = int(node_id.split("_")[1])
-                            domains = participants.get("executor", {}).get("domains", [])
-                            if executor_num <= len(domains):
-                                own_domain = domains[executor_num - 1]
+                            # Extract number from node_id like "spoke_w_execute_1" -> 1
+                            parts = node_id.split("_")
+                            if parts[-1].isdigit():
+                                idx = int(parts[-1]) - 1  # Convert to 0-based index
+                                if 0 <= idx < len(domains):
+                                    own_domain = domains[idx]
                         except (ValueError, IndexError):
                             pass
 
-                # For mesh topology, provide peer executor domain information
-                peer_domains = []
-                if executor_count > 1:
-                    domains = participants.get("executor", {}).get("domains", [])
-                    peer_domains = domains.copy()  # All domains for mesh
+                    # If no domain found yet, try first domain as fallback
+                    if not own_domain and domains:
+                        own_domain = domains[0]
 
-                context.update(
-                    {
-                        "include_own_domain": executor_count > 1 and own_domain is not None,
-                        "own_domain": own_domain,
-                        "include_other_executors": executor_count > 1,
-                        "total_executors": executor_count,
-                        # Mesh-specific: provide peer domain information
-                        "include_peer_domains": executor_count > 1 and len(peer_domains) > 0,
-                        "peer_domains": peer_domains,
-                    }
-                )
+        context.update(
+            {
+                "include_own_domain": own_domain is not None,
+                "own_domain": own_domain,
+                "include_other_executors": total_participants > 1,
+                "total_executors": total_participants,
+            }
+        )
 
-        return context
+    def _add_participant_context(self, context: Dict, base_role: str, node_id: str, participants: Dict, graph_config: Optional[Dict] = None) -> None:
+        """Add context for participant roles in blackboard/mesh topologies."""
+        own_domain = None
+        total_participants = 0
+        peer_domains = []
+
+        # Collect participant information from all participant types
+        for participant_type, participant_info in participants.items():
+            if participant_type in ["executor", "participant_w_execute", "participant_wo_execute"]:
+                domains = participant_info.get("domains", [])
+                count = participant_info.get("count", 0)
+                total_participants += count
+                peer_domains.extend(domains)
+
+                # Try to match node_id to domain
+                if node_id and "_" in node_id:
+                    try:
+                        # Extract number from node_id like "participant_w_execute_2" -> 2
+                        parts = node_id.split("_")
+                        if parts[-1].isdigit():
+                            idx = int(parts[-1]) - 1  # Convert to 0-based index
+                            if 0 <= idx < len(domains):
+                                own_domain = domains[idx]
+                    except (ValueError, IndexError):
+                        pass
+
+        context.update(
+            {
+                "include_own_domain": own_domain is not None,
+                "own_domain": own_domain,
+                "include_other_executors": total_participants > 1,
+                "total_executors": total_participants,
+                "include_peer_domains": len(peer_domains) > 1,
+                "peer_domains": peer_domains,
+            }
+        )
 
     def create_message_schema(self, permissions: MessagePermissions) -> Dict:
         """Create a JSON schema for the message format based on permissions.

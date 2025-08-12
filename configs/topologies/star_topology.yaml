@@ -1,0 +1,50 @@
+# Star Topology Configuration
+# Hub-and-spoke topology with central coordinator
+
+topology_type: "star"
+
+# Role definitions for star topology
+role_definitions:
+  hub:
+    message_permissions:
+      send: ["REQUEST", "RESPONSE", "STATUS"]
+      receive: ["REQUEST", "RESPONSE"]
+    allowed_components: ["request", "response"]
+    receives_goal: true
+    handler_type: "standard"
+    
+  spoke_w_execute:
+    message_permissions:
+      send: ["EXECUTE", "REQUEST", "RESPONSE"]
+      receive: ["REQUEST", "RESPONSE"]
+    allowed_components: ["observation", "request", "response"]
+    receives_goal: false
+    handler_type: "environment"
+    
+  spoke_wo_execute:
+    message_permissions:
+      send: ["REQUEST", "RESPONSE"]
+      receive: ["REQUEST", "RESPONSE"]
+    allowed_components: ["request", "response"]
+    receives_goal: false
+    handler_type: "standard"
+
+# Default participant assignments (used when no specific mapping is provided)
+default_participant_assignments:
+  hub:
+    count: 1
+    domains: ["task_coordination"]
+  spoke_w_execute:
+    count: 2
+    domains: ["web_automation", "file_management"]
+
+# Validation rules
+validation_rules:
+  hub_count: "exactly_1"
+  min_spokes: 1
+  max_spokes: 10
+
+# Legacy participant mapping (maps old format to new role assignments)
+legacy_mapping:
+  advisor: "hub"
+  executor: "spoke_w_execute"

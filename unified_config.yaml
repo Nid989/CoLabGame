@@ -28,7 +28,7 @@ task_generation:
             instances_per_task: 4
 
         output:
-          upload_s3: false
+          upload_s3: true
           output_dir: "outputs"
           session_name: "shared_level1_4x"  
       
@@ -55,7 +55,7 @@ task_generation:
             instances_per_task: 4
 
         output:
-          upload_s3: false
+          upload_s3: true
           output_dir: "outputs"
           session_name: "shared_level2_4x"
 
@@ -82,7 +82,7 @@ task_generation:
             instances_per_task: 4
 
         output:
-          upload_s3: false
+          upload_s3: true
           output_dir: "outputs"
           session_name: "shared_level3_4x"
 
@@ -140,7 +140,8 @@ task_generation:
 experiments:
 
   # Single Agent Experiments 
-  # Level 1 (a11y_tree)
+  # Level 1
+  # a11y_tree
   single_agent_a11y_tree_l1:
     environment_type: "osworld"
     observation_type: "a11y_tree"
@@ -149,8 +150,7 @@ experiments:
       executor:
         count: 1
         domains: []
-
-  # Level 1 (screenshot_a11y_tree)
+  # screenshot_a11y_tree
   single_agent_screenshot_a11y_tree_l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
@@ -159,8 +159,7 @@ experiments:
       executor:
         count: 1
         domains: []
-
-  # Level 1 (screenshot)
+  # screenshot
   single_agent_screenshot_l1:
     environment_type: "osworld"
     observation_type: "screenshot"
@@ -169,20 +168,33 @@ experiments:
       executor:
         count: 1
         domains: []
-
-  # Multi-Agent Experiments (Level 1)
-  multi_agent_star_screenshot_l1:
+  
+  # Level 2
+  # screenshot_a11y_tree
+  single_agent_screenshot_a11y_tree_l2:
     environment_type: "osworld"
-    observation_type: "screenshot"
-    topology_type: "star"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
     participants:
-      advisor:
-        count: 1
-        domains: ["task coordination"]
       executor:
-        count: 2
-        domains: ["web automation", "file management"] # TODO: change domains to something meaningful in context of Ubuntu environment.
-    
+        count: 1
+        domains: []
+
+  # Level 3 
+  # screenshot_a11y_tree
+  single_agent_screenshot_a11y_tree_l3:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+    participants:
+      executor:
+        count: 1
+        domains: []
+
+  # Multi-Agent Experiments 
+  # Star Topology
+  # Level 1
+  # screenshot_a11y_tree
   multi_agent_star_screenshot_a11y_tree_l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
@@ -195,47 +207,8 @@ experiments:
         count: 2
         domains: ["web automation", "file management"]
 
-  # Single Agent Experiments (Level 2)
-  single_agent_a11y_tree_l2:
-    environment_type: "osworld"
-    observation_type: "a11y_tree"
-    topology_type: "single"
-    participants:
-      executor:
-        count: 1
-        domains: []
-    
-  single_agent_screenshot_a11y_tree_l2:
-    environment_type: "osworld"
-    observation_type: "screenshot_a11y_tree"
-    topology_type: "single"
-    participants:
-      executor:
-        count: 1
-        domains: []
-    
-  single_agent_screenshot_l2:
-    environment_type: "osworld"
-    observation_type: "screenshot"
-    topology_type: "single"
-    participants:
-      executor:
-        count: 1
-        domains: []
-
-  # Multi-Agent Experiments (Level 1, 2)
-  multi_agent_star_screenshot_l2:
-    environment_type: "osworld"
-    observation_type: "screenshot"
-    topology_type: "star"
-    participants:
-      advisor:
-        count: 1
-        domains: ["task coordination"]
-      executor:
-        count: 2
-        domains: ["web automation", "file management"] # TODO: change domains to something meaningful in context of Ubuntu environment.
-    
+  # Level 2 
+  # screenshot_a11y_tree    
   multi_agent_star_screenshot_a11y_tree_l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
@@ -248,16 +221,23 @@ experiments:
         count: 2
         domains: ["web automation", "file management"]
 
-  # Blackboard Topology Experiments
-  multi_agent_blackboard_screenshot_l1:
+  # Level 3
+  # screenshot_a11y_tree    
+  multi_agent_star_screenshot_a11y_tree_l3:
     environment_type: "osworld"
-    observation_type: "screenshot"
-    topology_type: "blackboard"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
     participants:
+      advisor:
+        count: 1
+        domains: ["task coordination"]
       executor:
-        count: 3
-        domains: ["Farmer", "Developer", "Task Coordination"]
-    
+        count: 2
+        domains: ["web automation", "file management"]
+
+  # Blackboard Topology
+  # Level 1
+  # screenshot
   multi_agent_blackboard_screenshot_a11y_tree_l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
@@ -267,17 +247,54 @@ experiments:
         count: 3
         domains: ["Farmer", "Developer", "Task Coordination"]
 
-  # Mesh Topology Experiments
-  multi_agent_mesh_screenshot_l1:
+  # Level 2
+  # screenshot_a11y_tree
+  multi_agent_blackboard_screenshot_a11y_tree_l2:
     environment_type: "osworld"
     observation_type: "screenshot"
+    topology_type: "blackboard"
+    participants:
+      executor:
+        count: 3
+        domains: ["Farmer", "Developer", "Task Coordination"]
+
+  # Level 3
+  # screenshot_a11y_tree
+  multi_agent_blackboard_screenshot_a11y_tree_l3:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
+    participants:
+      executor:
+        count: 3
+        domains: ["Farmer", "Developer", "Task Coordination"]
+
+  # Mesh Topology
+  # Level 1
+  # screenshot_a11y_tree
+  multi_agent_mesh_screenshot_a11y_tree_l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
     participants:
       executor:
         count: 3
-        domains: ["web automation", "file management", "system administration"]
-    
-  multi_agent_mesh_screenshot_a11y_tree_l1:
+        domains: ["Thinker", "Python", "Orchestrator"]
+
+  # Level 2
+  # screenshot_a11y_tree
+  multi_agent_mesh_screenshot_a11y_tree_l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+    participants:
+      executor:
+        count: 3
+        domains: ["Thinker", "Python", "Orchestrator"]
+
+  # Level 3
+  # screenshot_a11y_tree
+  multi_agent_mesh_screenshot_a11y_tree_l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
@@ -295,54 +312,5 @@ system:
   max_transitions_per_round: 20
   player_consecutive_violation_limit: 3
   player_total_violation_limit: 5
-  sliding_window_size: null
+  sliding_window_size: 3
 
-# Role Configurations
-roles:
-  single:
-    executor:
-      name: "executor"
-      handler_type: "environment"
-      message_permissions:
-        send: ["EXECUTE", "STATUS"]
-        receive: []
-      allowed_components: ["observation"]
-      receives_goal: true
-
-  star:
-    advisor:
-      name: "advisor"
-      handler_type: "standard"
-      message_permissions:
-        send: ["REQUEST", "RESPONSE", "STATUS"]
-        receive: ["REQUEST", "RESPONSE"]
-      allowed_components: ["request", "response"]
-      receives_goal: true
-    executor:
-      name: "executor"
-      handler_type: "environment"
-      message_permissions:
-        send: ["EXECUTE", "REQUEST", "RESPONSE"]
-        receive: ["REQUEST", "RESPONSE"]
-      allowed_components: ["observation", "request", "response"]
-      receives_goal: false
-
-  blackboard:
-    executor:
-      name: "executor"
-      handler_type: "environment"
-      message_permissions:
-        send: ["EXECUTE", "STATUS", "WRITE_BOARD"]
-        receive: []
-      allowed_components: ["observation", "blackboard"]
-      receives_goal: true
-
-  mesh:
-    executor:
-      name: "executor"
-      handler_type: "environment"
-      message_permissions:
-        send: ["EXECUTE", "REQUEST", "RESPONSE", "STATUS"]
-        receive: ["REQUEST", "RESPONSE"]
-      allowed_components: ["observation", "request", "response"]
-      receives_goal: true

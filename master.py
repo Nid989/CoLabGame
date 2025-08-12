@@ -164,43 +164,82 @@ class ComputerGame(NetworkDialogueGameMaster):
         """
         # Create topology instance
         topology = TopologyFactory.create_topology(self.game_config["topology_type"])
-        # Generate graph using topology
+
+        # NEW: Load per-instance topology configuration
+        topology.load_game_instance_config(self.game_instance)
+
+        # Generate graph using topology (now with loaded config)
         graph_config = topology.generate_graph(participants)
-        # Update roles based on topology
+
+        # Update roles based on topology (now using dynamic roles from topology config)
         updated_roles = self._update_roles_for_topology(base_roles, participants, topology)
 
         return graph_config, updated_roles
 
     def _update_roles_for_topology(self, base_roles: List[Dict], participants: Dict, topology) -> List[Dict]:
-        """Update roles based on topology configuration.
+        """Create fresh roles based on dynamic topology configuration.
 
         Args:
-            base_roles: Base role templates from experiment
+            base_roles: Base role templates from experiment (ignored in new system)
             participants: Dictionary with participant configuration
-            topology: Topology instance
+            topology: Topology instance with loaded configuration
 
         Returns:
-            List[Dict]: Updated role configurations
+            List[Dict]: Fresh role configurations created from topology
         """
-        topology_config = topology.get_config()
+        # Get the node assignments from the generated graph
+        graph_config = self.game_instance.get("graph", {})
+        node_assignments = graph_config.get("node_assignments", {})
 
-        # Apply topology-specific role configurations
-        updated_roles = []
-        for base_role in base_roles:
-            role_name = base_role["name"]
-            if role_name in participants:
-                # Apply topology-specific message permissions
-                if role_name in topology_config.message_permissions:
-                    permissions = topology_config.message_permissions[role_name]
-                    # Convert MessagePermissions object to dictionary format
-                    base_role["message_permissions"] = {
-                        "send": [mt.name for mt in permissions.send],
-                        "receive": [mt.name for mt in permissions.receive],
-                    }
+        if not node_assignments:
+            logger.warning("No node assignments found in graph config, falling back to basic role creation")
+            return self._create_basic_roles_from_topology(topology)
 
-                updated_roles.append(base_role.copy())
+        # Get topology configuration
+        role_definitions = topology.topology_config.get("role_definitions", {}) if topology.topology_config else {}
 
-        return updated_roles
+        # Create fresh roles from topology configuration
+        fresh_roles = []
+
+        for topology_role_name, role_nodes in node_assignments.items():
+            if topology_role_name in role_definitions:
+                role_def = role_definitions[topology_role_name]
+
+                # Create role configuration based on topology definition
+                role_config = {
+                    "name": topology_role_name,
+                    "handler_type": role_def.get("handler_type", "standard"),
+                    "allowed_components": role_def.get("allowed_components", []),
+                    "receives_goal": role_def.get("receives_goal", False),
+                    "message_permissions": role_def.get("message_permissions", {"send": [], "receive": []}),
+                    # Add domain information for this role
+                    "domains": [node["domain"] for node in role_nodes],
+                    "node_count": len(role_nodes),
+                }
+
+                fresh_roles.append(role_config)
+
+        logger.info(f"Created {len(fresh_roles)} fresh roles from topology configuration")
+        return fresh_roles
+
+    def _create_basic_roles_from_topology(self, topology) -> List[Dict]:
+        """Fallback method to create basic roles when node assignments are not available."""
+        role_definitions = topology.topology_config.get("role_definitions", {}) if topology.topology_config else {}
+
+        basic_roles = []
+        for role_name, role_def in role_definitions.items():
+            role_config = {
+                "name": role_name,
+                "handler_type": role_def.get("handler_type", "standard"),
+                "allowed_components": role_def.get("allowed_components", []),
+                "receives_goal": role_def.get("receives_goal", False),
+                "message_permissions": role_def.get("message_permissions", {"send": [], "receive": []}),
+                "domains": ["general"],
+                "node_count": 1,
+            }
+            basic_roles.append(role_config)
+
+        return basic_roles
 
     def _initialize_formatter(self) -> None:
         """Initialize the player context formatter with the current game configuration."""
@@ -284,8 +323,16 @@ class ComputerGame(NetworkDialogueGameMaster):
                     goal = None
                     if role_config.receives_goal:
                         goal = self.game_instance["task_config"]["instruction"]
+                    # Get topology type for template manager
+                    topology_type_enum = self.game_config.get("topology_type")
+                    # Convert string to enum if needed
+                    if isinstance(topology_type_enum, str):
+                        from src.topologies.base import TopologyType
+
+                        topology_type_enum = TopologyType(topology_type_enum.upper())
+
                     role_config.initial_prompt = template_manager.generate_prompt(
-                        role_config, self.game_config.get("observation_type"), participants, node_id, goal, self.game_config.get("topology_type")
+                        role_config, self.game_config.get("observation_type"), participants, node_id, goal, topology_type_enum, graph_config
                     )
 
                 print("sliding window size", self.game_config.get("sliding_window_size"))

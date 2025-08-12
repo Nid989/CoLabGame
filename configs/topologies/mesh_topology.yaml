@@ -1,0 +1,37 @@
+# Mesh Topology Configuration
+# Peer-to-peer communication between all participants
+
+topology_type: "mesh"
+
+# Role definitions for mesh topology
+role_definitions:
+  participant_w_execute:
+    message_permissions:
+      send: ["EXECUTE", "REQUEST", "RESPONSE", "STATUS"]
+      receive: ["REQUEST", "RESPONSE"]
+    allowed_components: ["observation", "request", "response"]
+    receives_goal: true
+    handler_type: "environment"
+    
+  participant_wo_execute:
+    message_permissions:
+      send: ["REQUEST", "RESPONSE", "STATUS"]
+      receive: ["REQUEST", "RESPONSE"]
+    allowed_components: ["request", "response"]
+    receives_goal: true
+    handler_type: "standard"
+
+# Default participant assignments (used when no specific mapping is provided)
+default_participant_assignments:
+  participant_w_execute:
+    count: 3
+    domains: ["thinking", "python_execution", "orchestration"]
+
+# Validation rules
+validation_rules:
+  min_participants: 2
+  max_participants: 8
+
+# Legacy participant mapping (maps old format to new role assignments)
+legacy_mapping:
+  executor: "participant_w_execute"

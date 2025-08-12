@@ -6,6 +6,8 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Dict, Any, List
 import logging
+import yaml
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +67,34 @@ class BaseTopology(ABC):
             ValueError: If participant configuration is invalid for this topology
         """
         pass
+
+    def load_game_instance_config(self, game_instance: Dict) -> None:
+        """Load topology configuration for a specific game instance.
+
+        This method loads the topology-specific configuration from YAML files
+        and sets up the participant assignments based on the game instance data.
+
+        Args:
+            game_instance: Dictionary containing game instance configuration
+                          with fields like game_id, category, task_type, participants
+        """
+        # Get topology type name for config file
+        topology_name = self.get_config().topology_type.value
+        config_path = f"configs/topologies/{topology_name}_topology.yaml"
+
+        # Load topology configuration from YAML file
+        if os.path.exists(config_path):
+            with open(config_path, "r") as f:
+                topology_config = yaml.safe_load(f)
+                self.topology_config = topology_config
+
+                # Future: Can add category/task-specific config loading here
+                # Example: star_topology_code_ops.yaml for category-specific configs
+
+                logger.info(f"Loaded topology config from {config_path}")
+        else:
+            logger.warning(f"Topology config file not found: {config_path}")
+            self.topology_config = None
 
     def process_message(self, data: Dict, message_type: Any, player: Any, game_context: Dict) -> Dict:
         """Process topology-specific message logic.
