@@ -3,6 +3,24 @@
 
 topology_type: "single"
 
+# Domain definitions with mandatory descriptions - Comprehensive domain library
+domain_definitions:
+  # General & Multi-purpose
+  general_execution:
+    description: "Handles general task execution including computer automation, file operations, and goal completion independently"
+  universal_automation:
+    description: "Manages comprehensive automation tasks across multiple domains including file operations, web tasks, and system interactions"
+  task_execution:
+    description: "Executes diverse tasks independently with focus on goal completion and multi-domain problem solving"
+  
+  # Specialized Single Agent Capabilities  
+  complete_automation:
+    description: "Provides end-to-end automation capabilities including web navigation, file management, system operations, and task coordination"
+  independent_operation:
+    description: "Operates independently across all task domains with comprehensive problem-solving and execution capabilities"
+  full_stack_execution:
+    description: "Handles full-stack task execution including frontend interactions, backend operations, and system-level automation"
+
 # Role definitions for single topology
 role_definitions:
   executor:
@@ -13,11 +31,33 @@ role_definitions:
     receives_goal: true
     handler_type: "environment"
 
-# Default participant assignments (used when no specific mapping is provided)
+# Default participant assignments - fallback when category not found
 default_participant_assignments:
   executor:
     count: 1
     domains: ["general_execution"]
+
+# Category-specific participant assignments
+category_participant_assignments:
+  code_ops:
+    executor:
+      count: 1
+      domains: ["universal_automation"]
+  
+  data_processing:
+    executor:
+      count: 1
+      domains: ["task_execution"]
+      
+  graphic_document:
+    executor:
+      count: 1
+      domains: ["complete_automation"]
+      
+  research_brief:
+    executor:
+      count: 1
+      domains: ["independent_operation"]
 
 # Validation rules
 validation_rules:

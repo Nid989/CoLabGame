@@ -85,7 +85,8 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
     def _validate_experiments(self, experiments: dict) -> None:
         """Validate experiments configuration."""
         for exp_name, exp_config in experiments.items():
-            self._validate_required_keys(exp_config, ["environment_type", "observation_type", "participants"], f"Experiment '{exp_name}'")
+            # Participants are now handled by topology configs, not required in experiment configs
+            self._validate_required_keys(exp_config, ["environment_type", "observation_type"], f"Experiment '{exp_name}'")
 
             # Validate topology_type if present
             if "topology_type" in exp_config:
@@ -129,7 +130,6 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
 
     def _validate_topology_types(self, used_topologies: set) -> None:
         """Validate that all used topology types have implementations."""
-        from src.topologies.factory import TopologyFactory
 
         # Get available topologies from factory
         available_topologies = TopologyFactory.get_available_topologies()
@@ -176,23 +176,8 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
         """Validate consistency between roles and experiments."""
         for exp_name, exp_config in experiments.items():
             if "topology_type" in exp_config:
-                topology = exp_config["topology_type"]
-                participants = exp_config.get("participants", {})
-
-                # Check that participants match role definitions
-                self._validate_participants_roles_consistency(participants, roles.get(topology, {}), exp_name)
-
                 # Use topology-specific validation
                 self._validate_experiment_with_topology(exp_name, exp_config)
-
-    def _validate_participants_roles_consistency(self, participants: dict, topology_roles: dict, exp_name: str) -> None:
-        """Validate that participant roles exist in topology definition."""
-        for participant_role in participants.keys():
-            if participant_role not in topology_roles:
-                raise ValueError(
-                    f"Experiment '{exp_name}' uses participant role '{participant_role}' "
-                    f"but this role is not defined in the topology roles configuration"
-                )
 
     def _validate_experiment_with_topology(self, exp_name: str, exp_config: dict) -> None:
         """Validate experiment configuration using topology-specific validation.
@@ -204,8 +189,6 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
         Raises:
             ValueError: If topology validation fails
         """
-        from src.topologies.factory import TopologyFactory
-        from src.topologies.base import TopologyType
 
         topology_type = TopologyType(exp_config["topology_type"])
         topology = TopologyFactory.create_topology(topology_type)
@@ -291,23 +274,16 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
         return task_information
 
     def _create_participants_config(self, experiment_config: dict) -> dict:
-        """Create participants configuration from experiment config."""
-        return experiment_config.get("participants", {})
+        """Create participants configuration - now handled by topology configs."""
+        # Participants are now managed by topology configurations, not experiment configs
+        # Return empty dict - topology system will populate this during graph generation
+        return {}
 
     def _create_graph_config(self, experiment_name: str, participants: dict) -> dict:
         """Create graph configuration using topology factory."""
-        experiment_config = self.unified_config["experiments"][experiment_name]
-        topology_type = experiment_config.get("topology_type", "star")
-
-        # Determine topology type
-        if len(participants) == 1 and "executor" in participants:
-            topology_type = "single"
-
-        # Create topology instance
-        topology = TopologyFactory.create_topology(TopologyType(topology_type))
-
-        # Generate graph using topology
-        return topology.generate_graph(participants)
+        # Graph config is now generated in master.py using topology configurations
+        # Return empty dict - master.py will populate this using topology.generate_graph()
+        return {}
 
     def _merge_task_config_with_game_config(self, task_config: dict, game_config: dict) -> dict:
         """Merge task configuration with game-specific configuration."""
@@ -375,9 +351,8 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
             experiment = self.add_experiment(experiment_name)
             experiment["environment_type"] = experiment_config["environment_type"]
 
-            # Determine templates (single or multi-agent)
-            participants = experiment_config["participants"]
-            experiment["templates"] = self._create_agent_templates(experiment_config["topology_type"])
+            # Templates are now created dynamically in master.py based on topology configs
+            experiment["templates"] = self._create_agent_templates(experiment_config.get("topology_type", "single"))
 
             # Get the list of task configurations for this experiment
             task_gen_instruction = individual_task_configs.get(experiment_name)
@@ -405,38 +380,13 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
                 merged_task_config = self._merge_task_config_with_game_config(task_info["framework_config"], experiment_config)
 
                 game_instance["task_config"] = merged_task_config
-                game_instance["participants"] = participants
+                # Participants are now loaded from topology configs in master.py
                 # Add task metadata extracted from the generation session
                 game_instance["category"] = task_info["category"]
                 game_instance["task_type"] = task_info["task_type"]
 
             experiment["config"] = self._create_experiment_config(experiment_name, experiment_config["observation_type"])
         print("INFO: Finished generating all experiments.")
-
-    def should_include_dynamic_domain_info(self, participants: dict):
-        """
-        Determine if domain information should be dynamically included in prompts.
-
-        Args:
-            participants: Dictionary with participant configuration
-
-        Returns:
-            Dict: Information about what dynamic info to include for each role type
-        """
-        # NOTE: assumption is that there is only one advisor and multiple executors
-        executor_count = participants["executor"]["count"]
-
-        return {
-            "advisor": {
-                "include_executor_domains": executor_count > 1,  # Only if multiple executors
-                "executor_domains": participants["executor"]["domains"] if executor_count > 1 else [],
-            },
-            "executor": {
-                "include_own_domain": executor_count > 1,  # Only if multiple executors need domain distinction
-                "include_other_executors": executor_count > 1,  # Only if there are other executors
-                "total_executors": executor_count,
-            },
-        }
 
 
 # Example usage
@@ -457,24 +407,9 @@ if __name__ == "__main__":
         for exp_name in experiments.keys():
             print(f"  - {exp_name}")
 
-        print("\n" + "=" * 50)
-        print("EXAMPLE 1: Single agent setup")
-        example_participants_1 = {
-            "executor": {"count": 1, "domains": []},
-        }
-        print(f"Participants: {example_participants_1}")
-
-        print("\n" + "=" * 50)
-        print("EXAMPLE 2: Multi-agent setup")
-        example_participants_2 = {
-            "advisor": {"count": 1, "domains": ["task coordination"]},
-            "executor": {"count": 2, "domains": ["web automation", "file management"]},
-        }
-        graph_2 = generator.generate_star_topology_graph(example_participants_2)
-        dynamic_info_2 = generator.should_include_dynamic_domain_info(example_participants_2)
-        print(f"Participants: {example_participants_2}")
-        print(f"Graph nodes: {len(graph_2['nodes'])}")
-        print(f"Graph edges: {len(graph_2['edges'])}")
-        print(f"Anchor: {graph_2['anchor_node']}")
-        print(f"Dynamic info for advisor: {dynamic_info_2['advisor']}")
-        print(f"Dynamic info for executor: {dynamic_info_2['executor']}")
+        print("\nParticipant and domain configuration is now handled by topology configs:")
+        print("  - configs/topologies/star_topology.yaml")
+        print("  - configs/topologies/blackboard_topology.yaml")
+        print("  - configs/topologies/mesh_topology.yaml")
+        print("  - configs/topologies/single_topology.yaml")
+        print("\nEach topology config defines its own domains and default participant assignments.")

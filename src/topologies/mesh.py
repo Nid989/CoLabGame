@@ -54,6 +54,7 @@ class MeshTopology(BaseTopology):
             "edges": edges,
             "anchor_node": anchor_node,
             "node_assignments": node_assignments,  # For role creation in master.py
+            "domain_definitions": self.topology_config.get("domain_definitions", {}),  # For template manager
         }
 
     def _map_participants_to_roles(self, participants: Dict) -> Dict:
@@ -268,16 +269,24 @@ class MeshTopology(BaseTopology):
         """Get template name for mesh topology roles.
 
         Args:
-            role_name: Name of the role (e.g., 'executor_1')
+            role_name: Name of the role (e.g., 'participant_w_execute_1')
 
         Returns:
             str: Template filename to use for this role
         """
+        from src.message import MessageType
+
         base_role = role_name.split("_")[0] if "_" in role_name else role_name
 
         if base_role == "participant":
-            # Both participant_w_execute and participant_wo_execute use participant template
-            return "mesh_topology_participant_prompt.j2"
+            # Get role config to check for EXECUTE permissions
+            role_config = self._get_role_config_for_name(role_name)
+
+            # Check if role has EXECUTE permissions
+            has_execute = role_config and hasattr(role_config, "message_permissions") and MessageType.EXECUTE in role_config.message_permissions.send
+
+            execute_suffix = "w_execute" if has_execute else "wo_execute"
+            return f"mesh_topology_participant_{execute_suffix}_prompt.j2"
         else:
             # Fallback to default implementation
             return super().get_template_name(role_name)

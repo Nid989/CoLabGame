@@ -3,6 +3,23 @@
 
 topology_type: "blackboard"
 
+# Domain definitions with descriptions
+domain_definitions:
+  planner:
+    description: "Expert in breaking down the goal into clear, ordered tasks and assigning them to the most suitable participants. Focuses on defining **what** needs to be done, monitoring progress, and ensuring the final output meets the goal."
+  reviewer:
+    description: "Expert at critically evaluating work and strategies, spotting errors, redundancies, or gaps, and advising on precise corrections or improvements."
+  office_productivity_specialist:
+    description: "Expert in LibreOffice Writer, Calc, and Impress, skilled at creating, editing, and formatting professional documents, spreadsheets, and presentations."
+  software_development_specialist:
+    description: "Expert in coding, debugging, and executing programs, ensuring software is correct, efficient, and meets all requirements."
+  digital_media_specialist:
+    description: "Expert in GIMP, adept at editing, resizing, and enhancing images to produce high-quality visuals that meet exact specifications."
+  web_research_specialist:
+    description: "Expert in online research, proficient at quickly finding, extracting, and organizing accurate information from the web."
+  os_operation_specialist:
+    description: "Expert in file and system management, skilled at organizing folders, setting permissions, handling archives, and executing essential OS commands."
+
 # Role definitions for blackboard topology
 role_definitions:
   participant_w_execute:
@@ -15,17 +32,39 @@ role_definitions:
     
   participant_wo_execute:
     message_permissions:
-      send: ["STATUS", "WRITE_BOARD"]
+      send: ["EXECUTE", "STATUS", "WRITE_BOARD"]
       receive: []
-    allowed_components: ["blackboard"]
+    allowed_components: ["observation", "blackboard"]
     receives_goal: true
     handler_type: "standard"
 
-# Default participant assignments (used when no specific mapping is provided)
+# Default participant assignments - fallback when category not found
 default_participant_assignments:
   participant_w_execute:
     count: 3
-    domains: ["development", "testing", "coordination"]
+    domains: ["planner", "reviewer", "software_development_specialist", "os_operation_specialist"]
+
+# Category-specific participant assignments
+category_participant_assignments:
+  code_ops:
+    participant_w_execute:
+      count: 3
+      domains: ["planner", "reviewer", "software_development_specialist", "os_operation_specialist"]
+  
+  data_processing:
+    participant_w_execute:
+      count: 3
+      domains: ["planner", "reviewer", "office_productivity_specialist", "os_operation_specialist"]
+      
+  graphic_document:
+    participant_w_execute:
+      count: 3
+      domains: ["planner", "reviewer", "digital_media_specialist", "office_productivity_specialist", "os_operation_specialist"]
+      
+  research_brief:
+    participant_w_execute:
+      count: 3
+      domains: ["planner", "reviewer", "web_research_specialist", "office_productivity_specialist", "os_operation_specialist"]
 
 # Validation rules
 validation_rules:

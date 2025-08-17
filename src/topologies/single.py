@@ -43,7 +43,12 @@ class SingleTopology(BaseTopology):
             {"from": "executor", "to": "END", "type": "STANDARD", "description": ""},
         ]
 
-        return {"nodes": nodes, "edges": edges, "anchor_node": "executor"}
+        return {
+            "nodes": nodes,
+            "edges": edges,
+            "anchor_node": "executor",
+            "domain_definitions": getattr(self, "topology_config", {}).get("domain_definitions", {}),  # For template manager
+        }
 
     def validate_participants(self, participants: Dict) -> None:
         """Validate single agent participants.

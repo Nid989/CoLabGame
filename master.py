@@ -143,45 +143,41 @@ class ComputerGame(NetworkDialogueGameMaster):
         roles = templates["roles"]
         graph = templates["graph"]
 
-        # Check if participants dictionary exists for dynamic graph generation
-        participants = self.game_instance.get("participants")
-        if participants:
-            # Generate graph and roles dynamically based on participants
-            graph, roles = self._generate_dynamic_graph_and_roles(participants, roles)
+        # Generate graph and roles dynamically based on topology configuration
+        graph, roles = self._generate_dynamic_graph_and_roles()
 
         self.game_instance["roles"] = roles
         self.game_instance["graph"] = graph
 
-    def _generate_dynamic_graph_and_roles(self, participants: Dict, base_roles: List[Dict]) -> Tuple[Dict, List[Dict]]:
-        """Generate graph and roles dynamically based on participants configuration.
-
-        Args:
-            participants: Dictionary with participant configuration
-            base_roles: Base role templates from experiment
+    def _generate_dynamic_graph_and_roles(self) -> Tuple[Dict, List[Dict]]:
+        """
+        Generate the graph structure and corresponding roles based on the current topology configuration.
 
         Returns:
-            Tuple[Dict, List[Dict]]: (graph_config, updated_roles)
+            Tuple[Dict, List[Dict]]: A tuple containing the generated graph configuration and the updated roles.
         """
-        # Create topology instance
+        # Instantiate the topology based on the configured topology type
         topology = TopologyFactory.create_topology(self.game_config["topology_type"])
 
-        # NEW: Load per-instance topology configuration
+        # Load topology-specific configuration into the topology instance
         topology.load_game_instance_config(self.game_instance)
 
-        # Generate graph using topology (now with loaded config)
-        graph_config = topology.generate_graph(participants)
+        # Obtain participant assignments as defined by the topology configuration
+        topology_participants = topology.get_default_participants()
 
-        # Update roles based on topology (now using dynamic roles from topology config)
-        updated_roles = self._update_roles_for_topology(base_roles, participants, topology)
+        # Update the game instance with authoritative participant assignments
+        self.game_instance["participants"] = topology_participants
+
+        # Generate graph using topology with topology-defined participants
+        graph_config = topology.generate_graph(topology_participants)
+        updated_roles = self._update_roles_for_topology(topology)
 
         return graph_config, updated_roles
 
-    def _update_roles_for_topology(self, base_roles: List[Dict], participants: Dict, topology) -> List[Dict]:
+    def _update_roles_for_topology(self, topology) -> List[Dict]:
         """Create fresh roles based on dynamic topology configuration.
 
         Args:
-            base_roles: Base role templates from experiment (ignored in new system)
-            participants: Dictionary with participant configuration
             topology: Topology instance with loaded configuration
 
         Returns:
@@ -335,7 +331,6 @@ class ComputerGame(NetworkDialogueGameMaster):
                         role_config, self.game_config.get("observation_type"), participants, node_id, goal, topology_type_enum, graph_config
                     )
 
-                print("sliding window size", self.game_config.get("sliding_window_size"))
                 # Create player with message permissions
                 player = RoleBasedPlayer(
                     self.player_models[0],
@@ -351,6 +346,9 @@ class ComputerGame(NetworkDialogueGameMaster):
                     initial_prompt=role_config.initial_prompt,
                     node_id=node_id,
                 )
+
+                print(role_config.initial_prompt, "initial_prompt")
+                print("-" * 100)
 
             for edge in graph_config.get("edges", []):
                 from_node = edge.get("from")
@@ -441,12 +439,10 @@ class ComputerGame(NetworkDialogueGameMaster):
         """
         # Stop if a critical error has occurred.
         if self.aborted:
-            print("aborted", self.aborted)
             return False
 
         # Stop if the environment has signaled the game is over.
         if self.env_terminated:
-            print("env_terminated", self.env_terminated)
             self.log_to_self("info", "Environment signaled termination.")
             return False
 

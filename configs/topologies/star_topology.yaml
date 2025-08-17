@@ -3,6 +3,23 @@
 
 topology_type: "star"
 
+# Domain definitions with descriptions
+domain_definitions:
+  planner:
+    description: "Expert in breaking down a goal into simple, atomic subtasks. Defines **what** needs to be done and assigns tasks to the most suitable participants, but never specifies **how** to do it. Monitors progress and ensures the final output meets all requirements."
+  reviewer:
+    description: "Expert at critically evaluating work and strategies, spotting errors, redundancies, or gaps, and advising on precise corrections or improvements."
+  office_productivity_specialist:
+    description: "Expert in LibreOffice Writer, Calc, and Impress, skilled at creating, editing, and formatting professional documents, spreadsheets, and presentations."
+  software_development_specialist:
+    description: "Expert in coding, debugging, and executing programs, ensuring software is correct, efficient, and meets all requirements."
+  digital_media_specialist:
+    description: "Expert in GIMP, adept at editing, resizing, and enhancing images to produce high-quality visuals that meet exact specifications."
+  web_research_specialist:
+    description: "Expert in online research, proficient at quickly finding, extracting, and organizing accurate information from the web."
+  os_operation_specialist:
+    description: "Expert in file and system management, skilled at organizing folders, setting permissions, handling archives, and executing essential OS commands."
+
 # Role definitions for star topology
 role_definitions:
   hub:
@@ -23,20 +40,70 @@ role_definitions:
     
   spoke_wo_execute:
     message_permissions:
-      send: ["REQUEST", "RESPONSE"]
+      send: ["EXECUTE", "REQUEST", "RESPONSE"]
       receive: ["REQUEST", "RESPONSE"]
-    allowed_components: ["request", "response"]
+    allowed_components: ["observation", "request", "response"]
     receives_goal: false
     handler_type: "standard"
 
-# Default participant assignments (used when no specific mapping is provided)
+# Default participant assignments - fallback when category not found
 default_participant_assignments:
   hub:
     count: 1
-    domains: ["task_coordination"]
+    domains: ["planner"]
   spoke_w_execute:
     count: 2
-    domains: ["web_automation", "file_management"]
+    domains: ["software_development_specialist", "os_operation_specialist"]
+  spoke_wo_execute:
+    count: 1
+    domains: ["reviewer"]
+
+# Category-specific participant assignments
+category_participant_assignments:
+  code_ops:
+    hub:
+      count: 1
+      domains: ["planner"]
+    spoke_w_execute:
+      count: 2
+      domains: ["software_development_specialist", "os_operation_specialist"]
+    spoke_wo_execute:
+      count: 1
+      domains: ["reviewer"]
+  
+  data_processing:
+    hub:
+      count: 1
+      domains: ["planner"]
+    spoke_w_execute:
+      count: 2
+      domains: ["office_productivity_specialist", "os_operation_specialist"]
+    spoke_wo_execute:
+      count: 1
+      domains: ["reviewer"]
+      
+  graphic_document:
+    hub:
+      count: 1
+      domains: ["planner"]
+    spoke_w_execute:
+      count: 3
+      domains: ["digital_media_specialist", "office_productivity_specialist", "os_operation_specialist"]
+    spoke_wo_execute:
+      count: 1
+      domains: ["reviewer"]
+      
+  research_brief:
+    hub:
+      count: 1
+      domains: ["planner"]
+    spoke_w_execute:
+      count: 3
+      domains: ["web_research_specialist", "office_productivity_specialist", "os_operation_specialist"]
+    spoke_wo_execute:
+      count: 1
+      domains: ["reviewer"]
+
 
 # Validation rules
 validation_rules:

@@ -54,6 +54,7 @@ class StarTopology(BaseTopology):
             "edges": edges,
             "anchor_node": hub_node,
             "node_assignments": node_assignments,  # For role creation in master.py
+            "domain_definitions": self.topology_config.get("domain_definitions", {}),  # For template manager
         }
 
     def _map_participants_to_roles(self, participants: Dict) -> Dict:
@@ -302,13 +303,21 @@ class StarTopology(BaseTopology):
         Returns:
             str: Template filename to use for this role
         """
+        from src.message import MessageType
+
         base_role = role_name.split("_")[0] if "_" in role_name else role_name
 
         if base_role == "hub":
             return "star_topology_hub_prompt.j2"
         elif base_role in ["spoke"]:
-            # Both spoke_w_execute and spoke_wo_execute use spoke template
-            return "star_topology_spoke_prompt.j2"
+            # Get role config to check for EXECUTE permissions
+            role_config = self._get_role_config_for_name(role_name)
+
+            # Check if role has EXECUTE permissions
+            has_execute = role_config and hasattr(role_config, "message_permissions") and MessageType.EXECUTE in role_config.message_permissions.send
+
+            execute_suffix = "w_execute" if has_execute else "wo_execute"
+            return f"star_topology_spoke_{execute_suffix}_prompt.j2"
         else:
             # Fallback to default implementation
             return super().get_template_name(role_name)

@@ -10,6 +10,7 @@ import jinja2
 
 from src.message import MessagePermissions, MessageType, RoleConfig
 from src.topologies.base import TopologyType
+from src.utils.domain_manager import DomainManager, DomainResolutionError
 
 logger = logging.getLogger(__name__)
 
@@ -69,30 +70,55 @@ class PromptTemplateManager:
         # Build available target roles dynamically from graph configuration
         available_targets = []
 
-        if graph_config and "nodes" in graph_config:
-            # Extract all player node IDs from the graph
+        if graph_config and "edges" in graph_config:
+            # Extract targets from graph edges for the current role
+            for edge in graph_config["edges"]:
+                target = None
+                if edge.get("from") == role_name and "to" in edge:
+                    target = edge["to"]
+                # If communication is bidirectional, also consider targets where the role is the target
+                elif edge.get("to") == role_name and "from" in edge and edge.get("bidirectional", False):
+                    target = edge["from"]
+
+                # Add target if valid (not self, not system nodes, not duplicate)
+                if target and target != role_name and target not in ["START", "END"] and target not in available_targets:
+                    available_targets.append(target)
+
+        elif graph_config and "nodes" in graph_config:
+            # Fallback to node-based logic if edges are not defined
             for node in graph_config["nodes"]:
                 if node.get("type") == "PLAYER":
                     node_id = node.get("id")
-                    if node_id and node_id != role_name:  # Exclude self
+                    if node_id and node_id != role_name and node_id not in available_targets:  # Exclude self and duplicates
+                        available_targets.append(node_id)
+        elif graph_config and "node_assignments" in graph_config:
+            # Extract from node assignments (newer topology structure)
+            node_assignments = graph_config["node_assignments"]
+            for role_type, nodes in node_assignments.items():
+                for node_info in nodes:
+                    node_id = node_info.get("node_id")
+                    if node_id and node_id != role_name and node_id not in available_targets:
                         available_targets.append(node_id)
         elif participants:
             # Fallback to participant-based logic for backward compatibility
-            if "advisor" in participants:
-                available_targets.append("advisor")
-            if "executor" in participants:
-                executor_count = participants["executor"].get("count", 1)
-                if executor_count == 1:
-                    available_targets.append("executor")
-                else:
-                    for i in range(1, executor_count + 1):
-                        available_targets.append(f"executor_{i}")
+            # Support both legacy and new topology role names
+            for participant_type, participant_config in participants.items():
+                if participant_type in ["advisor", "hub"]:
+                    available_targets.append("hub" if participant_type == "advisor" else participant_type)
+                elif participant_type in ["executor", "spoke_w_execute", "spoke_wo_execute", "participant_w_execute", "participant_wo_execute"]:
+                    count = participant_config.get("count", 1)
+                    base_name = participant_type
+                    if count == 1:
+                        available_targets.append(base_name)
+                    else:
+                        for i in range(1, count + 1):
+                            available_targets.append(f"{base_name}_{i}")
+
             # Remove the current agent's ID from available targets
-            if role_name in available_targets:
-                available_targets.remove(role_name)
+            available_targets = [target for target in available_targets if target != role_name]
         else:
-            # Default targets as last resort
-            available_targets = ["advisor", "executor"]
+            # Default targets as last resort (empty list is better than hardcoded names)
+            available_targets = []
 
         # Build properties in logical order: type, from, to, content
         properties = {
@@ -302,6 +328,25 @@ Proceed with your assigned responsibilities.
 
         return context
 
+    def _get_domain_manager(self, graph_config: Optional[Dict] = None) -> Optional[DomainManager]:
+        """
+        Get domain manager from graph configuration.
+
+        Args:
+            graph_config: Graph configuration containing domain definitions
+
+        Returns:
+            DomainManager instance if domain definitions are available, None otherwise
+        """
+        if not graph_config or "domain_definitions" not in graph_config:
+            raise DomainResolutionError("Domain definitions are required but not found in graph configuration")
+
+        domain_definitions = graph_config["domain_definitions"]
+        if not domain_definitions:
+            raise DomainResolutionError("Domain definitions section is empty - all domains must have descriptions")
+
+        return DomainManager(domain_definitions)
+
     def _add_dynamic_topology_context(
         self, context: Dict, base_role: str, node_id: str, participants: Dict, graph_config: Optional[Dict] = None
     ) -> None:
@@ -324,22 +369,51 @@ Proceed with your assigned responsibilities.
             self._add_participant_context(context, actual_base_role, node_id, participants, graph_config)
 
     def _add_hub_context(self, context: Dict, participants: Dict, graph_config: Optional[Dict] = None) -> None:
-        """Add context for hub/advisor roles in star topology."""
+        """Add context for hub/advisor roles in star topology with mandatory domain descriptions."""
+        # Get domain manager for resolving descriptions
+        domain_manager = self._get_domain_manager(graph_config)
         executor_domains = []
+        own_domain = None
+        node_id = context.get("role_name")
 
-        # Try to get domain information from graph configuration first
+        # Get domain information from graph configuration
         if graph_config and "node_assignments" in graph_config:
             node_assignments = graph_config["node_assignments"]
+            # Find the Hub's own domain from its node_id
+            if node_id:
+                for role_type, nodes in node_assignments.items():
+                    for node_info in nodes:
+                        if node_info.get("node_id") == node_id:
+                            domain_name = node_info.get("domain")
+                            if domain_name:
+                                domain_info = domain_manager.resolve_domain(domain_name)
+                                own_domain = {
+                                    "domain_name": domain_info["name"],
+                                    "domain_description": domain_info["description"],
+                                    "has_description": domain_info["has_description"],
+                                }
+                            break
+                    if own_domain:
+                        break
             # Collect node_id and domain pairs from all spoke types
             for role_type in ["spoke_w_execute", "spoke_wo_execute"]:
                 if role_type in node_assignments:
                     for node_info in node_assignments[role_type]:
                         node_id = node_info.get("node_id")
-                        domain = node_info.get("domain")
-                        if node_id and domain and domain != f"general_{role_type}":
-                            executor_domains.append({"node_id": node_id, "domain": domain})
+                        domain_name = node_info.get("domain")
+                        if node_id and domain_name:
+                            # Resolve domain to get description
+                            domain_info = domain_manager.resolve_domain(domain_name)
+                            executor_domains.append(
+                                {
+                                    "node_id": node_id,
+                                    "domain_name": domain_info["name"],
+                                    "domain_description": domain_info["description"],
+                                    "has_description": domain_info["has_description"],
+                                }
+                            )
 
-        # Fallback to participant information if graph config doesn't have domains
+        # Fallback to participant information if graph config doesn't have node assignments
         if not executor_domains:
             # Check for new topology participants first
             spoke_domains = []
@@ -351,24 +425,31 @@ Proceed with your assigned responsibilities.
             if not spoke_domains and "executor" in participants:
                 spoke_domains = participants["executor"].get("domains", [])
 
-            # Convert domain list to node_id/domain pairs with generic names
-            for i, domain in enumerate(spoke_domains):
+            # Convert domain list to node_id/domain pairs with descriptions
+            for i, domain_name in enumerate(spoke_domains):
+                domain_info = domain_manager.resolve_domain(domain_name)
                 executor_domains.append(
                     {
                         "node_id": f"spoke_{i + 1}",  # Generic fallback names
-                        "domain": domain,
+                        "domain_name": domain_info["name"],
+                        "domain_description": domain_info["description"],
+                        "has_description": domain_info["has_description"],
                     }
                 )
 
         context.update(
             {
                 "include_executor_domains": len(executor_domains) > 0,
-                "executor_domains": executor_domains,
+                "executor_domains": executor_domains,  # Now includes descriptions
+                "include_own_domain": own_domain is not None,
+                "own_domain": own_domain,
             }
         )
 
     def _add_spoke_context(self, context: Dict, base_role: str, node_id: str, participants: Dict, graph_config: Optional[Dict] = None) -> None:
-        """Add context for spoke/executor roles in star topology."""
+        """Add context for spoke/executor roles in star topology with mandatory domain descriptions."""
+        # Get domain manager for resolving descriptions
+        domain_manager = self._get_domain_manager(graph_config)
         own_domain = None
         total_participants = 0
 
@@ -379,9 +460,15 @@ Proceed with your assigned responsibilities.
             for role_type, nodes in node_assignments.items():
                 for node_info in nodes:
                     if node_info.get("node_id") == node_id:
-                        domain = node_info.get("domain")
-                        if domain and domain != f"general_{role_type}":
-                            own_domain = domain
+                        domain_name = node_info.get("domain")
+                        if domain_name:
+                            # Resolve domain to get description
+                            domain_info = domain_manager.resolve_domain(domain_name)
+                            own_domain = {
+                                "domain_name": domain_info["name"],
+                                "domain_description": domain_info["description"],
+                                "has_description": domain_info["has_description"],
+                            }
                         break
                 if own_domain:
                     break
@@ -393,6 +480,7 @@ Proceed with your assigned responsibilities.
 
         # Fallback to participant information
         if not own_domain or total_participants == 0:
+            found_domain_name = None
             for participant_type, participant_info in participants.items():
                 if participant_type in ["executor", "spoke_w_execute", "spoke_wo_execute"]:
                     domains = participant_info.get("domains", [])
@@ -400,64 +488,134 @@ Proceed with your assigned responsibilities.
                     total_participants += count
 
                     # Try to match node_id to domain
-                    if node_id and "_" in node_id and not own_domain:
+                    if node_id and "_" in node_id and not found_domain_name:
                         try:
                             # Extract number from node_id like "spoke_w_execute_1" -> 1
                             parts = node_id.split("_")
                             if parts[-1].isdigit():
                                 idx = int(parts[-1]) - 1  # Convert to 0-based index
                                 if 0 <= idx < len(domains):
-                                    own_domain = domains[idx]
+                                    found_domain_name = domains[idx]
                         except (ValueError, IndexError):
                             pass
 
                     # If no domain found yet, try first domain as fallback
-                    if not own_domain and domains:
-                        own_domain = domains[0]
+                    if not found_domain_name and domains:
+                        found_domain_name = domains[0]
+
+            # Resolve the found domain name to get description
+            if found_domain_name and not own_domain:
+                domain_info = domain_manager.resolve_domain(found_domain_name)
+                own_domain = {
+                    "domain_name": domain_info["name"],
+                    "domain_description": domain_info["description"],
+                    "has_description": domain_info["has_description"],
+                }
 
         context.update(
             {
                 "include_own_domain": own_domain is not None,
-                "own_domain": own_domain,
+                "own_domain": own_domain,  # Now includes description
                 "include_other_executors": total_participants > 1,
                 "total_executors": total_participants,
             }
         )
 
     def _add_participant_context(self, context: Dict, base_role: str, node_id: str, participants: Dict, graph_config: Optional[Dict] = None) -> None:
-        """Add context for participant roles in blackboard/mesh topologies."""
+        """Add context for participant roles in blackboard/mesh topologies with mandatory domain descriptions."""
+        # Get domain manager for resolving descriptions
+        domain_manager = self._get_domain_manager(graph_config)
         own_domain = None
         total_participants = 0
         peer_domains = []
 
-        # Collect participant information from all participant types
-        for participant_type, participant_info in participants.items():
-            if participant_type in ["executor", "participant_w_execute", "participant_wo_execute"]:
-                domains = participant_info.get("domains", [])
-                count = participant_info.get("count", 0)
-                total_participants += count
-                peer_domains.extend(domains)
+        # Try to get domain from graph configuration first
+        if graph_config and "node_assignments" in graph_config and node_id:
+            node_assignments = graph_config["node_assignments"]
+            # Search for this specific node's domain
+            for role_type, nodes in node_assignments.items():
+                for node_info in nodes:
+                    if node_info.get("node_id") == node_id:
+                        domain_name = node_info.get("domain")
+                        if domain_name:
+                            # Resolve domain to get description
+                            domain_info = domain_manager.resolve_domain(domain_name)
+                            own_domain = {
+                                "domain_name": domain_info["name"],
+                                "domain_description": domain_info["description"],
+                                "has_description": domain_info["has_description"],
+                            }
+                        break
+                if own_domain:
+                    break
 
-                # Try to match node_id to domain
-                if node_id and "_" in node_id:
-                    try:
-                        # Extract number from node_id like "participant_w_execute_2" -> 2
-                        parts = node_id.split("_")
-                        if parts[-1].isdigit():
-                            idx = int(parts[-1]) - 1  # Convert to 0-based index
-                            if 0 <= idx < len(domains):
-                                own_domain = domains[idx]
-                    except (ValueError, IndexError):
-                        pass
+            # Collect peer domains from all participant types
+            for role_type in ["participant_w_execute", "participant_wo_execute"]:
+                if role_type in node_assignments:
+                    total_participants += len(node_assignments[role_type])
+                    for node_info in node_assignments[role_type]:
+                        domain_name = node_info.get("domain")
+                        if domain_name:
+                            domain_info = domain_manager.resolve_domain(domain_name)
+                            peer_domains.append(
+                                {
+                                    "domain_name": domain_info["name"],
+                                    "domain_description": domain_info["description"],
+                                    "has_description": domain_info["has_description"],
+                                }
+                            )
+
+        # Fallback to participant information
+        if not own_domain:
+            found_domain_name = None
+            # Collect participant information from all participant types
+            for participant_type, participant_info in participants.items():
+                if participant_type in ["executor", "participant_w_execute", "participant_wo_execute"]:
+                    domains = participant_info.get("domains", [])
+                    count = participant_info.get("count", 0)
+                    total_participants += count
+
+                    # Try to match node_id to domain
+                    if node_id and "_" in node_id and not found_domain_name:
+                        try:
+                            # Extract number from node_id like "participant_w_execute_2" -> 2
+                            parts = node_id.split("_")
+                            if parts[-1].isdigit():
+                                idx = int(parts[-1]) - 1  # Convert to 0-based index
+                                if 0 <= idx < len(domains):
+                                    found_domain_name = domains[idx]
+                        except (ValueError, IndexError):
+                            pass
+
+                    # Add all domains to peer_domains if not already collected
+                    if not peer_domains:
+                        for domain_name in domains:
+                            domain_info = domain_manager.resolve_domain(domain_name)
+                            peer_domains.append(
+                                {
+                                    "domain_name": domain_info["name"],
+                                    "domain_description": domain_info["description"],
+                                    "has_description": domain_info["has_description"],
+                                }
+                            )
+
+            # Resolve own domain if found
+            if found_domain_name:
+                domain_info = domain_manager.resolve_domain(found_domain_name)
+                own_domain = {
+                    "domain_name": domain_info["name"],
+                    "domain_description": domain_info["description"],
+                    "has_description": domain_info["has_description"],
+                }
 
         context.update(
             {
                 "include_own_domain": own_domain is not None,
-                "own_domain": own_domain,
+                "own_domain": own_domain,  # Now includes description
                 "include_other_executors": total_participants > 1,
                 "total_executors": total_participants,
                 "include_peer_domains": len(peer_domains) > 1,
-                "peer_domains": peer_domains,
+                "peer_domains": peer_domains,  # Now includes descriptions
             }
         )
 

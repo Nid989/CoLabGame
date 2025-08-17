@@ -146,28 +146,16 @@ experiments:
     environment_type: "osworld"
     observation_type: "a11y_tree"
     topology_type: "single"
-    participants:
-      executor:
-        count: 1
-        domains: []
   # screenshot_a11y_tree
   single_agent_screenshot_a11y_tree_l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
-    participants:
-      executor:
-        count: 1
-        domains: []
   # screenshot
   single_agent_screenshot_l1:
     environment_type: "osworld"
     observation_type: "screenshot"
     topology_type: "single"
-    participants:
-      executor:
-        count: 1
-        domains: []
   
   # Level 2
   # screenshot_a11y_tree
@@ -175,10 +163,6 @@ experiments:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
-    participants:
-      executor:
-        count: 1
-        domains: []
 
   # Level 3 
   # screenshot_a11y_tree
@@ -186,10 +170,6 @@ experiments:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
-    participants:
-      executor:
-        count: 1
-        domains: []
 
   # Multi-Agent Experiments 
   # Star Topology
@@ -199,13 +179,6 @@ experiments:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
-    participants:
-      advisor:
-        count: 1
-        domains: ["task coordination"]
-      executor:
-        count: 2
-        domains: ["web automation", "file management"]
 
   # Level 2 
   # screenshot_a11y_tree    
@@ -213,13 +186,6 @@ experiments:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
-    participants:
-      advisor:
-        count: 1
-        domains: ["task coordination"]
-      executor:
-        count: 2
-        domains: ["web automation", "file management"]
 
   # Level 3
   # screenshot_a11y_tree    
@@ -227,13 +193,6 @@ experiments:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
-    participants:
-      advisor:
-        count: 1
-        domains: ["task coordination"]
-      executor:
-        count: 2
-        domains: ["web automation", "file management"]
 
   # Blackboard Topology
   # Level 1
@@ -242,10 +201,6 @@ experiments:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
-    participants:
-      executor:
-        count: 3
-        domains: ["Farmer", "Developer", "Task Coordination"]
 
   # Level 2
   # screenshot_a11y_tree
@@ -253,10 +208,6 @@ experiments:
     environment_type: "osworld"
     observation_type: "screenshot"
     topology_type: "blackboard"
-    participants:
-      executor:
-        count: 3
-        domains: ["Farmer", "Developer", "Task Coordination"]
 
   # Level 3
   # screenshot_a11y_tree
@@ -264,10 +215,6 @@ experiments:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
-    participants:
-      executor:
-        count: 3
-        domains: ["Farmer", "Developer", "Task Coordination"]
 
   # Mesh Topology
   # Level 1
@@ -276,10 +223,6 @@ experiments:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
-    participants:
-      executor:
-        count: 3
-        domains: ["Thinker", "Python", "Orchestrator"]
 
   # Level 2
   # screenshot_a11y_tree
@@ -287,10 +230,6 @@ experiments:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
-    participants:
-      executor:
-        count: 3
-        domains: ["Thinker", "Python", "Orchestrator"]
 
   # Level 3
   # screenshot_a11y_tree
@@ -298,10 +237,6 @@ experiments:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
-    participants:
-      executor:
-        count: 3
-        domains: ["Thinker", "Python", "Orchestrator"]
 
 # System Configuration
 system:
