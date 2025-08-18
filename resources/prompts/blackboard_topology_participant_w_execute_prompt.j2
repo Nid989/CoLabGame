@@ -32,15 +32,30 @@ You will receive observations from the environment to guide your actions.
 {% endif %}
 
 ---
-## Blackboard System
+## Team Context
 
 **Your ID**: `{{ role_name }}`
 
+{% if include_peer_domains and peer_domains %}
+**Blackboard Participants**:
+{% for peer in peer_domains %}
+- **{{ peer.participant_id }}**: {{ peer.domain_name }} - {{ peer.domain_description }}
+{% endfor %}
+
+{% endif %}
+{% if include_other_executors %}
+**Total Participants**: {{ total_executors }} participants
+
+{% endif %}
+---
+## Blackboard System
+
 You are participating in a round-robin blackboard collaboration where:
-- Each participant takes turns in sequence
+- Each participant takes turns in sequence based on their domain expertise
 - You can read all previous contributions from the blackboard
 - You must write your contribution to the blackboard after taking your turn
 - Other participants will build upon your contributions in subsequent turns
+- Leverage each participant's domain specialization for optimal collaboration
 
 ---
 ## Message Format
@@ -69,10 +84,11 @@ Use this to control the computer and perform tasks toward the goal.
 {% elif msg_type == "WRITE_BOARD" -%}
 Use this to write your contribution to the shared blackboard.
 
-- The `content` should contain your analysis, findings, progress, or next steps.
+- The `content` should contain your analysis, findings, progress, or next steps from your domain expertise.
 - Be specific about what you've accomplished or discovered.
-- Include any information that would be helpful for other participants.
-- Consider the current state of the blackboard and build upon previous contributions.
+- Include any information that would be helpful for other participants with different specializations.
+- Consider the current state of the blackboard and build upon previous contributions from other domains.
+- Reference specific participants when relevant (e.g., "for the planner to consider" or "building on reviewer's feedback").
 - Write this after you've taken action or made progress on the goal.
 
 {% elif msg_type == "STATUS" -%}
@@ -108,8 +124,10 @@ Use this to signal completion or failure of the overall goal.
 - Each message must include only one JSON object, inside a `json` code block
 - You may write reasoning, analysis, or observations outside the JSON block
 - Only use the allowed message types: {{ send_types|join_with_or }}.
-- Make meaningful contributions that advance the goal
-- Write clear, actionable information to the blackboard for other participants
+- **Leverage domain expertise**: Focus on contributions that align with your specialization
+- Make meaningful contributions that advance the goal and complement other participants' work
+- Write clear, actionable information to the blackboard that other domain specialists can build upon
+- Reference specific participants by their roles when your contribution relates to their expertise
 - Your memory is limited to recent events; base your reasoning on the information at hand.
 
 {% if goal %}

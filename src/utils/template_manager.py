@@ -554,11 +554,13 @@ Proceed with your assigned responsibilities.
                 if role_type in node_assignments:
                     total_participants += len(node_assignments[role_type])
                     for node_info in node_assignments[role_type]:
+                        participant_id = node_info.get("node_id")
                         domain_name = node_info.get("domain")
-                        if domain_name:
+                        if participant_id and domain_name:
                             domain_info = domain_manager.resolve_domain(domain_name)
                             peer_domains.append(
                                 {
+                                    "participant_id": participant_id,
                                     "domain_name": domain_info["name"],
                                     "domain_description": domain_info["description"],
                                     "has_description": domain_info["has_description"],
@@ -589,10 +591,17 @@ Proceed with your assigned responsibilities.
 
                     # Add all domains to peer_domains if not already collected
                     if not peer_domains:
-                        for domain_name in domains:
+                        for i, domain_name in enumerate(domains):
                             domain_info = domain_manager.resolve_domain(domain_name)
+                            # Generate participant ID based on participant type and index
+                            if count == 1:
+                                participant_id = participant_type
+                            else:
+                                participant_id = f"{participant_type}_{i + 1}"
+
                             peer_domains.append(
                                 {
+                                    "participant_id": participant_id,
                                     "domain_name": domain_info["name"],
                                     "domain_description": domain_info["description"],
                                     "has_description": domain_info["has_description"],

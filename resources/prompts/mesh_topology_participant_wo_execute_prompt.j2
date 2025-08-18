@@ -32,14 +32,26 @@ You will receive observations from the environment to guide your actions.
 {% endif %}
 
 ---
-## Mesh Network
+## Team Context
 
 **Your ID**: `{{ role_name }}`
 
+{% if include_peer_domains and peer_domains %}
+**Network Participants**:
+{% for peer in peer_domains %}
+- **{{ peer.participant_id }}**: {{ peer.domain_name }} - {{ peer.domain_description }}
+{% endfor %}
+
+{% endif %}
+{% if include_other_executors %}
+**Total Network Size**: {{ total_executors }} participants
+
+{% endif %}
 You are part of a mesh network where:
-- You can communicate directly with any other participant
+- You can communicate directly with any other participant using their specific ID
 - No central coordinator - you must self-organize with peers through information sharing
 - Coordinate efficiently to avoid conflicts and provide observational support for execution tasks
+- Leverage each participant's domain expertise for optimal coordination and information sharing
 - Share information and coordination insights with relevant participants
 
 ---
@@ -79,8 +91,8 @@ Use this to observe system state and gather information for coordination purpose
 Use this to communicate with other participants when you need help, coordination, or want to share observational findings.
 
 - The `content` should clearly describe what you need, are reporting, or have observed.
-- Be specific about which participant(s) you're addressing.
-- Use this to coordinate task division, share observational findings, or ask for assistance.
+- Be specific about which participant(s) you're addressing by their domain expertise.
+- Use this to coordinate task division, share observational findings, or ask for assistance from relevant specialists.
 - Report system state information that may be useful for execution participants.
 - The `to` field must be set to the specific participant ID you want to communicate with.
 
@@ -88,7 +100,7 @@ Use this to communicate with other participants when you need help, coordination
 Use this to respond to requests from other participants with observational insights.
 
 - The `content` should directly address what was asked for.
-- Provide helpful observational information, coordination details, or status updates.
+- Provide helpful observational information, coordination details, or status updates from your domain expertise.
 - Share findings from your information gathering activities.
 - Be clear and actionable in your responses.
 - The `to` field must be set to the participant ID you're responding to.
@@ -126,7 +138,9 @@ Use this to signal completion or failure of the overall goal based on your obser
 - Each message must include only one JSON object, inside a `json` code block
 - You may write reasoning, analysis, or observations outside the JSON block
 - Only use the allowed message types: {{ send_types|join_with_or }}.
+- **Leverage domain expertise**: Direct requests to participants with relevant specializations
 - Coordinate with other participants to avoid conflicts and support efficient execution
+- Use specific participant IDs when communicating (available in the `to` field enum)
 - Share relevant observational findings and progress with the team
 - Your memory is limited to recent events; base your reasoning on the information at hand.
 - Use keyboard shortcuts (e.g., Ctrl+O) to open files for viewing instead of navigating menus.

@@ -6,7 +6,7 @@ topology_type: "mesh"
 # Domain definitions with descriptions
 domain_definitions:
   planner:
-    description: "Expert in breaking down the goal into clear, ordered tasks and assigning them to the most suitable participants. Focuses on defining **what** needs to be done, monitoring progress, and ensuring the final output meets the goal."
+    description: "Expert in breaking down a goal into simple, atomic subtasks. Defines **what** needs to be done and assigns tasks to the most suitable participants, but never specifies **how** to do it. Monitors progress and ensures the final output meets all requirements."
   reviewer:
     description: "Expert at critically evaluating work and strategies, spotting errors, redundancies, or gaps, and advising on precise corrections or improvements."
   office_productivity_specialist:
@@ -41,30 +41,45 @@ role_definitions:
 # Default participant assignments - fallback when category not found
 default_participant_assignments:
   participant_w_execute:
-    count: 3
-    domains: ["planner", "reviewer", "software_development_specialist", "os_operation_specialist"]
+    count: 2
+    domains: ["software_development_specialist", "os_operation_specialist"]
+  participant_wo_execute:
+    count: 2
+    domains: ["planner", "reviewer"]
 
 # Category-specific participant assignments
 category_participant_assignments:
   code_ops:
     participant_w_execute:
-      count: 3
-      domains: ["planner", "reviewer", "software_development_specialist", "os_operation_specialist"]
+      count: 2
+      domains: ["software_development_specialist", "os_operation_specialist"]
+    participant_wo_execute:
+      count: 2
+      domains: ["planner", "reviewer"]
   
   data_processing:
     participant_w_execute:
-      count: 3
-      domains: ["planner", "reviewer", "office_productivity_specialist", "os_operation_specialist"]
-      
+      count: 2
+      domains: ["office_productivity_specialist", "os_operation_specialist"]
+    participant_wo_execute:
+      count: 2
+      domains: ["planner", "reviewer"]
+        
   graphic_document:
     participant_w_execute:
       count: 3
-      domains: ["planner", "reviewer", "digital_media_specialist", "office_productivity_specialist", "os_operation_specialist"]
+      domains: ["digital_media_specialist", "office_productivity_specialist", "os_operation_specialist"]
+    participant_wo_execute:
+      count: 2
+      domains: ["planner", "reviewer"]
       
   research_brief:
     participant_w_execute:
       count: 3
-      domains: ["planner", "reviewer", "web_research_specialist", "office_productivity_specialist", "os_operation_specialist"]
+      domains: ["web_research_specialist", "office_productivity_specialist", "os_operation_specialist"]
+    participant_wo_execute:
+      count: 2
+      domains: ["planner", "reviewer"]
 
 # Validation rules
 validation_rules:
