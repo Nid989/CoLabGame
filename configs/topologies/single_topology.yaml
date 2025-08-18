@@ -5,25 +5,12 @@ topology_type: "single"
 
 # Domain definitions with mandatory descriptions - Comprehensive domain library
 domain_definitions:
-  # General & Multi-purpose
-  general_execution:
-    description: "Handles general task execution including computer automation, file operations, and goal completion independently"
-  universal_automation:
-    description: "Manages comprehensive automation tasks across multiple domains including file operations, web tasks, and system interactions"
-  task_execution:
-    description: "Executes diverse tasks independently with focus on goal completion and multi-domain problem solving"
-  
-  # Specialized Single Agent Capabilities  
-  complete_automation:
-    description: "Provides end-to-end automation capabilities including web navigation, file management, system operations, and task coordination"
-  independent_operation:
-    description: "Operates independently across all task domains with comprehensive problem-solving and execution capabilities"
-  full_stack_execution:
-    description: "Handles full-stack task execution including frontend interactions, backend operations, and system-level automation"
+  universal_specialist:
+    description: "A highly capable, autonomous agent with a full spectrum of specialist skills, including planning, execution, and review. Responsible for independently breaking down the goal, performing all necessary tasks (coding, research, file operations), and critically evaluating its own work to ensure the final output is flawless."
 
 # Role definitions for single topology
 role_definitions:
-  executor:
+  participant_w_execute:
     message_permissions:
       send: ["EXECUTE", "STATUS"]
       receive: []
@@ -33,36 +20,32 @@ role_definitions:
 
 # Default participant assignments - fallback when category not found
 default_participant_assignments:
-  executor:
+  participant_w_execute:
     count: 1
-    domains: ["general_execution"]
+    domains: ["universal_specialist"]
 
 # Category-specific participant assignments
 category_participant_assignments:
   code_ops:
-    executor:
+    participant_w_execute:
       count: 1
-      domains: ["universal_automation"]
+      domains: ["universal_specialist"]
   
   data_processing:
-    executor:
+    participant_w_execute:
       count: 1
-      domains: ["task_execution"]
+      domains: ["universal_specialist"]
       
   graphic_document:
-    executor:
+    participant_w_execute:
       count: 1
-      domains: ["complete_automation"]
+      domains: ["universal_specialist"]
       
   research_brief:
-    executor:
+    participant_w_execute:
       count: 1
-      domains: ["independent_operation"]
+      domains: ["universal_specialist"]
 
 # Validation rules
 validation_rules:
-  executor_count: "exactly_1"
-
-# Legacy participant mapping (maps old format to new role assignments)
-legacy_mapping:
-  executor: "executor"
+  participant_count: "exactly_1"

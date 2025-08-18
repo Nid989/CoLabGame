@@ -6,7 +6,6 @@ import logging
 from typing import Dict, Any, List
 
 from .base import BaseTopology, TopologyConfig, TopologyType
-from src.message import MessagePermissions, MessageType
 
 logger = logging.getLogger(__name__)
 
@@ -17,9 +16,9 @@ class SingleTopology(BaseTopology):
     def __init__(self):
         self.config = TopologyConfig(
             topology_type=TopologyType.SINGLE,
-            anchor_selection="fixed",  # Executor is always anchor
+            anchor_selection="fixed",  # Single agent is always anchor
             transition_strategy="conditional",  # Based on message types
-            message_permissions={"executor": MessagePermissions(send=[MessageType.EXECUTE, MessageType.STATUS], receive=[])},
+            message_permissions={},  # Will be populated from topology config
         )
 
     def generate_graph(self, participants: Dict) -> Dict:
@@ -33,20 +32,23 @@ class SingleTopology(BaseTopology):
         """
         self.validate_participants(participants)
 
+        # Get the single role name from participants (should be only one)
+        role_name = list(participants.keys())[0]
+
         # Create nodes
-        nodes = [{"id": "START", "type": "START"}, {"id": "executor", "type": "PLAYER", "role_index": 0}, {"id": "END", "type": "END"}]
+        nodes = [{"id": "START", "type": "START"}, {"id": role_name, "type": "PLAYER", "role_index": 0}, {"id": "END", "type": "END"}]
 
         # Create edges
         edges = [
-            {"from": "START", "to": "executor", "type": "STANDARD", "description": ""},
-            {"from": "executor", "to": "executor", "type": "DECISION", "condition": {"type": "EXECUTE"}, "description": "EXECUTE"},
-            {"from": "executor", "to": "END", "type": "STANDARD", "description": ""},
+            {"from": "START", "to": role_name, "type": "STANDARD", "description": ""},
+            {"from": role_name, "to": role_name, "type": "DECISION", "condition": {"type": "EXECUTE"}, "description": "EXECUTE"},
+            {"from": role_name, "to": "END", "type": "STANDARD", "description": ""},
         ]
 
         return {
             "nodes": nodes,
             "edges": edges,
-            "anchor_node": "executor",
+            "anchor_node": role_name,
             "domain_definitions": getattr(self, "topology_config", {}).get("domain_definitions", {}),  # For template manager
         }
 
@@ -62,11 +64,12 @@ class SingleTopology(BaseTopology):
         if len(participants) != 1:
             raise ValueError("Single agent topology requires exactly one participant")
 
-        if "executor" not in participants:
-            raise ValueError("Single agent topology requires an 'executor' role")
+        # Get the single role name and validate its count
+        role_name = list(participants.keys())[0]
+        role_config = participants[role_name]
 
-        if participants["executor"]["count"] != 1:
-            raise ValueError("Single agent topology requires exactly 1 executor")
+        if role_config.get("count", 0) != 1:
+            raise ValueError(f"Single agent topology requires exactly 1 {role_name}, got {role_config.get('count', 0)}")
 
     def get_config(self) -> TopologyConfig:
         """Return single agent topology configuration.
@@ -100,18 +103,13 @@ class SingleTopology(BaseTopology):
         """Get template name for single topology roles.
 
         Args:
-            role_name: Name of the role (e.g., 'executor')
+            role_name: Name of the role (e.g., 'participant_w_execute')
 
         Returns:
             str: Template filename to use for this role
         """
-        base_role = role_name.split("_")[0] if "_" in role_name else role_name
-
-        if base_role == "executor":
-            return "single_topology_executor_prompt.j2"
-        else:
-            # Fallback to default implementation
-            return super().get_template_name(role_name)
+        # For single topology, always use the single executor prompt regardless of role name
+        return "single_topology_executor_prompt.j2"
 
     def validate_experiment_config(self, experiment_config: Dict) -> List[str]:
         """Validate experiment configuration for single topology.
@@ -128,13 +126,14 @@ class SingleTopology(BaseTopology):
         # Check for exactly one participant type
         if len(participants) != 1:
             errors.append(f"Single topology requires exactly one participant type, got {len(participants)}")
+            return errors
 
-        # Check for executor participant
-        if "executor" not in participants:
-            errors.append("Single topology requires an 'executor' participant")
-        else:
-            executor_count = participants["executor"].get("count", 0)
-            if executor_count != 1:
-                errors.append(f"Single topology requires exactly 1 executor, got {executor_count}")
+        # Get the single role and validate its count
+        role_name = list(participants.keys())[0]
+        role_config = participants[role_name]
+        role_count = role_config.get("count", 0)
+
+        if role_count != 1:
+            errors.append(f"Single topology requires exactly 1 {role_name}, got {role_count}")
 
         return errors

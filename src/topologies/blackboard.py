@@ -32,8 +32,8 @@ class BlackboardTopology(BaseTopology):
         if not self.topology_config:
             raise ValueError("Topology configuration not loaded. Call load_game_instance_config first.")
 
-        # Map legacy participants to topology roles
-        participant_assignments = self._map_participants_to_roles(participants)
+        # Use participants directly, assuming they are already in the correct format
+        participant_assignments = participants
 
         # Validate the mapped participants
         self.validate_participants(participant_assignments)
@@ -59,34 +59,6 @@ class BlackboardTopology(BaseTopology):
             "node_assignments": node_assignments,  # For role creation in master.py
             "domain_definitions": self.topology_config.get("domain_definitions", {}),  # For template manager
         }
-
-    def _map_participants_to_roles(self, participants: Dict) -> Dict:
-        """Map legacy participant format to topology roles using legacy mapping."""
-        if not self.topology_config:
-            raise ValueError("Topology configuration not loaded")
-
-        legacy_mapping = self.topology_config.get("legacy_mapping", {})
-
-        # Use default participant assignments if available
-        default_assignments = self.topology_config.get("default_participant_assignments", {})
-
-        mapped_assignments = {}
-
-        # Map legacy participants to topology roles
-        for legacy_role, participant_config in participants.items():
-            if legacy_role in legacy_mapping:
-                topology_role = legacy_mapping[legacy_role]
-                mapped_assignments[topology_role] = participant_config
-            else:
-                # If no mapping found, use the role as-is (for new topology roles)
-                mapped_assignments[legacy_role] = participant_config
-
-        # If no mappings were found, use default assignments
-        if not mapped_assignments and default_assignments:
-            logger.info("No participant mappings found, using default assignments")
-            mapped_assignments = default_assignments.copy()
-
-        return mapped_assignments
 
     def _create_node_assignments(self, participant_assignments: Dict) -> Dict:
         """Create node assignments with role indices and domains."""
@@ -348,11 +320,8 @@ class BlackboardTopology(BaseTopology):
                     with open(config_path, "r") as f:
                         self.topology_config = yaml.safe_load(f)
 
-            # Map participants to topology roles
-            participant_assignments = self._map_participants_to_roles(participants)
-
-            # Validate using the mapped assignments
-            self.validate_participants(participant_assignments)
+            # Use participants directly for validation
+            self.validate_participants(participants)
 
         except ValueError as e:
             errors.append(str(e))

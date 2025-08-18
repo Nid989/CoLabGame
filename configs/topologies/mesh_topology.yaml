@@ -85,7 +85,3 @@ category_participant_assignments:
 validation_rules:
   min_participants: 2
   max_participants: 8
-
-# Legacy participant mapping (maps old format to new role assignments)
-legacy_mapping:
-  executor: "participant_w_execute"

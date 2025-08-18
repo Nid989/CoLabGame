@@ -110,8 +110,3 @@ validation_rules:
   hub_count: "exactly_1"
   min_spokes: 1
   max_spokes: 10
-
-# Legacy participant mapping (maps old format to new role assignments)
-legacy_mapping:
-  advisor: "hub"
-  executor: "spoke_w_execute"

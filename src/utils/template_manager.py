@@ -365,8 +365,12 @@ Proceed with your assigned responsibilities.
             # Star topology spoke/executor context
             self._add_spoke_context(context, actual_base_role, node_id, participants, graph_config)
         elif actual_base_role in ["participant_w_execute", "participant_wo_execute"]:
-            # Blackboard/Mesh topology participant context
-            self._add_participant_context(context, actual_base_role, node_id, participants, graph_config)
+            # Check for single agent topology
+            if graph_config and graph_config.get("topology_type") == "single":
+                self._add_single_agent_context(context, actual_base_role, node_id, participants, graph_config)
+            else:
+                # Blackboard/Mesh topology participant context
+                self._add_participant_context(context, actual_base_role, node_id, participants, graph_config)
 
     def _add_hub_context(self, context: Dict, participants: Dict, graph_config: Optional[Dict] = None) -> None:
         """Add context for hub/advisor roles in star topology with mandatory domain descriptions."""
@@ -625,6 +629,53 @@ Proceed with your assigned responsibilities.
                 "total_executors": total_participants,
                 "include_peer_domains": len(peer_domains) > 1,
                 "peer_domains": peer_domains,  # Now includes descriptions
+            }
+        )
+
+    def _add_single_agent_context(self, context: Dict, base_role: str, node_id: str, participants: Dict, graph_config: Optional[Dict] = None) -> None:
+        """Add context for the single agent in a single topology."""
+        domain_manager = self._get_domain_manager(graph_config)
+        own_domain = None
+
+        # Try to get domain from graph configuration first
+        if graph_config and "node_assignments" in graph_config and node_id:
+            node_assignments = graph_config["node_assignments"]
+            # Search for this specific node's domain
+            for role_type, nodes in node_assignments.items():
+                for node_info in nodes:
+                    if node_info.get("node_id") == node_id:
+                        domain_name = node_info.get("domain")
+                        if domain_name:
+                            domain_info = domain_manager.resolve_domain(domain_name)
+                            own_domain = {
+                                "domain_name": domain_info["name"],
+                                "domain_description": domain_info["description"],
+                                "has_description": domain_info["has_description"],
+                            }
+                        break
+                if own_domain:
+                    break
+
+        # Fallback to participant information if graph config doesn't have node assignments
+        if not own_domain and participants:
+            # For single topology, there should be only one participant type
+            for participant_type, participant_info in participants.items():
+                domains = participant_info.get("domains", [])
+                if domains:
+                    # Use the first domain for the single agent
+                    domain_name = domains[0]
+                    domain_info = domain_manager.resolve_domain(domain_name)
+                    own_domain = {
+                        "domain_name": domain_info["name"],
+                        "domain_description": domain_info["description"],
+                        "has_description": domain_info["has_description"],
+                    }
+                    break
+
+        context.update(
+            {
+                "include_own_domain": own_domain is not None,
+                "own_domain": own_domain,
             }
         )
 
