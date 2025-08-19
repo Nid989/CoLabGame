@@ -14250,7 +14250,7 @@
                 "max_transitions_per_round": 20,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": 3,
+                "sliding_window_size": 5,
                 "topology_type": "blackboard"
             }
         },
