@@ -26,7 +26,7 @@ role_definitions:
     message_permissions:
       send: ["EXECUTE", "STATUS", "WRITE_BOARD"]
       receive: []
-    allowed_components: ["observation", "blackboard"]
+    allowed_components: ["round_info", "observation", "blackboard"]
     receives_goal: true
     handler_type: "environment"
     
@@ -34,7 +34,7 @@ role_definitions:
     message_permissions:
       send: ["EXECUTE", "STATUS", "WRITE_BOARD"]
       receive: []
-    allowed_components: ["observation", "blackboard"]
+    allowed_components: ["round_info", "observation", "blackboard"]
     receives_goal: true
     handler_type: "standard"
 

@@ -26,7 +26,7 @@ role_definitions:
     message_permissions:
       send: ["REQUEST", "RESPONSE", "STATUS"]
       receive: ["REQUEST", "RESPONSE"]
-    allowed_components: ["request", "response"]
+    allowed_components: ["round_info", "request", "response"]
     receives_goal: true
     handler_type: "standard"
     
@@ -34,7 +34,7 @@ role_definitions:
     message_permissions:
       send: ["EXECUTE", "REQUEST", "RESPONSE"]
       receive: ["REQUEST", "RESPONSE"]
-    allowed_components: ["observation", "request", "response"]
+    allowed_components: ["round_info", "observation", "request", "response"]
     receives_goal: false
     handler_type: "environment"
     
@@ -42,7 +42,7 @@ role_definitions:
     message_permissions:
       send: ["EXECUTE", "REQUEST", "RESPONSE"]
       receive: ["REQUEST", "RESPONSE"]
-    allowed_components: ["observation", "request", "response"]
+    allowed_components: ["round_info", "observation", "request", "response"]
     receives_goal: false
     handler_type: "standard"
 

@@ -898,6 +898,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                 standard_edges = self._get_standard_edges(current_node)
                 if standard_edges:
                     next_node = standard_edges[0][0]  # Take the first standard edge target node
+                    print(f"Standard edge found: {next_node}")
                 else:
                     raise RuleViolationError(
                         f"No valid transition (decision or standard) found for message type {message_type.name} from role {from_role} from node {current_node}"
@@ -938,6 +939,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                     self.message_state.update(round_info={"current_round": self.current_round, "max_rounds": max_rounds})
 
                 formatted_context = self.player_context_formatter.create_context_for(self.message_state, next_player)
+                print("Formatted Context", formatted_context)
                 self._set_context_for(next_player, formatted_context)
                 self.message_state.reset(preserve=["observation", "blackboard"])
 

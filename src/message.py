@@ -191,6 +191,7 @@ class MessageState:
     """Dynamic container for message components updated during gameplay.
 
     Fields:
+        round_info: Optional dictionary with current round information (e.g., {'current_round': 2, 'max_rounds': 5})
         observation: Optional dictionary (e.g., {'screenshot': str, 'accessibility_tree': str})
         plan: Optional plan string
         task: Optional task string
@@ -198,9 +199,9 @@ class MessageState:
         response: Optional response string
         tagged_content: Optional dictionary of tag-content pairs (e.g., {'note': 'text'})
         blackboard: Optional list of blackboard entry dictionaries
-        round_info: Optional dictionary with current round information (e.g., {'current_round': 2, 'max_rounds': 5})
     """
 
+    round_info: Optional[Dict[str, int]] = None
     observation: Optional[Dict[str, Union[str, Image.Image, Dict]]] = None
     plan: Optional[str] = None
     task: Optional[str] = None
@@ -208,7 +209,6 @@ class MessageState:
     response: Optional[str] = None
     tagged_content: Optional[Dict[str, str]] = None
     blackboard: Optional[List[Dict]] = None
-    round_info: Optional[Dict[str, int]] = None
 
     def reset(self, preserve: Optional[List[str]] = None):
         """Reset specified fields to None, preserving others.
