@@ -8,6 +8,7 @@ import networkx as nx
 from clemcore import backends
 from clemcore.clemgame import DialogueGameMaster
 from .player import RoleBasedPlayer
+from .topologies.base import TopologyType
 
 module_logger = logging.getLogger(__name__)
 
@@ -119,6 +120,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
         self.non_anchor_visited = False
         self.round_complete = False
         self.transition = NodeTransition()
+        self.topology_type: Optional[TopologyType] = None
 
     @property
     def current_node(self):
@@ -296,10 +298,10 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
 
     def _update_round_tracking(self, prev_node: str, next_node: str):
         """Update round tracking state based on node transitions.
-
-        Tracks visited nodes, transitions count, and marks a round complete when returning
-        to the anchor after other nodes, or when transitioning to the END node.
-
+        Tracks visited nodes, transitions count, and marks a round complete.
+        For single-agent topology, a self-loop at the anchor or a transition to END completes a round.
+        For other topologies, a round completes when returning to the anchor after other nodes,
+        or when transitioning to the END node.
         Args:
             prev_node: Node being transitioned from.
             next_node: Node being transitioned to.
@@ -312,8 +314,12 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             self.non_anchor_visited = True
         node_data = self.graph.nodes.get(next_node, {})
         is_end_node = node_data.get("type") == NodeType.END
-        is_anchor_return = next_node == self.anchor_node and self.non_anchor_visited
-        if is_end_node or is_anchor_return:
+        is_anchor_return = next_node == self.anchor_node
+        if is_end_node:
+            self.round_complete = True
+        elif self.topology_type == TopologyType.SINGLE and is_anchor_return:
+            self.round_complete = True
+        elif is_anchor_return and self.non_anchor_visited:
             self.round_complete = True
 
     def _reset_round_tracking(self):

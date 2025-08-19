@@ -22,6 +22,7 @@ MEMORY_COMPONENT_MAPPING = {
     "response": "forget_responses",
     "tagged_content": "forget_tagged_content",
     "blackboard": "forget_blackboard",
+    "round_info": "forget_round_info",
 }
 
 
@@ -197,6 +198,7 @@ class MessageState:
         response: Optional response string
         tagged_content: Optional dictionary of tag-content pairs (e.g., {'note': 'text'})
         blackboard: Optional list of blackboard entry dictionaries
+        round_info: Optional dictionary with current round information (e.g., {'current_round': 2, 'max_rounds': 5})
     """
 
     observation: Optional[Dict[str, Union[str, Image.Image, Dict]]] = None
@@ -206,6 +208,7 @@ class MessageState:
     response: Optional[str] = None
     tagged_content: Optional[Dict[str, str]] = None
     blackboard: Optional[List[Dict]] = None
+    round_info: Optional[Dict[str, int]] = None
 
     def reset(self, preserve: Optional[List[str]] = None):
         """Reset specified fields to None, preserving others.
@@ -245,6 +248,10 @@ class MessageState:
                     raise ValueError("Observation must be a dictionary")
                 elif field == "blackboard" and not isinstance(value, list):
                     raise ValueError("Blackboard must be a list of dictionaries")
+                elif field == "round_info" and not (
+                    isinstance(value, dict) and all(isinstance(k, str) and isinstance(v, int) for k, v in value.items())
+                ):
+                    raise ValueError("Round info must be Dict[str, int]")
                 elif field in {
                     "plan",
                     "task",
@@ -304,6 +311,7 @@ class PlayerContextFormatter:
 
     def _setup_handlers(self):
         """Set up the default format handlers."""
+        self.add_handler("round_info", self._format_round_info)
         self.add_handler("observation", self._format_observation)
         self.add_handler("plan", self._format_plan)
         self.add_handler("task", self._format_task)
@@ -369,6 +377,7 @@ class PlayerContextFormatter:
         """
         handler_rules = {
             "standard": {
+                "round_info",
                 "plan",
                 "task",
                 "request",
@@ -377,6 +386,7 @@ class PlayerContextFormatter:
                 "blackboard",
             },
             "environment": {
+                "round_info",
                 "observation",
                 "plan",
                 "task",
@@ -601,3 +611,16 @@ class PlayerContextFormatter:
             formatted_entries.append(f"### {entry['role_id']}\n{entry['content']}")
 
         return {"content": "## Blackboard History\n" + "\n".join(formatted_entries), "image": []}
+
+    def _format_round_info(self, round_info: Dict[str, int]) -> Dict:
+        """Format round information for context display.
+
+        Args:
+            round_info: Dictionary containing current_round and max_rounds
+
+        Returns:
+            Dict: Dictionary with 'content' and 'image' keys
+        """
+        current_round = round_info.get("current_round", 0)
+        max_rounds = round_info.get("max_rounds", 1)
+        return {"content": f"## Round Information\nCurrent Round: {current_round}/{max_rounds}", "image": []}

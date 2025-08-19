@@ -103,6 +103,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         self._initialize_environment()
         self._build_graph()
         self._initialize_topology_specific_components()
+        self.topology_type = self.game_config.get("topology_type")
 
     def _prepare_game_config(self) -> None:
         """Prepare game configuration dictionary"""
@@ -328,7 +329,14 @@ class ComputerGame(NetworkDialogueGameMaster):
                         topology_type_enum = TopologyType(topology_type_enum.upper())
 
                     role_config.initial_prompt = template_manager.generate_prompt(
-                        role_config, self.game_config.get("observation_type"), participants, node_id, goal, topology_type_enum, graph_config
+                        role_config,
+                        self.game_config.get("observation_type"),
+                        participants,
+                        node_id,
+                        goal,
+                        topology_type_enum,
+                        graph_config,
+                        self.game_config.get("max_rounds"),
                     )
 
                 # Create player with message permissions
@@ -494,6 +502,12 @@ class ComputerGame(NetworkDialogueGameMaster):
         """
         super()._on_before_game()
         assert self._current_node == self.anchor_node, "Current node must be the anchor node at game start"
+
+        # Add round information to message state before creating context
+        max_rounds = self.game_config.get("max_rounds", 1)
+        if max_rounds > 1:
+            self.message_state.update(round_info={"current_round": self.current_round, "max_rounds": max_rounds})
+
         context = self.player_context_formatter.create_context_for(self.message_state, self._current_player)
         self.message_state.reset(preserve=["observation", "blackboard"])  # NOTE: do we actually need to preserve blackboard?
         if context is None:
@@ -917,6 +931,12 @@ class ComputerGame(NetworkDialogueGameMaster):
             if next_player:
                 # Get blackboard context and store in message state
                 self._get_blackboard_context()
+
+                # Add round information to message state before creating context
+                max_rounds = self.game_config.get("max_rounds", 1)
+                if max_rounds > 1:
+                    self.message_state.update(round_info={"current_round": self.current_round, "max_rounds": max_rounds})
+
                 formatted_context = self.player_context_formatter.create_context_for(self.message_state, next_player)
                 self._set_context_for(next_player, formatted_context)
                 self.message_state.reset(preserve=["observation", "blackboard"])

@@ -10,22 +10,22 @@ task_generation:
           - category: "code_ops"
             levels: [1]
             task_types: ["basic_python_syntax_fix"]
-            instances_per_task: 4
+            instances_per_task: 2
 
           - category: "data_processing"
             levels: [1]
             task_types: ["simple_data_transfer"]
-            instances_per_task: 4
+            instances_per_task: 2
 
           - category: "graphic_document"
             levels: [1]
             task_types: ["basic_image_insertion"]
-            instances_per_task: 4
+            instances_per_task: 2
 
           - category: "research_brief"
             levels: [1]
             task_types: ["basic_web_extraction"]
-            instances_per_task: 4
+            instances_per_task: 2
 
         output:
           upload_s3: true
@@ -37,22 +37,22 @@ task_generation:
           - category: "code_ops"
             levels: [2]
             task_types: ["simple_logic_completion"]
-            instances_per_task: 4
+            instances_per_task: 2
 
           - category: "data_processing"
             levels: [2]
             task_types: ["basic_data_aggregation"]
-            instances_per_task: 4
+            instances_per_task: 2
 
           - category: "graphic_document"
             levels: [2]
             task_types: ["image_resize_insertion"]
-            instances_per_task: 4
+            instances_per_task: 2
 
           - category: "research_brief"
             levels: [2]
             task_types: ["multi_point_summary"]
-            instances_per_task: 4
+            instances_per_task: 2
 
         output:
           upload_s3: true
@@ -64,22 +64,22 @@ task_generation:
           - category: "code_ops"
             levels: [3]
             task_types: ["multi_file_config_update"]
-            instances_per_task: 4
+            instances_per_task: 2
 
           - category: "data_processing"
             levels: [3]
             task_types: ["simple_calculation_output"]
-            instances_per_task: 4
+            instances_per_task: 2
 
           - category: "graphic_document"
             levels: [3]
             task_types: ["image_modify_caption"]
-            instances_per_task: 4
+            instances_per_task: 2
 
           - category: "research_brief"
             levels: [3]
             task_types: ["file_download_integration"]
-            instances_per_task: 4
+            instances_per_task: 2
 
         output:
           upload_s3: true

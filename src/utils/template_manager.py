@@ -166,6 +166,7 @@ class PromptTemplateManager:
         goal: Optional[str] = None,
         topology_type: Optional[TopologyType] = None,
         graph_config: Optional[Dict] = None,
+        max_rounds: Optional[int] = None,
     ) -> str:
         """Generate a dynamic prompt based on role configuration.
 
@@ -176,6 +177,8 @@ class PromptTemplateManager:
             node_id: The specific node ID (e.g., 'executor_1', 'executor_2') for context
             goal: Optional goal string to be included in the prompt
             topology_type: The topology type enum (e.g., TopologyType.BLACKBOARD, TopologyType.STAR)
+            graph_config: Graph configuration dictionary
+            max_rounds: Optional maximum number of rounds for task completion
 
         Returns:
             Generated prompt string
@@ -189,15 +192,21 @@ class PromptTemplateManager:
             logger.warning(f"Template {template_name} not found, falling back to base template")
             template = self._get_base_template(role_config)
             # For base template, we need to add the JSON schema to the context
-            context = self._prepare_template_context(role_config, observation_type, participants, node_id, goal, graph_config=graph_config)
+            context = self._prepare_template_context(
+                role_config, observation_type, participants, node_id, goal, graph_config=graph_config, max_rounds=max_rounds
+            )
             return template.render(**context)
 
         # Prepare template context
         # For blackboard topology executor, do not include goal in context
         if template_name == "blackboard_topology_executor_prompt.j2":
-            context = self._prepare_template_context(role_config, observation_type, participants, node_id, goal=None, graph_config=graph_config)
+            context = self._prepare_template_context(
+                role_config, observation_type, participants, node_id, goal=None, graph_config=graph_config, max_rounds=max_rounds
+            )
         else:
-            context = self._prepare_template_context(role_config, observation_type, participants, node_id, goal, graph_config=graph_config)
+            context = self._prepare_template_context(
+                role_config, observation_type, participants, node_id, goal, graph_config=graph_config, max_rounds=max_rounds
+            )
 
         # Render the template
         return template.render(**context)
@@ -275,6 +284,7 @@ Proceed with your assigned responsibilities.
         node_id: Optional[str] = None,
         goal: Optional[str] = None,
         graph_config: Optional[Dict] = None,
+        max_rounds: Optional[int] = None,
     ) -> Dict:
         """Prepare context variables for template rendering."""
         permissions = role_config.message_permissions
@@ -319,6 +329,7 @@ Proceed with your assigned responsibilities.
             "observation_type": observation_type,
             "json_schema": self._generate_json_schema(permissions, node_id or role_config.name, participants, graph_config),
             "goal": goal,
+            "max_rounds": max_rounds,
         }
 
         # Add dynamic multi-agent context if participants provided

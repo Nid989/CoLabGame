@@ -1,7 +1,6 @@
 import os
 import sys
 import yaml
-import uuid
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
@@ -374,7 +373,7 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
 
             # Create final game instances for the experiment
             for task_info in task_information_list:
-                game_id = str(uuid.uuid4())
+                game_id = task_info["framework_config"]["id"]
                 game_instance = self.add_game_instance(experiment, game_id)
 
                 merged_task_config = self._merge_task_config_with_game_config(task_info["framework_config"], experiment_config)
