@@ -5,7 +5,56 @@
 task_generation:
   experiments:
     shared:
-      shared_level1_4x:
+      shared-code_ops-level1-2x:
+        sampling:
+          - category: "code_ops"
+            levels: [1]
+            task_types: ["basic_python_syntax_fix"]
+            instances_per_task: 2
+
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-code_ops-level1-2x"  
+
+      shared-data_processing-level1-2x:
+        sampling:
+          - category: "data_processing"
+            levels: [1]
+            task_types: ["simple_data_transfer"]
+            instances_per_task: 2
+
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-data_processing-level1-2x"  
+
+      shared-graphic_document-level1-2x:
+        sampling:
+          - category: "graphic_document"
+            levels: [1]
+            task_types: ["basic_image_insertion"]
+            instances_per_task: 2
+        
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-graphic_document-level1-2x"  
+
+      shared-research_brief-level1-2x:
+        sampling:
+          - category: "research_brief"
+            levels: [1]
+            task_types: ["basic_web_extraction"]
+            instances_per_task: 2
+
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-research_brief-level1-2x"  
+      
+      # collective level1 2x
+      shared-level1-2x:
         sampling:
           - category: "code_ops"
             levels: [1]
@@ -30,9 +79,58 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared_level1_4x"  
+          session_name: "shared-level1-2x"  
       
-      shared_level2_4x:
+      shared-code_ops-level2-2x:
+        sampling:
+          - category: "code_ops"
+            levels: [2]
+            task_types: ["simple_logic_completion"]
+            instances_per_task: 2
+            
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-code_ops-level2-2x"  
+          
+      shared-data_processing-level2-2x:
+        sampling:
+          - category: "data_processing"
+            levels: [2]
+            task_types: ["basic_data_aggregation"]
+            instances_per_task: 2
+            
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-data_processing-level2-2x"  
+          
+      shared-graphic_document-level2-2x:
+        sampling:
+          - category: "graphic_document"
+            levels: [2]
+            task_types: ["image_resize_insertion"]
+            instances_per_task: 2
+            
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-graphic_document-level2-2x"  
+          
+      shared-research_brief-level2-2x:
+        sampling:
+          - category: "research_brief"
+            levels: [2]
+            task_types: ["multi_point_summary"]
+            instances_per_task: 2 
+            
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-research_brief-level2-2x"  
+
+      # collective level2 2x
+      shared-level2-2x:
         sampling:
           - category: "code_ops"
             levels: [2]
@@ -57,9 +155,58 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared_level2_4x"
+          session_name: "shared-level2-2x"
 
-      shared_level3_4x:
+      shared-code_ops-level3-2x:
+        sampling:
+          - category: "code_ops"
+            levels: [3]
+            task_types: ["multi_file_config_update"]
+            instances_per_task: 2
+            
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-code_ops-level3-2x"  
+          
+      shared-data_processing-level3-2x:
+        sampling:
+          - category: "data_processing"
+            levels: [3]
+            task_types: ["simple_calculation_output"]
+            instances_per_task: 2
+            
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-data_processing-level3-2x"  
+          
+      shared-graphic_document-level3-2x:
+        sampling:
+          - category: "graphic_document"
+            levels: [3]
+            task_types: ["image_modify_caption"]
+            instances_per_task: 2
+            
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-graphic_document-level3-2x"  
+          
+      shared-research_brief-level3-2x:
+        sampling:
+          - category: "research_brief"
+            levels: [3]
+            task_types: ["file_download_integration"]
+            instances_per_task: 2
+            
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-research_brief-level3-2x"  
+
+      # collective level3 2x
+      shared-level3-4x:
         sampling:
           - category: "code_ops"
             levels: [3]
@@ -84,89 +231,475 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared_level3_4x"
+          session_name: "shared-level3-4x"
+      
+      # OSWorld 
+      # chrome
+      shared-chrome_osworld-5x:
+        source_type: "osworld"
+        sampling:
+          - category: "osworld"
+            task_types: ["chrome"]
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-chrome_osworld-5x"
+      
+      # gimp
+      shared-gimp_osworld-5x:
+        source_type: "osworld"
+        sampling:
+          - category: "osworld"
+            task_types: ["gimp"]
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-gimp_osworld-5x"
+      
+      # libreoffice_writer
+      shared-libreoffice_writer_osworld-5x:
+        source_type: "osworld"
+        sampling:
+          - category: "osworld"
+            task_types: ["libreoffice_writer"]
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-libreoffice_writer_osworld-5x"
+      
+      # os
+      shared-os_osworld-5x:
+        source_type: "osworld"
+        sampling:
+          - category: "osworld"
+            task_types: ["os"]
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-os_osworld-5x"
 
     individual:
       # Single Agent Experiments
       # Level 1
-      single_agent_a11y_tree_l1:
-        use_shared: "shared_level1_4x"
-      single_agent_screenshot_a11y_tree_l1:
-        use_shared: "shared_level1_4x"
-      single_agent_screenshot_l1:
-        use_shared: "shared_level1_4x"
+      # category: "code_ops"
+      single_agent-code_ops-a11y_tree-l1:
+        use_shared: "shared-code_ops-level1-2x"
+
+      single_agent-code_ops-screenshot-l1:
+        use_shared: "shared-code_ops-level1-2x"
+
+      single_agent-code_ops-screenshot_a11y_tree-l1:
+        use_shared: "shared-code_ops-level1-2x"
+      
+      # category: "data_processing"
+      single_agent-data_processing-a11y_tree-l1:
+        use_shared: "shared-data_processing-level1-2x"
+
+      single_agent-data_processing-screenshot-l1:
+        use_shared: "shared-data_processing-level1-2x"
+
+      single_agent-data_processing-screenshot_a11y_tree-l1:
+        use_shared: "shared-data_processing-level1-2x"
+
+      # category: "graphic_document"
+      single_agent-graphic_document-a11y_tree-l1:
+        use_shared: "shared-graphic_document-level1-2x"
+
+      single_agent-graphic_document-screenshot-l1:
+        use_shared: "shared-graphic_document-level1-2x"
+
+      single_agent-graphic_document-screenshot_a11y_tree-l1:
+        use_shared: "shared-graphic_document-level1-2x"
+
+      # category: "research_brief"
+      single_agent-research_brief-a11y_tree-l1:
+        use_shared: "shared-research_brief-level1-2x"
+
+      single_agent-research_brief-screenshot-l1:
+        use_shared: "shared-research_brief-level1-2x"
+
+      single_agent-research_brief-screenshot_a11y_tree-l1:
+        use_shared: "shared-research_brief-level1-2x"
+
       # Level 2
-      single_agent_screenshot_a11y_tree_l2:
-        use_shared: "shared_level2_4x"
-      # Level 
-      single_agent_screenshot_a11y_tree_l3:
-        use_shared: "shared_level3_4x"
+      # category: "code_ops"
+      single_agent-code_ops-screenshot_a11y_tree-l2:
+        use_shared: "shared-code_ops-level2-2x"
+
+      # category: "data_processing"
+      single_agent-data_processing-screenshot_a11y_tree-l2:
+        use_shared: "shared-data_processing-level2-2x"
+
+      # category: "graphic_document"
+      single_agent-graphic_document-screenshot_a11y_tree-l2:
+        use_shared: "shared-graphic_document-level2-2x"
+
+      # category: "research_brief"
+      single_agent-research_brief-screenshot_a11y_tree-l2:
+        use_shared: "shared-research_brief-level2-2x"
+      
+      # Level 3
+      # category: "code_ops"
+      single_agent-code_ops-screenshot_a11y_tree-l3:
+        use_shared: "shared-code_ops-level3-2x"
+
+      # category: "data_processing"
+      single_agent-data_processing-screenshot_a11y_tree-l3:
+        use_shared: "shared-data_processing-level3-2x"
+
+      # category: "graphic_document"
+      single_agent-graphic_document-screenshot_a11y_tree-l3:
+        use_shared: "shared-graphic_document-level3-2x"
+
+      # category: "research_brief"
+      single_agent-research_brief-screenshot_a11y_tree-l3:
+        use_shared: "shared-research_brief-level3-2x"
 
       # Multi-Agent Experiments
       # STAR Topology
       # Level 1
-      multi_agent_star_screenshot_a11y_tree_l1:
-        use_shared: "shared_level1_4x"
+      # category: "code_ops"
+      multi_agent-star-code_ops-screenshot_a11y_tree-l1:
+        use_shared: "shared-code_ops-level1-2x"
+
+      # category: "data_processing"
+      multi_agent-star-data_processing-screenshot_a11y_tree-l1:
+        use_shared: "shared-data_processing-level1-2x"
+
+      # category: "graphic_document"
+      multi_agent-star-graphic_document-screenshot_a11y_tree-l1:
+        use_shared: "shared-graphic_document-level1-2x"
+
+      # category: "research_brief"
+      multi_agent-star-research_brief-screenshot_a11y_tree-l1:
+        use_shared: "shared-research_brief-level1-2x"
+
       # Level 2
-      multi_agent_star_screenshot_a11y_tree_l2:
-        use_shared: "shared_level2_4x"
+      # category: "code_ops"
+      multi_agent-star-code_ops-screenshot_a11y_tree-l2:
+        use_shared: "shared-code_ops-level2-2x"
+
+      # category: "data_processing"
+      multi_agent-star-data_processing-screenshot_a11y_tree-l2:
+        use_shared: "shared-data_processing-level2-2x"
+
+      # category: "graphic_document"
+      multi_agent-star-graphic_document-screenshot_a11y_tree-l2:
+        use_shared: "shared-graphic_document-level2-2x"
+
+      # category: "research_brief"
+      multi_agent-star-research_brief-screenshot_a11y_tree-l2:
+        use_shared: "shared-research_brief-level2-2x"
+
       # Level 3
-      multi_agent_star_screenshot_a11y_tree_l3:
-        use_shared: "shared_level3_4x"
+      # category: "code_ops"
+      multi_agent-star-code_ops-screenshot_a11y_tree-l3:
+        use_shared: "shared-code_ops-level3-2x"
+
+      # category: "data_processing"
+      multi_agent-star-data_processing-screenshot_a11y_tree-l3:
+        use_shared: "shared-data_processing-level3-2x"
+
+      # category: "graphic_document"
+      multi_agent-star-graphic_document-screenshot_a11y_tree-l3:
+        use_shared: "shared-graphic_document-level3-2x"
+
+      # category: "research_brief"
+      multi_agent-star-research_brief-screenshot_a11y_tree-l3:
+        use_shared: "shared-research_brief-level3-2x"
 
       # BLACKBOARD Topology
       # Level 1
-      multi_agent_blackboard_screenshot_a11y_tree_l1:
-        use_shared: "shared_level1_4x"
+      # category: "code_ops"
+      multi_agent-blackboard-code_ops-screenshot_a11y_tree-l1:
+        use_shared: "shared-code_ops-level1-2x"
+
+      # category: "data_processing"
+      multi_agent-blackboard-data_processing-screenshot_a11y_tree-l1:
+        use_shared: "shared-data_processing-level1-2x"
+
+      # category: "graphic_document"
+      multi_agent-blackboard-graphic_document-screenshot_a11y_tree-l1:
+        use_shared: "shared-graphic_document-level1-2x"
+
+      # category: "research_brief"
+      multi_agent-blackboard-research_brief-screenshot_a11y_tree-l1:
+        use_shared: "shared-research_brief-level1-2x"
+
       # Level 2
-      multi_agent_blackboard_screenshot_a11y_tree_l2:
-        use_shared: "shared_level2_4x"
+      # category: "code_ops"
+      multi_agent-blackboard-code_ops-screenshot_a11y_tree-l2:
+        use_shared: "shared-code_ops-level2-2x"
+
+      # category: "data_processing"
+      multi_agent-blackboard-data_processing-screenshot_a11y_tree-l2:
+        use_shared: "shared-data_processing-level2-2x"
+
+      # category: "graphic_document"
+      multi_agent-blackboard-graphic_document-screenshot_a11y_tree-l2:
+        use_shared: "shared-graphic_document-level2-2x"
+
+      # category: "research_brief"
+      multi_agent-blackboard-research_brief-screenshot_a11y_tree-l2:
+        use_shared: "shared-research_brief-level2-2x"
+      
       # Level 3
-      multi_agent_blackboard_screenshot_a11y_tree_l3:
-        use_shared: "shared_level3_4x"
+      # category: "code_ops"
+      multi_agent-blackboard-code_ops-screenshot_a11y_tree-l3:
+        use_shared: "shared-code_ops-level3-2x"
+
+      # category: "data_processing"
+      multi_agent-blackboard-data_processing-screenshot_a11y_tree-l3:
+        use_shared: "shared-data_processing-level3-2x"  
+
+      # category: "graphic_document"
+      multi_agent-blackboard-graphic_document-screenshot_a11y_tree-l3:
+        use_shared: "shared-graphic_document-level3-2x"
+
+      # category: "research_brief"
+      multi_agent-blackboard-research_brief-screenshot_a11y_tree-l3:
+        use_shared: "shared-research_brief-level3-2x"
 
       # MESH Topology
       # Level 1
-      multi_agent_mesh_screenshot_a11y_tree_l1:
-        use_shared: "shared_level1_4x"
+      # category: "code_ops"
+      multi_agent-mesh-code_ops-screenshot_a11y_tree-l1:
+        use_shared: "shared-code_ops-level1-2x"
+
+      # category: "data_processing"
+      multi_agent-mesh-data_processing-screenshot_a11y_tree-l1:
+        use_shared: "shared-data_processing-level1-2x"
+
+      # category: "graphic_document"
+      multi_agent-mesh-graphic_document-screenshot_a11y_tree-l1:
+        use_shared: "shared-graphic_document-level1-2x"
+
+      # category: "research_brief"
+      multi_agent-mesh-research_brief-screenshot_a11y_tree-l1:
+        use_shared: "shared-research_brief-level1-2x"
+
       # Level 2
-      multi_agent_mesh_screenshot_a11y_tree_l2:
-        use_shared: "shared_level2_4x"
+      # category: "code_ops"
+      multi_agent-mesh-code_ops-screenshot_a11y_tree-l2:
+        use_shared: "shared-code_ops-level2-2x"
+
+      # category: "data_processing"
+      multi_agent-mesh-data_processing-screenshot_a11y_tree-l2:
+        use_shared: "shared-data_processing-level2-2x"
+
+      # category: "graphic_document"
+      multi_agent-mesh-graphic_document-screenshot_a11y_tree-l2:
+        use_shared: "shared-graphic_document-level2-2x"
+
+      # category: "research_brief"
+      multi_agent-mesh-research_brief-screenshot_a11y_tree-l2:
+        use_shared: "shared-research_brief-level2-2x"
+
       # Level 3
-      multi_agent_mesh_screenshot_a11y_tree_l3:
-        use_shared: "shared_level3_4x"
+      # category: "code_ops"
+      multi_agent-mesh-code_ops-screenshot_a11y_tree-l3:
+        use_shared: "shared-code_ops-level3-2x"
+
+      # category: "data_processing"
+      multi_agent-mesh-data_processing-screenshot_a11y_tree-l3:
+        use_shared: "shared-data_processing-level3-2x"
+
+      # category: "graphic_document"
+      multi_agent-mesh-graphic_document-screenshot_a11y_tree-l3:
+        use_shared: "shared-graphic_document-level3-2x"
+
+      # category: "research_brief"
+      multi_agent-mesh-research_brief-screenshot_a11y_tree-l3:
+        use_shared: "shared-research_brief-level3-2x"
+
+      # OSWorld Experiments
+      # chrome
+      single_agent-chrome_osworld-screenshot_a11y_tree:
+        use_shared: "shared-chrome_osworld-5x"
+
+      multi_agent-star-chrome_osworld-screenshot_a11y_tree:
+        use_shared: "shared-chrome_osworld-5x"
+
+      multi_agent-mesh-chrome_osworld-screenshot_a11y_tree:
+        use_shared: "shared-chrome_osworld-5x"
+
+      multi_agent-blackboard-chrome_osworld-screenshot_a11y_tree:
+        use_shared: "shared-chrome_osworld-5x"
+
+      # gimp
+      single_agent-gimp_osworld-screenshot_a11y_tree:
+        use_shared: "shared-gimp_osworld-5x"
+
+      multi_agent-star-gimp_osworld-screenshot_a11y_tree:
+        use_shared: "shared-gimp_osworld-5x"
+        
+      multi_agent-mesh-gimp_osworld-screenshot_a11y_tree:
+        use_shared: "shared-gimp_osworld-5x"
+
+      multi_agent-blackboard-gimp_osworld-screenshot_a11y_tree:
+        use_shared: "shared-gimp_osworld-5x"
+        
+      # libreoffice_writer
+      single_agent-libreoffice_writer_osworld-screenshot_a11y_tree:
+        use_shared: "shared-libreoffice_writer_osworld-5x"
+
+      multi_agent-star-libreoffice_writer_osworld-screenshot_a11y_tree:
+        use_shared: "shared-libreoffice_writer_osworld-5x"
+        
+      multi_agent-mesh-libreoffice_writer_osworld-screenshot_a11y_tree:
+        use_shared: "shared-libreoffice_writer_osworld-5x"
+
+      multi_agent-blackboard-libreoffice_writer_osworld-screenshot_a11y_tree:
+        use_shared: "shared-libreoffice_writer_osworld-5x"
+        
+      # os
+      single_agent-os_osworld-screenshot_a11y_tree:
+        use_shared: "shared-os_osworld-5x"
+
+      multi_agent-star-os_osworld-screenshot_a11y_tree:
+        use_shared: "shared-os_osworld-5x"
+        
+      multi_agent-mesh-os_osworld-screenshot_a11y_tree:
+        use_shared: "shared-os_osworld-5x"
+
+      multi_agent-blackboard-os_osworld-screenshot_a11y_tree:
+        use_shared: "shared-os_osworld-5x"
 
 # Experiment Configuration
 experiments:
 
   # Single Agent Experiments 
   # Level 1
+  # code_ops
   # a11y_tree
-  single_agent_a11y_tree_l1:
+  single_agent-code_ops-a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "a11y_tree"
     topology_type: "single"
-  # screenshot_a11y_tree
-  single_agent_screenshot_a11y_tree_l1:
-    environment_type: "osworld"
-    observation_type: "screenshot_a11y_tree"
-    topology_type: "single"
+  
   # screenshot
-  single_agent_screenshot_l1:
+  single_agent-code_ops-screenshot-l1:
     environment_type: "osworld"
     observation_type: "screenshot"
     topology_type: "single"
-  
-  # Level 2
+
   # screenshot_a11y_tree
-  single_agent_screenshot_a11y_tree_l2:
+  single_agent-code_ops-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+  
+  # data_processing
+  # a11y_tree
+  single_agent-data_processing-a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "a11y_tree"
+    topology_type: "single"
+
+  # screenshot
+  single_agent-data_processing-screenshot-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot"
+    topology_type: "single"
+
+  # screenshot_a11y_tree
+  single_agent-data_processing-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
 
-  # Level 3 
+  # graphic_document
+  # a11y_tree
+  single_agent-graphic_document-a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "a11y_tree"
+    topology_type: "single"
+
+  # screenshot
+  single_agent-graphic_document-screenshot-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot"
+    topology_type: "single"
+
   # screenshot_a11y_tree
-  single_agent_screenshot_a11y_tree_l3:
+  single_agent-graphic_document-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+
+  # research_brief
+  # a11y_tree
+  single_agent-research_brief-a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "a11y_tree"
+    topology_type: "single"
+  
+  # screenshot
+  single_agent-research_brief-screenshot-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot"
+    topology_type: "single"
+
+  # screenshot_a11y_tree
+  single_agent-research_brief-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+
+  # Level 2
+  # code_ops
+  # screenshot_a11y_tree
+  single_agent-code_ops-screenshot_a11y_tree-l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+  
+  # data_processing
+  # screenshot_a11y_tree
+  single_agent-data_processing-screenshot_a11y_tree-l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+  
+  # graphic_document
+  # screenshot_a11y_tree
+  single_agent-graphic_document-screenshot_a11y_tree-l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+  
+  # research_brief
+  # screenshot_a11y_tree
+  single_agent-research_brief-screenshot_a11y_tree-l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+  
+  # Level 3 
+  # code_ops
+  # screenshot_a11y_tree
+  single_agent-code_ops-screenshot_a11y_tree-l3:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+  
+  # data_processing
+  # screenshot_a11y_tree
+  single_agent-data_processing-screenshot_a11y_tree-l3:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+  
+  # graphic_document
+  # screenshot_a11y_tree
+  single_agent-graphic_document-screenshot_a11y_tree-l3:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+  
+  # research_brief
+  # screenshot_a11y_tree
+  single_agent-research_brief-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
@@ -174,72 +707,356 @@ experiments:
   # Multi-Agent Experiments 
   # Star Topology
   # Level 1
+  # code_ops
   # screenshot_a11y_tree
-  multi_agent_star_screenshot_a11y_tree_l1:
+  multi_agent-star-code_ops-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
+
+  # data_processing
+  # screenshot_a11y_tree
+  multi_agent-star-data_processing-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
+  
+  # graphic_document
+  # screenshot_a11y_tree
+  multi_agent-star-graphic_document-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
+  
+  # research_brief
+  # screenshot_a11y_tree
+  multi_agent-star-research_brief-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
 
   # Level 2 
+  # code_ops
   # screenshot_a11y_tree    
-  multi_agent_star_screenshot_a11y_tree_l2:
+  multi_agent-star-code_ops-screenshot_a11y_tree-l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
+  
+  # data_processing
+  # screenshot_a11y_tree
+  multi_agent-star-data_processing-screenshot_a11y_tree-l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
+    
+  # graphic_document
+  # screenshot_a11y_tree
+  multi_agent-star-graphic_document-screenshot_a11y_tree-l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
+    
+  # research_brief
+  # screenshot_a11y_tree
+  multi_agent-star-research_brief-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
 
   # Level 3
+  # code_ops
   # screenshot_a11y_tree    
-  multi_agent_star_screenshot_a11y_tree_l3:
+  multi_agent-star-code_ops-screenshot_a11y_tree-l3:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
+
+  # data_processing
+  # screenshot_a11y_tree
+  multi_agent-star-data_processing-screenshot_a11y_tree-l3:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
+    
+  # graphic_document
+  # screenshot_a11y_tree
+  multi_agent-star-graphic_document-screenshot_a11y_tree-l3:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
+  
+  # research_brief
+  # screenshot_a11y_tree
+  multi_agent-star-research_brief-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
 
   # Blackboard Topology
   # Level 1
-  # screenshot
-  multi_agent_blackboard_screenshot_a11y_tree_l1:
+  # code_ops
+  # screenshot_a11y_tree
+  multi_agent-blackboard-code_ops-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
+
+  # data_processing
+  # screenshot_a11y_tree
+  multi_agent-blackboard-data_processing-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
+
+  # graphic_document
+  # screenshot_a11y_tree
+  multi_agent-blackboard-graphic_document-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
+
+  # research_brief
+  # screenshot_a11y_tree
+  multi_agent-blackboard-research_brief-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
 
   # Level 2
+  # code_ops
   # screenshot_a11y_tree
-  multi_agent_blackboard_screenshot_a11y_tree_l2:
+  multi_agent-blackboard-code_ops-screenshot_a11y_tree-l2:
     environment_type: "osworld"
-    observation_type: "screenshot"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
+
+  # data_processing
+  # screenshot_a11y_tree
+  multi_agent-blackboard-data_processing-screenshot_a11y_tree-l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
+
+  # graphic_document
+  # screenshot_a11y_tree
+  multi_agent-blackboard-graphic_document-screenshot_a11y_tree-l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
+
+  # research_brief
+  # screenshot_a11y_tree
+  multi_agent-blackboard-research_brief-screenshot_a11y_tree-l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
 
   # Level 3
+  # code_ops
   # screenshot_a11y_tree
-  multi_agent_blackboard_screenshot_a11y_tree_l3:
+  multi_agent-blackboard-code_ops-screenshot_a11y_tree-l3:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
+  
+  # data_processing
+  # screenshot_a11y_tree
+  multi_agent-blackboard-data_processing-screenshot_a11y_tree-l3:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
+    
+  # graphic_document
+  # screenshot_a11y_tree
+  multi_agent-blackboard-graphic_document-screenshot_a11y_tree-l3:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
+
+  # research_brief
+  # screenshot_a11y_tree
+  multi_agent-blackboard-research_brief-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
 
   # Mesh Topology
   # Level 1
+  # code_ops
   # screenshot_a11y_tree
-  multi_agent_mesh_screenshot_a11y_tree_l1:
+  multi_agent-mesh-code_ops-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+
+  # data_processing
+  # screenshot_a11y_tree
+  multi_agent-mesh-data_processing-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+
+  # graphic_document
+  # screenshot_a11y_tree
+  multi_agent-mesh-graphic_document-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+
+  # research_brief
+  # screenshot_a11y_tree
+  multi_agent-mesh-research_brief-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
 
   # Level 2
+  # code_ops
   # screenshot_a11y_tree
-  multi_agent_mesh_screenshot_a11y_tree_l2:
+  multi_agent-mesh-code_ops-screenshot_a11y_tree-l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+  
+  # data_processing
+  # screenshot_a11y_tree
+  multi_agent-mesh-data_processing-screenshot_a11y_tree-l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+    
+  # graphic_document
+  # screenshot_a11y_tree
+  multi_agent-mesh-graphic_document-screenshot_a11y_tree-l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+    
+  # research_brief
+  # screenshot_a11y_tree
+  multi_agent-mesh-research_brief-screenshot_a11y_tree-l2:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+    
+  # Level 3
+  # code_ops
+  # screenshot_a11y_tree
+  multi_agent-mesh-code_ops-screenshot_a11y_tree-l3:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+  
+  # data_processing
+  # screenshot_a11y_tree
+  multi_agent-mesh-data_processing-screenshot_a11y_tree-l3:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+    
+  # graphic_document
+  # screenshot_a11y_tree
+  multi_agent-mesh-graphic_document-screenshot_a11y_tree-l3:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+    
+  # research_brief
+  # screenshot_a11y_tree
+  multi_agent-mesh-research_brief-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
 
-  # Level 3
-  # screenshot_a11y_tree
-  multi_agent_mesh_screenshot_a11y_tree_l3:
+  # OSWorld
+  # chrome
+  single_agent-chrome_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+
+  multi_agent-star-chrome_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
+
+  multi_agent-mesh-chrome_osworld-screenshot_a11y_tree:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
+
+  multi_agent-blackboard-chrome_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
+
+  # gimp
+  single_agent-gimp_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+
+  multi_agent-star-gimp_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
+
+  multi_agent-mesh-gimp_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+
+  multi_agent-blackboard-gimp_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
+
+  # libreoffice_writer
+  single_agent-libreoffice_writer_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+
+  multi_agent-star-libreoffice_writer_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
+
+  multi_agent-mesh-libreoffice_writer_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+
+  multi_agent-blackboard-libreoffice_writer_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
+
+  # os
+  single_agent-os_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+    
+  multi_agent-star-os_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
+    
+  multi_agent-mesh-os_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+
+  multi_agent-blackboard-os_osworld-screenshot_a11y_tree:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
 
 # System Configuration
 system:
+  headless: true
   vm_path: "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx"
   screen_width: 1920
   screen_height: 1080

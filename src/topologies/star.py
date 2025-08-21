@@ -275,21 +275,20 @@ class StarTopology(BaseTopology):
         Returns:
             str: Template filename to use for this role
         """
-        from src.message import MessageType
+        # Extract base role name correctly (e.g., 'spoke_w_execute_1' -> 'spoke_w_execute')
+        base_role = "_".join(role_name.split("_")[:-1]) if role_name.split("_")[-1].isdigit() else role_name
 
-        base_role = role_name.split("_")[0] if "_" in role_name else role_name
-
-        if base_role == "hub":
+        if "hub" in base_role:
             return "star_topology_hub_prompt.j2"
-        elif base_role in ["spoke"]:
-            # Get role config to check for EXECUTE permissions
-            role_config = self._get_role_config_for_name(role_name)
-
-            # Check if role has EXECUTE permissions
-            has_execute = role_config and hasattr(role_config, "message_permissions") and MessageType.EXECUTE in role_config.message_permissions.send
-
-            execute_suffix = "w_execute" if has_execute else "wo_execute"
-            return f"star_topology_spoke_{execute_suffix}_prompt.j2"
+        elif base_role.startswith("spoke"):
+            # Determine template based on role name pattern, not permissions
+            if "_w_execute" in base_role:
+                return "star_topology_spoke_w_execute_prompt.j2"
+            elif "_wo_execute" in base_role:
+                return "star_topology_spoke_wo_execute_prompt.j2"
+            else:
+                # Fallback for legacy role names
+                return "star_topology_spoke_w_execute_prompt.j2"
         else:
             # Fallback to default implementation
             return super().get_template_name(role_name)

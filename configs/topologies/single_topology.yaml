@@ -46,6 +46,11 @@ category_participant_assignments:
       count: 1
       domains: ["universal_specialist"]
 
+  osworld:
+    participant_w_execute:
+      count: 1
+      domains: ["universal_specialist"]
+
 # Validation rules
 validation_rules:
   participant_count: "exactly_1"

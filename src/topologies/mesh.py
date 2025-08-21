@@ -249,19 +249,18 @@ class MeshTopology(BaseTopology):
         Returns:
             str: Template filename to use for this role
         """
-        from src.message import MessageType
+        # Extract base role name correctly (e.g., 'participant_w_execute_1' -> 'participant_w_execute')
+        base_role = "_".join(role_name.split("_")[:-1]) if role_name.split("_")[-1].isdigit() else role_name
 
-        base_role = role_name.split("_")[0] if "_" in role_name else role_name
-
-        if base_role == "participant":
-            # Get role config to check for EXECUTE permissions
-            role_config = self._get_role_config_for_name(role_name)
-
-            # Check if role has EXECUTE permissions
-            has_execute = role_config and hasattr(role_config, "message_permissions") and MessageType.EXECUTE in role_config.message_permissions.send
-
-            execute_suffix = "w_execute" if has_execute else "wo_execute"
-            return f"mesh_topology_participant_{execute_suffix}_prompt.j2"
+        if base_role.startswith("participant"):
+            # Determine template based on role name pattern, not permissions
+            if "_w_execute" in base_role:
+                return "mesh_topology_participant_w_execute_prompt.j2"
+            elif "_wo_execute" in base_role:
+                return "mesh_topology_participant_wo_execute_prompt.j2"
+            else:
+                # Fallback for legacy role names
+                return "mesh_topology_participant_w_execute_prompt.j2"
         else:
             # Fallback to default implementation
             return super().get_template_name(role_name)

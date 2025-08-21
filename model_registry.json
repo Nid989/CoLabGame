@@ -430,6 +430,7 @@
         },
         "model_config": {
             "reasoning_model": true,
+            "reasoning_effort": "low",
             "multimodality": {
                 "single_image": true,
                 "multiple_images": true,
@@ -469,6 +470,7 @@
         },
         "model_config": {
             "reasoning_model": true,
+            "reasoning_effort": "low",
             "multimodality": {
                 "single_image": true,
                 "multiple_images": true,

@@ -292,6 +292,7 @@ class ComputerGame(NetworkDialogueGameMaster):
             ValueError: If player model is not available for role index
             KeyError: If condition type is invalid
         """
+        print("running")
         try:
             from src.message import RoleConfig
             from src.utils.template_manager import PromptTemplateManager
@@ -354,9 +355,6 @@ class ComputerGame(NetworkDialogueGameMaster):
                     initial_prompt=role_config.initial_prompt,
                     node_id=node_id,
                 )
-
-                print(role_config.initial_prompt, "initial_prompt")
-                print("-" * 100)
 
             for edge in graph_config.get("edges", []):
                 from_node = edge.get("from")
@@ -898,7 +896,6 @@ class ComputerGame(NetworkDialogueGameMaster):
                 standard_edges = self._get_standard_edges(current_node)
                 if standard_edges:
                     next_node = standard_edges[0][0]  # Take the first standard edge target node
-                    print(f"Standard edge found: {next_node}")
                 else:
                     raise RuleViolationError(
                         f"No valid transition (decision or standard) found for message type {message_type.name} from role {from_role} from node {current_node}"
@@ -936,10 +933,9 @@ class ComputerGame(NetworkDialogueGameMaster):
                 # Add round information to message state before creating context
                 max_rounds = self.game_config.get("max_rounds", 1)
                 if max_rounds > 1:
-                    self.message_state.update(round_info={"current_round": self.current_round, "max_rounds": max_rounds})
+                    self.message_state.update(round_info={"current_round": self.current_round + 1, "max_rounds": max_rounds})
 
                 formatted_context = self.player_context_formatter.create_context_for(self.message_state, next_player)
-                print("Formatted Context", formatted_context)
                 self._set_context_for(next_player, formatted_context)
                 self.message_state.reset(preserve=["observation", "blackboard"])
 
@@ -1056,9 +1052,6 @@ class ComputerGame(NetworkDialogueGameMaster):
         self._episode_score = float(self.env.evaluate())
         self.success = self._episode_score == 1.0
         self.fail = not self.success
-        print("episode_score", self._episode_score)
-        print("success", self.success)
-        print("fail", self.fail)
 
         # Step 2: Log all final summary data for the episode.
         log_keys = [

@@ -32,7 +32,9 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
         """
         super().__init__(path)
         self._cached_sessions = {}  # Cache entire GenerationSession objects
+        self._osworld_tasks = {}  # Cache OSWorld tasks by type
         self._load_unified_config()
+        self._load_osworld_tasks()
 
     def _load_unified_config(self):
         """Load unified configuration from yaml file."""
@@ -50,6 +52,27 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
             self.unified_config = yaml.safe_load(f)
 
         self._validate_unified_config(self.unified_config)
+
+    def _load_osworld_tasks(self):
+        """Load OSWorld tasks from osworld_subset.json and cache by task type."""
+        import json
+
+        osworld_path = "in/osworld_subset.json"
+        try:
+            with open(osworld_path, "r") as f:
+                osworld_data = json.load(f)
+
+            # Cache tasks by task type
+            for task_type, tasks in osworld_data.items():
+                self._osworld_tasks[task_type] = tasks
+                print(f"Loaded {len(tasks)} {task_type} tasks from OSWorld")
+
+        except FileNotFoundError:
+            print(f"Warning: OSWorld tasks file not found at {osworld_path}")
+            self._osworld_tasks = {}
+        except json.JSONDecodeError as e:
+            print(f"Error parsing OSWorld tasks file: {e}")
+            self._osworld_tasks = {}
 
     def _validate_unified_config(self, config: dict) -> None:
         """Validate the unified configuration format."""
@@ -251,8 +274,63 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
             print(f"FATAL: Error generating tasks for run '{run_name}': {str(e)}")
             raise
 
+    def _generate_osworld_tasks(self, config: dict, run_name: str):
+        """
+        Generate OSWorld task information for a given configuration.
+        Returns a mock session-like object with task information.
+        """
+        try:
+            sampling_config = config.get("sampling", [])
+            all_task_info = []
+
+            for sample_spec in sampling_config:
+                category = sample_spec.get("category")
+                task_types = sample_spec.get("task_types", [])
+
+                if category != "osworld":
+                    continue
+
+                for task_type in task_types:
+                    if task_type not in self._osworld_tasks:
+                        print(f"Warning: OSWorld task type '{task_type}' not found")
+                        continue
+
+                    # Use all tasks of this type (no sampling)
+                    tasks = self._osworld_tasks[task_type]
+                    task_info = self._extract_osworld_task_information(tasks, task_type)
+                    all_task_info.extend(task_info)
+                    print(f"Added {len(task_info)} {task_type} OSWorld tasks")
+
+            # Create a simple object to hold the task information
+            class MockOSWorldSession:
+                def __init__(self, task_info):
+                    self.successful_tasks = task_info
+                    self.failed_tasks = []
+
+            return MockOSWorldSession(all_task_info)
+
+        except Exception as e:
+            print(f"FATAL: Error generating OSWorld tasks for run '{run_name}': {str(e)}")
+            raise
+
+    def _extract_osworld_task_information(self, osworld_tasks: list, task_type: str) -> list:
+        """Extract task information from OSWorld tasks in the expected format."""
+        task_information = []
+
+        for task in osworld_tasks:
+            task_info = {
+                "framework_config": task,  # Use the entire OSWorld task as framework_config
+                "category": "osworld",
+                "task_type": task_type,
+                "level": 1,  # OSWorld tasks don't have levels, use default
+                "instance": 1,  # OSWorld tasks don't have instance numbers, use default
+            }
+            task_information.append(task_info)
+
+        return task_information
+
     def _extract_task_information(self, session) -> list:
-        """Extract framework configs and task metadata from GenerationSession."""
+        """Extract framework configs and task metadata from GenerationSession or OSWorld session."""
         task_information = []
 
         if not session.successful_tasks:
@@ -260,14 +338,19 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
             return task_information
 
         for task_package in session.successful_tasks:
-            task_info = {
-                "framework_config": task_package.framework_config,
-                "category": task_package.spec.category,
-                "task_type": task_package.spec.task_type,
-                "level": task_package.spec.level,
-                "instance": task_package.spec.instance,
-            }
-            task_information.append(task_info)
+            # Check if this is already a task_info dict (from OSWorld)
+            if isinstance(task_package, dict) and "framework_config" in task_package:
+                task_information.append(task_package)
+            else:
+                # This is a regular GenerationSession task package
+                task_info = {
+                    "framework_config": task_package.framework_config,
+                    "category": task_package.spec.category,
+                    "task_type": task_package.spec.task_type,
+                    "level": task_package.spec.level,
+                    "instance": task_package.spec.instance,
+                }
+                task_information.append(task_info)
 
         print(f"Extracted {len(task_information)} task information packages from session")
         return task_information
@@ -300,7 +383,7 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
         experiment_config = self.unified_config["experiments"][experiment_name]
 
         return {
-            "headless": False,
+            "headless": system_config.get("headless", False),
             "observation_type": observation_type,
             "action_space": "pyautogui",
             "screen_width": system_config["screen_width"],
@@ -337,7 +420,14 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
         print("INFO: Generating shared task sets...")
         for shared_name, config in shared_configs.items():
             session_name = config.get("output", {}).get("session_name", shared_name)
-            session = self._generate_tasks(config, f"shared__{session_name}")
+
+            # Check if this is an OSWorld configuration
+            if config.get("source_type") == "osworld":
+                print(f"INFO: Generating OSWorld tasks for shared set '{shared_name}'")
+                session = self._generate_osworld_tasks(config, f"shared__{session_name}")
+            else:
+                session = self._generate_tasks(config, f"shared__{session_name}")
+
             cached_shared_task_information[shared_name] = self._extract_task_information(session)
         print("INFO: Finished generating shared task sets.")
 
@@ -368,7 +458,14 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
             else:
                 # This is an individual, non-shared task configuration
                 print(f"INFO: Generating individual tasks for experiment '{experiment_name}'.")
-                session = self._generate_tasks(task_gen_instruction, experiment_name)
+
+                # Check if this is an OSWorld configuration
+                if task_gen_instruction.get("source_type") == "osworld":
+                    print(f"INFO: Generating OSWorld tasks for individual experiment '{experiment_name}'")
+                    session = self._generate_osworld_tasks(task_gen_instruction, experiment_name)
+                else:
+                    session = self._generate_tasks(task_gen_instruction, experiment_name)
+
                 task_information_list = self._extract_task_information(session)
 
             # Create final game instances for the experiment
