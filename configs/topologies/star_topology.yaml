@@ -103,7 +103,63 @@ category_participant_assignments:
     spoke_wo_execute:
       count: 1
       domains: ["reviewer"]
+      
+  osworld:
+    task_types:
+      chrome:
+        hub:
+          count: 1
+          domains: ["planner"]
+        spoke_w_execute:
+          count: 2
+          domains: ["web_research_specialist", "os_operation_specialist"]
+        spoke_wo_execute:
+          count: 1
+          domains: ["reviewer"]
+          
+      libreoffice_writer:
+        hub:
+          count: 1
+          domains: ["planner"]
+        spoke_w_execute:
+          count: 2
+          domains: ["office_productivity_specialist", "os_operation_specialist"]
+        spoke_wo_execute:
+          count: 1
+          domains: ["reviewer"]
 
+      gimp:
+        hub:
+          count: 1
+          domains: ["planner"]
+        spoke_w_execute:
+          count: 2
+          domains: ["digital_media_specialist", "os_operation_specialist"]
+        spoke_wo_execute:
+          count: 1
+          domains: ["reviewer"]
+
+      os:
+        hub:
+          count: 1
+          domains: ["planner"]
+        spoke_w_execute:
+          count: 2
+          domains: ["os_operation_specialist"]
+        spoke_wo_execute:
+          count: 1
+          domains: ["reviewer"]
+
+      default:
+        hub:
+          count: 1
+          domains: ["planner"]
+        spoke_w_execute:
+          count: 2
+          domains: ["software_development_specialist", "os_operation_specialist"]
+        spoke_wo_execute:
+          count: 1
+          domains: ["reviewer"]
 
 # Validation rules
 validation_rules:

@@ -80,8 +80,9 @@ class BaseTopology(ABC):
             game_instance: Dictionary containing game instance configuration
                           with fields like game_id, category, task_type, participants
         """
-        # Extract and store category from game instance
+        # Extract and store category and task_type from game instance
         self.category = game_instance.get("category", None)
+        self.task_type = game_instance.get("task_type", None)
 
         # Get topology type name for config file
         topology_name = self.get_config().topology_type.value
@@ -96,7 +97,7 @@ class BaseTopology(ABC):
                 # Validate domain definitions are present and properly configured
                 self._validate_domain_definitions()
 
-                logger.info(f"Loaded topology config from {config_path} for category: {self.category}")
+                logger.info(f"Loaded topology config from {config_path} for category: {self.category}, task_type: {self.task_type}")
         else:
             logger.warning(f"Topology config file not found: {config_path}")
             self.topology_config = None
@@ -145,9 +146,18 @@ class BaseTopology(ABC):
         # Collect domains from category-specific participant assignments
         if "category_participant_assignments" in self.topology_config:
             category_assignments = self.topology_config["category_participant_assignments"]
-            for category, participant_assignments in category_assignments.items():
-                for role_name, role_config in participant_assignments.items():
-                    if "domains" in role_config:
+            for category, category_config in category_assignments.items():
+                # Handle new task_types structure
+                if "task_types" in category_config:
+                    task_type_assignments = category_config["task_types"]
+                    for task_type, participant_assignments in task_type_assignments.items():
+                        for role_name, role_config in participant_assignments.items():
+                            if "domains" in role_config:
+                                used_domains.update(role_config["domains"])
+
+                # Handle direct participant assignments (backward compatibility)
+                for role_name, role_config in category_config.items():
+                    if role_name != "task_types" and isinstance(role_config, dict) and "domains" in role_config:
                         used_domains.update(role_config["domains"])
 
         # Only validate domains that are actually used in participant assignments
@@ -163,11 +173,14 @@ class BaseTopology(ABC):
 
     def get_default_participants(self) -> Dict:
         """
-        Get participant assignments from topology configuration, prioritizing category-specific assignments.
+        Get participant assignments from topology configuration, prioritizing task_type-specific assignments.
 
         Returns:
             Dictionary containing participant assignments for this topology.
-            First checks for category-specific assignments, then falls back to default assignments.
+            Lookup priority:
+            1. category_participant_assignments[category][task_types][task_type] (most specific)
+            2. category_participant_assignments[category] (category-level fallback)
+            3. default_participant_assignments (global fallback)
 
         Raises:
             ValueError: If topology config is not loaded or no assignments are found
@@ -179,12 +192,32 @@ class BaseTopology(ABC):
         if self.category and "category_participant_assignments" in self.topology_config:
             category_assignments = self.topology_config["category_participant_assignments"]
             if self.category in category_assignments:
-                logger.info(f"Using category-specific participant assignments for category: {self.category}")
-                return category_assignments[self.category]
+                category_config = category_assignments[self.category]
+
+                # Level 1: Check for task_type-specific assignments (most specific)
+                if self.task_type and "task_types" in category_config:
+                    task_type_assignments = category_config["task_types"]
+                    if self.task_type in task_type_assignments:
+                        logger.info(f"Using task_type-specific participant assignments for category: {self.category}, task_type: {self.task_type}")
+                        return task_type_assignments[self.task_type]
+                    elif "default" in task_type_assignments:
+                        logger.info(f"Task_type '{self.task_type}' not found, using default task_type for category: {self.category}")
+                        return task_type_assignments["default"]
+                    else:
+                        logger.info(
+                            f"No task_type assignments found for '{self.task_type}' in category: {self.category}, falling back to category level"
+                        )
+
+                # Level 2: Check if category has direct participant assignments (backward compatibility)
+                # This handles categories that don't use task_types structure
+                category_direct_assignments = {k: v for k, v in category_config.items() if k != "task_types"}
+                if category_direct_assignments:
+                    logger.info(f"Using category-level participant assignments for category: {self.category}")
+                    return category_direct_assignments
             else:
                 logger.info(f"Category '{self.category}' not found in category_participant_assignments, falling back to default")
 
-        # Fallback to default participant assignments
+        # Level 3: Fallback to default participant assignments
         if "default_participant_assignments" not in self.topology_config:
             raise ValueError("No default participant assignments found in topology configuration")
 

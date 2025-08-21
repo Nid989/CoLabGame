@@ -356,6 +356,8 @@ class ComputerGame(NetworkDialogueGameMaster):
                     node_id=node_id,
                 )
 
+                print("initial_prompt", role_config.initial_prompt)
+
             for edge in graph_config.get("edges", []):
                 from_node = edge.get("from")
                 to_node = edge.get("to")

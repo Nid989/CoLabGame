@@ -47,9 +47,19 @@ category_participant_assignments:
       domains: ["universal_specialist"]
 
   osworld:
-    participant_w_execute:
-      count: 1
-      domains: ["universal_specialist"]
+    task_types:
+      chrome:
+        participant_w_execute:
+          count: 1
+          domains: ["universal_specialist"]
+      libreoffice_writer:
+        participant_w_execute:
+          count: 1
+          domains: ["universal_specialist"]
+      default:
+        participant_w_execute:
+          count: 1
+          domains: ["universal_specialist"]
 
 # Validation rules
 validation_rules:
