@@ -1,39 +1,46 @@
 # Blackboard Topology Configuration
-# Shared memory with round-robin turn-taking
+# Shared memory communication between all participants
 
 topology_type: "blackboard"
 
-# Domain definitions with descriptions
+# Domain definitions with dual descriptions
 domain_definitions:
   planner:
-    description: "Expert in breaking down a goal into simple, atomic subtasks. Defines **what** needs to be done and assigns tasks to the most suitable participants, but never specifies **how** to do it. Monitors progress and ensures the final output meets all requirements."
+    self_description: "You are an expert in breaking down goals into simple, atomic subtasks. You define **what** needs to be done and assign tasks to the most suitable participants, but never specify **how** to do it. You monitor progress and ensure the final output meets all requirements."
+    team_description: "breaks down goals into atomic subtasks and coordinates task assignments"
   reviewer:
-    description: "Expert at critically evaluating work and strategies, spotting errors, redundancies, or gaps, and advising on precise corrections or improvements."
+    self_description: "You are an expert at critically evaluating work and strategies. You spot errors, redundancies, or gaps, and advise on precise corrections or improvements."
+    team_description: "evaluates work quality and provides improvement recommendations"
   office_productivity_specialist:
-    description: "Expert in LibreOffice Writer, Calc, and Impress, skilled at creating, editing, and formatting professional documents, spreadsheets, and presentations."
+    self_description: "You are an expert in LibreOffice Writer, Calc, and Impress. You create, edit, and format professional documents, spreadsheets, and presentations with precision."
+    team_description: "handles document creation and office productivity tasks using LibreOffice applications"
   software_development_specialist:
-    description: "Expert in coding, debugging, and executing programs, ensuring software is correct, efficient, and meets all requirements."
+    self_description: "You are an expert in coding, debugging, and executing programs. You ensure software is correct, efficient, and meets all requirements."
+    team_description: "develops, debugs, and executes software programs and code"
   digital_media_specialist:
-    description: "Expert in GIMP, adept at editing, resizing, and enhancing images to produce high-quality visuals that meet exact specifications."
+    self_description: "You are an expert in GIMP and digital media editing. You edit, resize, and enhance images to produce high-quality visuals that meet exact specifications."
+    team_description: "creates and edits digital media content using GIMP and image editing tools"
   web_research_specialist:
-    description: "Expert in online research, proficient at quickly finding, extracting, and organizing accurate information from the web."
+    self_description: "You are an expert in online research. You quickly find, extract, and organize accurate information from the web."
+    team_description: "conducts web research and gathers accurate information from online sources"
   os_operation_specialist:
-    description: "Expert in file and system management, skilled at organizing folders, setting permissions, handling archives, and executing essential OS commands."
+    self_description: "You are an expert in file and system management. You organize folders, set permissions, handle archives, and execute essential OS commands."
+    team_description: "manages file systems, permissions, and essential operating system operations"
 
 # Role definitions for blackboard topology
 role_definitions:
   participant_w_execute:
     message_permissions:
-      send: ["EXECUTE", "STATUS", "WRITE_BOARD"]
-      receive: []
+      send: ["EXECUTE", "WRITE_BOARD", "STATUS"]
+      receive: ["WRITE_BOARD"]
     allowed_components: ["round_info", "observation", "blackboard"]
     receives_goal: true
     handler_type: "environment"
     
   participant_wo_execute:
     message_permissions:
-      send: ["EXECUTE", "STATUS", "WRITE_BOARD"]
-      receive: []
+      send: ["WRITE_BOARD", "STATUS"]
+      receive: ["WRITE_BOARD"]
     allowed_components: ["round_info", "observation", "blackboard"]
     receives_goal: true
     handler_type: "standard"
@@ -64,7 +71,7 @@ category_participant_assignments:
     participant_wo_execute:
       count: 2
       domains: ["planner", "reviewer"]
-      
+        
   graphic_document:
     participant_w_execute:
       count: 3
@@ -80,65 +87,50 @@ category_participant_assignments:
     participant_wo_execute:
       count: 2
       domains: ["planner", "reviewer"]
-
+      
   osworld:
     task_types:
       chrome:
-        hub:
-          count: 1
-          domains: ["planner"]
-        spoke_w_execute:
+        participant_w_execute:
           count: 2
           domains: ["web_research_specialist", "os_operation_specialist"]
-        spoke_wo_execute:
-          count: 1
-          domains: ["reviewer"]
+        participant_wo_execute:
+          count: 2
+          domains: ["planner", "reviewer"]
           
       libreoffice_writer:
-        hub:
-          count: 1
-          domains: ["planner"]
-        spoke_w_execute:
+        participant_w_execute:
           count: 2
           domains: ["office_productivity_specialist", "os_operation_specialist"]
-        spoke_wo_execute:
-          count: 1
-          domains: ["reviewer"]
+        participant_wo_execute:
+          count: 2
+          domains: ["planner", "reviewer"]
 
       gimp:
-        hub:
-          count: 1
-          domains: ["planner"]
-        spoke_w_execute:
+        participant_w_execute:
           count: 2
           domains: ["digital_media_specialist", "os_operation_specialist"]
-        spoke_wo_execute:
-          count: 1
-          domains: ["reviewer"]
+        participant_wo_execute:
+          count: 2
+          domains: ["planner", "reviewer"]
 
       os:
-        hub:
+        participant_w_execute:
           count: 1
-          domains: ["planner"]
-        spoke_w_execute:
-          count: 2
           domains: ["os_operation_specialist"]
-        spoke_wo_execute:
-          count: 1
-          domains: ["reviewer"]
+        participant_wo_execute:
+          count: 2
+          domains: ["planner", "reviewer"]
 
       default:
-        hub:
-          count: 1
-          domains: ["planner"]
-        spoke_w_execute:
+        participant_w_execute:
           count: 2
           domains: ["software_development_specialist", "os_operation_specialist"]
-        spoke_wo_execute:
-          count: 1
-          domains: ["reviewer"]
-          
+        participant_wo_execute:
+          count: 2
+          domains: ["planner", "reviewer"]
+
 # Validation rules
 validation_rules:
   min_participants: 2
-  max_participants: 10
+  max_participants: 8

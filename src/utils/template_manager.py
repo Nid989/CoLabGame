@@ -416,7 +416,7 @@ Proceed with your assigned responsibilities.
                         if node_info.get("node_id") == node_id:
                             domain_name = node_info.get("domain")
                             if domain_name:
-                                domain_info = domain_manager.resolve_domain(domain_name)
+                                domain_info = domain_manager.resolve_domain(domain_name, context="self")
                                 own_domain = {
                                     "domain_name": domain_info["name"],
                                     "domain_description": domain_info["description"],
@@ -432,8 +432,8 @@ Proceed with your assigned responsibilities.
                         node_id = node_info.get("node_id")
                         domain_name = node_info.get("domain")
                         if node_id and domain_name:
-                            # Resolve domain to get description
-                            domain_info = domain_manager.resolve_domain(domain_name)
+                            # Resolve domain to get team description for executor domains
+                            domain_info = domain_manager.resolve_domain(domain_name, context="team")
                             executor_domains.append(
                                 {
                                     "node_id": node_id,
@@ -457,7 +457,7 @@ Proceed with your assigned responsibilities.
 
             # Convert domain list to node_id/domain pairs with descriptions
             for i, domain_name in enumerate(spoke_domains):
-                domain_info = domain_manager.resolve_domain(domain_name)
+                domain_info = domain_manager.resolve_domain(domain_name, context="team")
                 executor_domains.append(
                     {
                         "node_id": f"spoke_{i + 1}",  # Generic fallback names
@@ -492,8 +492,8 @@ Proceed with your assigned responsibilities.
                     if node_info.get("node_id") == node_id:
                         domain_name = node_info.get("domain")
                         if domain_name:
-                            # Resolve domain to get description
-                            domain_info = domain_manager.resolve_domain(domain_name)
+                            # Resolve domain to get self description for own domain
+                            domain_info = domain_manager.resolve_domain(domain_name, context="self")
                             own_domain = {
                                 "domain_name": domain_info["name"],
                                 "domain_description": domain_info["description"],
@@ -533,9 +533,9 @@ Proceed with your assigned responsibilities.
                     if not found_domain_name and domains:
                         found_domain_name = domains[0]
 
-            # Resolve the found domain name to get description
+            # Resolve the found domain name to get self description
             if found_domain_name and not own_domain:
-                domain_info = domain_manager.resolve_domain(found_domain_name)
+                domain_info = domain_manager.resolve_domain(found_domain_name, context="self")
                 own_domain = {
                     "domain_name": domain_info["name"],
                     "domain_description": domain_info["description"],
@@ -568,8 +568,8 @@ Proceed with your assigned responsibilities.
                     if node_info.get("node_id") == node_id:
                         domain_name = node_info.get("domain")
                         if domain_name:
-                            # Resolve domain to get description
-                            domain_info = domain_manager.resolve_domain(domain_name)
+                            # Resolve domain to get self description for own domain
+                            domain_info = domain_manager.resolve_domain(domain_name, context="self")
                             own_domain = {
                                 "domain_name": domain_info["name"],
                                 "domain_description": domain_info["description"],
@@ -587,7 +587,7 @@ Proceed with your assigned responsibilities.
                         participant_id = node_info.get("node_id")
                         domain_name = node_info.get("domain")
                         if participant_id and domain_name:
-                            domain_info = domain_manager.resolve_domain(domain_name)
+                            domain_info = domain_manager.resolve_domain(domain_name, context="team")
                             peer_domains.append(
                                 {
                                     "participant_id": participant_id,
@@ -622,7 +622,7 @@ Proceed with your assigned responsibilities.
                     # Add all domains to peer_domains if not already collected
                     if not peer_domains:
                         for i, domain_name in enumerate(domains):
-                            domain_info = domain_manager.resolve_domain(domain_name)
+                            domain_info = domain_manager.resolve_domain(domain_name, context="team")
                             # Generate participant ID based on participant type and index
                             if count == 1:
                                 participant_id = participant_type
@@ -640,7 +640,7 @@ Proceed with your assigned responsibilities.
 
             # Resolve own domain if found
             if found_domain_name:
-                domain_info = domain_manager.resolve_domain(found_domain_name)
+                domain_info = domain_manager.resolve_domain(found_domain_name, context="self")
                 own_domain = {
                     "domain_name": domain_info["name"],
                     "domain_description": domain_info["description"],
@@ -672,7 +672,7 @@ Proceed with your assigned responsibilities.
                     if node_info.get("node_id") == node_id:
                         domain_name = node_info.get("domain")
                         if domain_name:
-                            domain_info = domain_manager.resolve_domain(domain_name)
+                            domain_info = domain_manager.resolve_domain(domain_name, context="self")
                             own_domain = {
                                 "domain_name": domain_info["name"],
                                 "domain_description": domain_info["description"],
@@ -690,7 +690,7 @@ Proceed with your assigned responsibilities.
                 if domains:
                     # Use the first domain for the single agent
                     domain_name = domains[0]
-                    domain_info = domain_manager.resolve_domain(domain_name)
+                    domain_info = domain_manager.resolve_domain(domain_name, context="self")
                     own_domain = {
                         "domain_name": domain_info["name"],
                         "domain_description": domain_info["description"],

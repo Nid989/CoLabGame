@@ -3,10 +3,11 @@
 
 topology_type: "single"
 
-# Domain definitions with mandatory descriptions - Comprehensive domain library
+# Domain definitions with dual descriptions - Comprehensive domain library
 domain_definitions:
   universal_specialist:
-    description: "A highly capable, autonomous agent with a full spectrum of specialist skills, including planning, execution, and review. Responsible for independently breaking down the goal, performing all necessary tasks (coding, research, file operations), and critically evaluating its own work to ensure the final output is flawless."
+    self_description: "You are a highly capable, autonomous agent with a full spectrum of specialist skills, including planning, execution, and review. You independently break down goals, perform all necessary tasks (coding, research, file operations), and critically evaluate your own work to ensure the final output is flawless."
+    team_description: "handles all aspects of task completion independently with comprehensive specialist skills"
 
 # Role definitions for single topology
 role_definitions:
@@ -53,6 +54,14 @@ category_participant_assignments:
           count: 1
           domains: ["universal_specialist"]
       libreoffice_writer:
+        participant_w_execute:
+          count: 1
+          domains: ["universal_specialist"]
+      gimp:
+        participant_w_execute:
+          count: 1
+          domains: ["universal_specialist"]
+      os:
         participant_w_execute:
           count: 1
           domains: ["universal_specialist"]
