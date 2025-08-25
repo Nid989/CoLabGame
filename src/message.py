@@ -20,6 +20,7 @@ MEMORY_COMPONENT_MAPPING = {
     "task": "forget_tasks",
     "request": "forget_requests",
     "response": "forget_responses",
+    "error": "forget_errors",
     "tagged_content": "forget_tagged_content",
     "blackboard": "forget_blackboard",
     "round_info": "forget_round_info",
@@ -197,11 +198,13 @@ class MessageState:
         task: Optional task string
         request: Optional request string
         response: Optional response string
+        error: Optional error message string
         tagged_content: Optional dictionary of tag-content pairs (e.g., {'note': 'text'})
         blackboard: Optional list of blackboard entry dictionaries
     """
 
     round_info: Optional[Dict[str, int]] = None
+    error: Optional[str] = None
     observation: Optional[Dict[str, Union[str, Image.Image, Dict]]] = None
     plan: Optional[str] = None
     task: Optional[str] = None
@@ -257,6 +260,7 @@ class MessageState:
                     "task",
                     "request",
                     "response",
+                    "error",
                 } and not isinstance(value, str):
                     raise ValueError(f"{field} must be a string")
             setattr(self, field, value)
@@ -317,6 +321,7 @@ class PlayerContextFormatter:
         self.add_handler("task", self._format_task)
         self.add_handler("request", self._format_request)
         self.add_handler("response", self._format_response)
+        self.add_handler("error", self._format_error)
         self.add_handler("tagged_content", self._format_tagged_content)
         self.add_handler("blackboard", self._format_blackboard)
 
@@ -382,6 +387,7 @@ class PlayerContextFormatter:
                 "task",
                 "request",
                 "response",
+                "error",
                 "tagged_content",
                 "blackboard",
             },
@@ -392,6 +398,7 @@ class PlayerContextFormatter:
                 "task",
                 "request",
                 "response",
+                "error",
                 "tagged_content",
                 "blackboard",
             },
@@ -581,6 +588,17 @@ class PlayerContextFormatter:
             Dict: Dictionary with 'content' and 'image' keys
         """
         return {"content": f"## Response\n{response}", "image": []}
+
+    def _format_error(self, error: str) -> Dict:
+        """Format an error component.
+
+        Args:
+            error: Error message string
+
+        Returns:
+            Dict: Dictionary with 'content' and 'image' keys
+        """
+        return {"content": f"## Error\n{error}", "image": []}
 
     def _format_tagged_content(self, tagged_content: Dict[str, str]) -> Dict:
         """Format tagged content.

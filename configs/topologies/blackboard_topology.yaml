@@ -33,7 +33,7 @@ role_definitions:
     message_permissions:
       send: ["EXECUTE", "WRITE_BOARD", "STATUS"]
       receive: ["WRITE_BOARD"]
-    allowed_components: ["round_info", "observation", "blackboard"]
+    allowed_components: ["round_info", "observation", "blackboard", "error"]
     receives_goal: true
     handler_type: "environment"
     
@@ -41,7 +41,7 @@ role_definitions:
     message_permissions:
       send: ["WRITE_BOARD", "STATUS"]
       receive: ["WRITE_BOARD"]
-    allowed_components: ["round_info", "observation", "blackboard"]
+    allowed_components: ["round_info", "observation", "blackboard", "error"]
     receives_goal: true
     handler_type: "standard"
 

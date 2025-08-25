@@ -350,6 +350,8 @@ class ComputerGame(NetworkDialogueGameMaster):
                     sliding_window_size=self.game_config.get("sliding_window_size"),
                 )
 
+                role_config.initial_prompt = "Please respond with any random content."
+
                 self.add_player_to_graph(
                     player=player,
                     initial_prompt=role_config.initial_prompt,
@@ -1041,12 +1043,127 @@ class ComputerGame(NetworkDialogueGameMaster):
     def _on_parse_error(self, error: ParseError):
         """Hook to implement consequences for parsing errors e.g. prepare re-prompting or set game state to abort."""
         self.log_to_self("parse_error", str(error))
+
+        # Convert technical error to user-friendly message
+        user_friendly_error = self._convert_parse_error_to_user_message(error)
+        self.message_state.update(error=user_friendly_error)
+        formatted_context = self.player_context_formatter.create_context_for(self.message_state, self._current_player)
+        self._set_context_for(self._current_player, formatted_context)
+
+        print(self.message_state.preview())
+        print(formatted_context)
+
         self._handle_player_violation()
+
+    def _convert_parse_error_to_user_message(self, error: ParseError) -> str:
+        """Convert technical ParseError to user-friendly error message.
+
+        Args:
+            error: ParseError instance with technical details
+
+        Returns:
+            str: User-friendly error message
+        """
+        reason = error.reason.lower()
+
+        # JSON format issues
+        if "no code block found" in reason:
+            return "Your response must be enclosed in code blocks (```)"
+        elif "empty code block" in reason:
+            return "Your code block is empty"
+        elif "invalid language identifier" in reason:
+            return "Your code block must not specify a language or use 'json' only"
+        elif "invalid json format" in reason or "parsed content is not a json object" in reason:
+            return "Your response contains invalid JSON format"
+
+        # Missing required fields
+        elif "missing required keys" in reason:
+            if "type" in reason:
+                return "Your response is missing the 'type' field"
+            elif "from" in reason:
+                return "Your response is missing the 'from' field"
+            elif "content" in reason:
+                return "Your response is missing the 'content' field"
+            else:
+                return "Your response is missing required fields"
+
+        # Message type validation
+        elif "invalid message type" in reason:
+            return "The message type you specified is not valid"
+        elif "not allowed for your role" in reason or "validate_outgoing_message" in reason:
+            return "The message type you specified is not allowed for your role"
+        elif "validate_incoming_message" in reason:
+            return "The target role cannot receive this message type"
+
+        # Field requirements
+        elif "'to' field is required" in reason:
+            return "Your message type requires specifying a recipient in the 'to' field"
+        elif "'to' field must not be present" in reason:
+            return "Your message type should not include a 'to' field"
+        elif "'from' field must match current player role" in reason:
+            return "The 'from' field must match your current role"
+
+        # Content validation
+        elif "invalid 'content' field" in reason:
+            if "computer13" in reason:
+                return "Your content must be a list of action dictionaries for computer13"
+            else:
+                return "Your content format is incorrect for this message type"
+        elif "invalid python syntax" in reason:
+            return "Your Python code contains syntax errors"
+        elif "pyautogui content must be a non-empty string" in reason:
+            return "Your PyAutoGUI content cannot be empty"
+
+        # Fallback for any unhandled cases
+        else:
+            return "Your response format is incorrect"
 
     def _on_game_error(self, error: GameError):
         """Hook to implement consequences for game errors e.g. prepare re-prompting or set game state to failure."""
         self.log_to_self("game_error", str(error))
+
+        # Convert technical error to user-friendly message
+        user_friendly_error = self._convert_game_error_to_user_message(error)
+        self.message_state.update(error=user_friendly_error)
+        formatted_context = self.player_context_formatter.create_context_for(self.message_state, self._current_player)
+        self._set_context_for(self._current_player, formatted_context)
+
         self._handle_player_violation()
+
+    def _convert_game_error_to_user_message(self, error: GameError) -> str:
+        """Convert technical GameError to user-friendly error message.
+
+        Args:
+            error: GameError instance with technical details
+
+        Returns:
+            str: User-friendly error message
+        """
+        reason = error.reason.lower()
+
+        # Action execution errors
+        if "no actions to execute" in reason:
+            return "Your action list is empty"
+        elif "received none observation after action execution" in reason:
+            return "The action could not be completed successfully"
+        elif "failed to execute action" in reason:
+            return "The action you specified could not be executed"
+        elif "no observation recorded after executing actions" in reason:
+            return "The action execution did not complete properly"
+
+        # Message type errors
+        elif "unknown message type" in reason:
+            return "The message type you specified is not recognized"
+
+        # Content processing errors (from parsers)
+        elif "forbidden function" in reason:
+            return "Your code contains a function that is not allowed"
+        elif "invalid context" in reason:
+            return "Your action is not valid in the current environment"
+
+        # Fallback for any unhandled cases
+        else:
+            return "Your action could not be processed"
 
     def _on_after_game(self):
         """
