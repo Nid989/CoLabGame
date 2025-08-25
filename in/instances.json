@@ -132,7 +132,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -280,7 +280,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -428,7 +428,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -616,7 +616,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -804,7 +804,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -992,7 +992,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -1196,7 +1196,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -1400,7 +1400,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -1604,7 +1604,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -1864,7 +1864,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -2124,7 +2124,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -2384,7 +2384,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -2562,7 +2562,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -2750,7 +2750,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -3018,7 +3018,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -3278,7 +3278,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -3520,7 +3520,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -3756,7 +3756,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -4052,7 +4052,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -4354,7 +4354,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -4502,7 +4502,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -4690,7 +4690,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -4894,7 +4894,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -5154,7 +5154,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -5332,7 +5332,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -5520,7 +5520,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -5788,7 +5788,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -6048,7 +6048,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -6290,7 +6290,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -6526,7 +6526,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -6822,7 +6822,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -7124,7 +7124,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -7272,7 +7272,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -7460,7 +7460,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -7664,7 +7664,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -7924,7 +7924,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -8102,7 +8102,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -8290,7 +8290,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -8558,7 +8558,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -8818,7 +8818,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -9060,7 +9060,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -9296,7 +9296,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -9592,7 +9592,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -9894,7 +9894,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -10042,7 +10042,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -10230,7 +10230,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -10434,7 +10434,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -10694,7 +10694,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -10872,7 +10872,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -11060,7 +11060,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -11328,7 +11328,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -11588,7 +11588,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -11830,7 +11830,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -12066,7 +12066,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -12362,7 +12362,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -12664,7 +12664,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -13111,7 +13111,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -13558,7 +13558,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -14005,7 +14005,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -14452,7 +14452,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -14588,220 +14588,6 @@
                     },
                     "category": "osworld",
                     "task_type": "gimp"
-                },
-                {
-                    "game_id": "e2dd0213-26db-4349-abe5-d5667bfd725c",
-                    "task_config": {
-                        "id": "e2dd0213-26db-4349-abe5-d5667bfd725c",
-                        "snapshot": "gimp",
-                        "instruction": "Can you assist me in shifting the text box to the left? I keep accidentally selecting the image layer beneath it.",
-                        "source": "https://superuser.com/questions/839650/how-to-move-an-inserted-text-box-in-gimp",
-                        "config": [
-                            {
-                                "type": "download",
-                                "parameters": {
-                                    "files": [
-                                        {
-                                            "url": "https://drive.google.com/uc?export=download&id=1KMHuScgF8Eq9OPR40SCntxO3Q1DUmbKV",
-                                            "path": "/home/user/Desktop/orange_background.xcf"
-                                        }
-                                    ]
-                                }
-                            },
-                            {
-                                "type": "launch",
-                                "parameters": {
-                                    "command": [
-                                        "gimp",
-                                        "/home/user/Desktop/orange_background.xcf"
-                                    ]
-                                }
-                            }
-                        ],
-                        "trajectory": "trajectories/",
-                        "related_apps": [
-                            "gimp"
-                        ],
-                        "evaluator": {
-                            "postconfig": [
-                                {
-                                    "type": "execute",
-                                    "parameters": {
-                                        "command": [
-                                            "python3",
-                                            "-c",
-                                            "import pyautogui; pyautogui.hotkey([\"shift\", \"ctrl\", \"e\"]);"
-                                        ]
-                                    }
-                                },
-                                {
-                                    "type": "sleep",
-                                    "parameters": {
-                                        "seconds": 0.5
-                                    }
-                                },
-                                {
-                                    "type": "execute",
-                                    "parameters": {
-                                        "command": [
-                                            "python3",
-                                            "-c",
-                                            "import pyautogui; pyautogui.write(\"leftside_textbox\");pyautogui.press([\"enter\"]);"
-                                        ]
-                                    }
-                                },
-                                {
-                                    "type": "sleep",
-                                    "parameters": {
-                                        "seconds": 2
-                                    }
-                                },
-                                {
-                                    "type": "execute",
-                                    "parameters": {
-                                        "command": [
-                                            "python3",
-                                            "-c",
-                                            "import pyautogui; pyautogui.press([\"enter\"]);"
-                                        ]
-                                    }
-                                },
-                                {
-                                    "type": "sleep",
-                                    "parameters": {
-                                        "seconds": 5
-                                    }
-                                }
-                            ],
-                            "func": "check_textbox_on_leftside",
-                            "result": {
-                                "type": "vm_file",
-                                "path": "/home/user/Desktop/leftside_textbox.png",
-                                "dest": "leftside_textbox.png"
-                            }
-                        }
-                    },
-                    "category": "osworld",
-                    "task_type": "gimp"
-                },
-                {
-                    "game_id": "fbb548ca-c2a6-4601-9204-e39a2efc507b",
-                    "task_config": {
-                        "id": "fbb548ca-c2a6-4601-9204-e39a2efc507b",
-                        "snapshot": "gimp",
-                        "instruction": "Blue is my favorite color, so could you help me change the color theme of GIMP to \"Blue\"?",
-                        "source": "",
-                        "config": [],
-                        "trajectory": "trajectories/",
-                        "related_apps": [
-                            "gimp"
-                        ],
-                        "evaluator": {
-                            "func": "infeasible"
-                        }
-                    },
-                    "category": "osworld",
-                    "task_type": "gimp"
-                },
-                {
-                    "game_id": "7a4deb26-d57d-4ea9-9a73-630f66a7b568",
-                    "task_config": {
-                        "id": "7a4deb26-d57d-4ea9-9a73-630f66a7b568",
-                        "snapshot": "gimp",
-                        "instruction": "Could you tone down the brightness of my photo?",
-                        "source": "https://www.quora.com/How-do-I-edit-a-photo-in-GIMP",
-                        "config": [
-                            {
-                                "type": "download",
-                                "parameters": {
-                                    "files": [
-                                        {
-                                            "url": "https://drive.usercontent.google.com/download?id=1SIvX9Wimyw6i2UvnoLTNDHIObvDLAsIM&export=download&authuser=0&confirm=t&uuid=a48447ab-13a2-421f-9662-6ffff8f6f6d5&at=APZUnTVRxofs822XxgEv33WwYCkb:1705046264363",
-                                            "path": "/home/user/Desktop/woman_sitting_by_the_tree.png"
-                                        }
-                                    ]
-                                }
-                            },
-                            {
-                                "type": "launch",
-                                "parameters": {
-                                    "command": [
-                                        "gimp",
-                                        "/home/user/Desktop/woman_sitting_by_the_tree.png"
-                                    ]
-                                }
-                            }
-                        ],
-                        "trajectory": "trajectories/",
-                        "related_apps": [
-                            "gimp"
-                        ],
-                        "evaluator": {
-                            "postconfig": [
-                                {
-                                    "type": "execute",
-                                    "parameters": {
-                                        "command": [
-                                            "python3",
-                                            "-c",
-                                            "import pyautogui; pyautogui.hotkey([\"shift\", \"ctrl\", \"e\"]);"
-                                        ]
-                                    }
-                                },
-                                {
-                                    "type": "sleep",
-                                    "parameters": {
-                                        "seconds": 0.5
-                                    }
-                                },
-                                {
-                                    "type": "execute",
-                                    "parameters": {
-                                        "command": [
-                                            "python3",
-                                            "-c",
-                                            "import pyautogui; pyautogui.write(\"edited_darker\");pyautogui.press([\"enter\"]);"
-                                        ]
-                                    }
-                                },
-                                {
-                                    "type": "sleep",
-                                    "parameters": {
-                                        "seconds": 2
-                                    }
-                                },
-                                {
-                                    "type": "execute",
-                                    "parameters": {
-                                        "command": [
-                                            "python3",
-                                            "-c",
-                                            "import pyautogui; pyautogui.press([\"enter\"]);"
-                                        ]
-                                    }
-                                },
-                                {
-                                    "type": "sleep",
-                                    "parameters": {
-                                        "seconds": 5
-                                    }
-                                }
-                            ],
-                            "func": "check_brightness_decrease_and_structure_sim",
-                            "expected": {
-                                "type": "vm_file",
-                                "path": "/home/user/Desktop/woman_sitting_by_the_tree.png",
-                                "dest": "woman_sitting_by_the_tree.png"
-                            },
-                            "result": {
-                                "type": "vm_file",
-                                "path": "/home/user/Desktop/edited_darker.png",
-                                "dest": "edited_darker.png"
-                            }
-                        }
-                    },
-                    "category": "osworld",
-                    "task_type": "gimp"
                 }
             ],
             "environment_type": "osworld",
@@ -14810,7 +14596,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -15168,7 +14954,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -15526,7 +15312,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -15884,7 +15670,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -16273,7 +16059,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -16662,7 +16448,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -17051,7 +16837,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -17440,7 +17226,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -17826,7 +17612,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -18212,7 +17998,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -18598,7 +18384,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -18984,7 +18770,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": false,
+                "headless": true,
                 "observation_type": "screenshot_a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,

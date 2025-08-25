@@ -36,6 +36,21 @@ class PromptTemplateManager:
         self.env.filters["select_message_type"] = self._select_message_type
         self.env.filters["generate_json_schema"] = self._generate_json_schema
         self.env.filters["tojson"] = lambda obj, **kwargs: json.dumps(obj, **kwargs)
+        self.env.filters["alphabet"] = self._alphabet
+
+    def _alphabet(self, index: int) -> str:
+        """Convert numeric index to alphabetical character (1 -> A, 2 -> B, etc.)."""
+        if index < 1:
+            return ""
+        if index <= 26:
+            return chr(64 + index)  # ASCII 65 = 'A', so 64 + index gives us the right letter
+        # For indices > 26, use AA, AB, etc.
+        result = ""
+        while index > 0:
+            index -= 1
+            result = chr(65 + (index % 26)) + result
+            index //= 26
+        return result
 
     def _join_with_or(self, items: List[str]) -> str:
         """Join list items with 'or' for the last item."""
@@ -240,7 +255,7 @@ You are the **{{ role_name|title }}**, operating in the system. Your role is to 
 You must respond using structured JSON messages. Each reply must contain **exactly one JSON object** enclosed in a markdown code block using the `json` language identifier. The schema is:
 
 ```json
-{{ json_schema | tojson(indent=2) }}
+{{ json_schema | tojson }}
 ```
 
 ---

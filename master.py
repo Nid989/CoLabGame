@@ -356,7 +356,13 @@ class ComputerGame(NetworkDialogueGameMaster):
                     node_id=node_id,
                 )
 
-                print("initial_prompt", role_config.initial_prompt)
+                import uuid
+
+                prompt_hash = uuid.uuid4().hex
+                prompt_filename = f"prompt_{prompt_hash}.txt"
+                with open(prompt_filename, "w", encoding="utf-8") as f:
+                    f.write(role_config.initial_prompt)
+                print(f"Prompt saved to {prompt_filename}")
 
             for edge in graph_config.get("edges", []):
                 from_node = edge.get("from")

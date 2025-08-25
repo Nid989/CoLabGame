@@ -38,3 +38,8 @@ key.json
 
 # Outputs
 outputs/
+
+# Backup prompt files 
+/resources/prompts/backups/
+
+/scripts/logs/

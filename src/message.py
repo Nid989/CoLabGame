@@ -495,7 +495,7 @@ class PlayerContextFormatter:
                     parts.append(content)
 
         # Build final context
-        context = {"content": "\n".join(parts), "image": image_paths or None}
+        context = {"content": "\n\n".join(parts), "image": image_paths or None}
 
         # Add extra keys for forgettable content
         context.update(extra_keys)
