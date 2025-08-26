@@ -97,6 +97,9 @@ class BaseTopology(ABC):
                 # Validate domain definitions are present and properly configured
                 self._validate_domain_definitions()
 
+                # Validate anchor configuration
+                self._validate_anchor_configuration()
+
                 logger.info(f"Loaded topology config from {config_path} for category: {self.category}, task_type: {self.task_type}")
         else:
             logger.warning(f"Topology config file not found: {config_path}")
@@ -307,6 +310,148 @@ class BaseTopology(ABC):
         # Default implementation: construct template name from topology type and base role
         base_role = role_name.split("_")[0] if "_" in role_name else role_name
         return f"{self.get_config().topology_type.value}_topology_{base_role}_prompt.j2"
+
+    def get_anchor_selection_config(self) -> Dict:
+        """Get anchor selection configuration from topology config.
+
+        Returns:
+            Dict: Configuration with 'mode' and 'config' keys
+        """
+        if not self.topology_config:
+            raise ValueError("Topology configuration not loaded")
+
+        # Check category-specific config first
+        if self.category and "category_participant_assignments" in self.topology_config:
+            category_assignments = self.topology_config["category_participant_assignments"]
+            if self.category in category_assignments:
+                category_config = category_assignments[self.category]
+
+                # Task-type specific config (if exists)
+                if self.task_type and "task_types" in category_config:
+                    task_type_config = category_config["task_types"].get(self.task_type, {})
+                    if "anchor_selection_mode" in task_type_config:
+                        return {"mode": task_type_config["anchor_selection_mode"], "config": task_type_config.get("anchor_node_config")}
+
+                # Category-level config
+                if "anchor_selection_mode" in category_config:
+                    return {"mode": category_config["anchor_selection_mode"], "config": category_config.get("anchor_node_config")}
+
+        # Global default config
+        default_mode = self.topology_config.get("anchor_selection_mode", "random")  # backward compatibility
+        default_config = self.topology_config.get("default_anchor_node_config")
+
+        return {"mode": default_mode, "config": default_config}
+
+    def generate_anchor_node(self, node_assignments: Dict, role_domain_lookup: Dict = None) -> str:
+        """Generate anchor node based strictly on configuration - no fallback priorities.
+
+        Args:
+            node_assignments: Dictionary of role assignments
+            role_domain_lookup: Optional lookup dict for O(1) access
+
+        Returns:
+            str: Node ID of the selected anchor node
+        """
+        anchor_config = self.get_anchor_selection_config()
+        mode = anchor_config["mode"]
+        config = anchor_config["config"]
+
+        if mode == "fixed":
+            if not config:
+                raise ValueError("anchor_selection_mode is 'fixed' but no anchor_node_config provided")
+
+            return self._get_fixed_anchor_node(config, node_assignments, role_domain_lookup)
+
+        elif mode == "random":
+            return self._get_random_anchor_node(node_assignments)
+
+        else:
+            raise ValueError(f"Invalid anchor_selection_mode: '{mode}'. Must be 'fixed' or 'random'")
+
+    def _get_fixed_anchor_node(self, config: Dict, node_assignments: Dict, role_domain_lookup: Dict = None) -> str:
+        """Get the exactly specified anchor node with strict validation.
+
+        Args:
+            config: Anchor node configuration with role and domain
+            node_assignments: Dictionary of role assignments
+            role_domain_lookup: Optional lookup dict for O(1) access
+
+        Returns:
+            str: Node ID of the fixed anchor node
+        """
+        required_role = config.get("role")
+        required_domain = config.get("domain")
+
+        if not required_role or not required_domain:
+            raise ValueError("Fixed anchor_node_config must specify both 'role' and 'domain'")
+
+        # Use O(1) lookup if available
+        if role_domain_lookup and (required_role, required_domain) in role_domain_lookup:
+            anchor_node = role_domain_lookup[(required_role, required_domain)]
+            logger.info(f"Using fixed anchor node: {anchor_node} (role='{required_role}', domain='{required_domain}')")
+            return anchor_node
+
+        # O(n) fallback lookup
+        if required_role in node_assignments:
+            for node in node_assignments[required_role]:
+                if node.get("domain") == required_domain:
+                    logger.info(f"Using fixed anchor node: {node['node_id']} (role='{required_role}', domain='{required_domain}')")
+                    return node["node_id"]
+
+        # Strict validation - fail if not found
+        available_combinations = []
+        for role, nodes in node_assignments.items():
+            for node in nodes:
+                available_combinations.append(f"role='{role}', domain='{node.get('domain')}'")
+
+        raise ValueError(
+            f"Could not find participant with role='{required_role}' and domain='{required_domain}' "
+            f"for fixed anchor node. Available combinations: {available_combinations}"
+        )
+
+    def _get_random_anchor_node(self, node_assignments: Dict) -> str:
+        """Get random anchor node for backward compatibility.
+
+        Args:
+            node_assignments: Dictionary of role assignments
+
+        Returns:
+            str: Node ID of the randomly selected anchor node
+        """
+        import random
+
+        all_participant_nodes = []
+        for role_nodes in node_assignments.values():
+            all_participant_nodes.extend([node["node_id"] for node in role_nodes])
+
+        if not all_participant_nodes:
+            raise ValueError("No participant nodes available for random anchor selection")
+
+        anchor_node = random.choice(all_participant_nodes)
+        logger.info(f"Using random anchor node: {anchor_node}")
+        return anchor_node
+
+    def _validate_anchor_configuration(self) -> None:
+        """Validate anchor configuration during config loading."""
+        try:
+            anchor_config = self.get_anchor_selection_config()
+            mode = anchor_config["mode"]
+            config = anchor_config["config"]
+
+            if mode == "fixed" and not config:
+                raise ValueError("anchor_selection_mode is 'fixed' but no anchor_node_config provided")
+
+            if mode == "fixed":
+                required_role = config.get("role")
+                required_domain = config.get("domain")
+                if not required_role or not required_domain:
+                    raise ValueError("Fixed anchor_node_config must specify both 'role' and 'domain'")
+
+            logger.info(f"Anchor configuration validated: mode='{mode}'")
+
+        except Exception as e:
+            logger.error(f"Anchor configuration validation failed: {e}")
+            raise
 
     def validate_experiment_config(self, experiment_config: Dict) -> List[str]:
         """Validate experiment configuration for this topology.

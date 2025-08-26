@@ -130,6 +130,12 @@ category_participant_assignments:
           count: 2
           domains: ["planner", "reviewer"]
 
+# Global anchor configuration (used as default)
+anchor_selection_mode: "fixed"
+default_anchor_node_config:
+  role: "participant_wo_execute"
+  domain: "planner"
+
 # Validation rules
 validation_rules:
   min_participants: 2

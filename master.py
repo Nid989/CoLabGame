@@ -23,7 +23,7 @@ from clemcore.clemgame import (
 from src.master import NetworkDialogueGameMaster, EdgeCondition
 from src.environment import Environment, EnvironmentFactory
 from src.player import RoleBasedPlayer
-from src.message import MessageType, MessageState, PlayerContextFormatter
+from src.message import MessageType, MessageState, PlayerContextFormatter, CommunicationRuleTracker
 from src.utils.registry.parsers import parsers, get_parser_metadata, process_content
 from src.utils.image_manager import ImageManager
 from src.utils.s3_manager import S3Manager
@@ -82,6 +82,16 @@ class ComputerGame(NetworkDialogueGameMaster):
         self.player_stats = {}
         self.round_stats = {}
         self._episode_score: float = 0.0
+        self.communication_tracker = CommunicationRuleTracker()
+        self._last_communication_partners = {}  # Track last communication partner for each player
+
+        # Initialize communication rules configuration
+        self.communication_rules_config = {
+            "enable_rules": True,
+            "exclude_topologies": ["single"],
+            "cycle_threshold": 4,  # 4 messages = 2 round trips
+            "violation_threshold": 3,  # 3 consecutive violations = game abort
+        }
 
     def _on_setup(self, **game_instance) -> None:
         """Method executed at the start of the default setup method.
@@ -350,8 +360,6 @@ class ComputerGame(NetworkDialogueGameMaster):
                     sliding_window_size=self.game_config.get("sliding_window_size"),
                 )
 
-                role_config.initial_prompt = "Please respond with any random content."
-
                 self.add_player_to_graph(
                     player=player,
                     initial_prompt=role_config.initial_prompt,
@@ -361,7 +369,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                 import uuid
 
                 prompt_hash = uuid.uuid4().hex
-                prompt_filename = f"prompt_{prompt_hash}.txt"
+                prompt_filename = f"prompt_{prompt_hash}.md"
                 with open(prompt_filename, "w", encoding="utf-8") as f:
                     f.write(role_config.initial_prompt)
                 print(f"Prompt saved to {prompt_filename}")
@@ -846,6 +854,123 @@ class ComputerGame(NetworkDialogueGameMaster):
             raise GameError(reason="No observation recorded after executing actions")
         return observation
 
+    def _validate_communication_rules(self, data: Dict, message_type: MessageType, player: RoleBasedPlayer):
+        """Validate cycle-breaking communication rules for REQUEST and RESPONSE messages.
+
+        Args:
+            data: Parsed JSON response data
+            message_type: Type of message being sent
+            player: Current player sending the message
+
+        Raises:
+            RuleViolationError: If communication rules are violated
+        """
+        # Check if communication rules are enabled
+        comm_rules_config = self.communication_rules_config
+        if not comm_rules_config.get("enable_rules", True):
+            return
+
+        # Check if current topology is excluded
+        current_topology = str(self.game_config.get("topology_type", "")).lower()
+        excluded_topologies = comm_rules_config.get("exclude_topologies", ["single"])
+        if current_topology in [t.lower() for t in excluded_topologies]:
+            return
+
+        # Only validate REQUEST and RESPONSE messages
+        if message_type not in [MessageType.REQUEST, MessageType.RESPONSE]:
+            return
+
+        # Get target player from 'to' field
+        recipient_node = data.get("to")
+        recipient = self.get_player_from_node(recipient_node)
+        recipient_name = str(recipient.name)
+        if not recipient_name:
+            return  # No target specified, skip validation
+
+        sender_name = str(player.name)
+
+        # Check if player is blocked from REQUEST/RESPONSE to this specific target
+        if self.communication_tracker.is_communication_blocked(sender_name, recipient_name):
+            # Player is blocked but trying to send REQUEST/RESPONSE to blocked target
+            violation_count = self.communication_tracker.increment_violation_count(sender_name)
+            violation_threshold = comm_rules_config.get("violation_threshold", 3)
+
+            if violation_count >= violation_threshold:
+                self.aborted = True
+                reason = f"Player {sender_name} exceeded communication rule violation threshold ({violation_count}/{violation_threshold})"
+                self.log_to_self("aborted", {"reason": reason})
+
+            raise RuleViolationError(
+                f"Cycle-breaking rule violation: Player {sender_name} is blocked from REQUEST/RESPONSE messages to {recipient_node} (must EXECUTE first)"
+            )
+
+    def _update_communication_rules(self, data: Dict, message_type: MessageType, player: RoleBasedPlayer):
+        """Update cycle-breaking communication rules state after successful message processing.
+
+        Args:
+            data: Processed JSON response data
+            message_type: Type of message that was processed
+            player: Player who sent the message
+        """
+        # Check if communication rules are enabled
+        comm_rules_config = self.communication_rules_config
+        if not comm_rules_config.get("enable_rules", True):
+            return
+
+        # Check if current topology is excluded
+        current_topology = str(self.game_config.get("topology_type", "")).lower()
+        excluded_topologies = comm_rules_config.get("exclude_topologies", ["single"])
+        if current_topology in [t.lower() for t in excluded_topologies]:
+            return
+
+        sender_name = str(player.name)
+
+        # Handle EXECUTE messages - unblock the player completely and reset their cycles
+        if message_type == MessageType.EXECUTE:
+            self.communication_tracker.unblock_player_completely(sender_name)
+            # Reset violation count for successful EXECUTE
+            if sender_name in self.communication_tracker.rule_violations:
+                self.communication_tracker.rule_violations[sender_name] = 0
+            # Reset cycle counts for this player to allow fresh communication
+            self.communication_tracker.reset_all_for_player(sender_name)
+            return
+
+        # Handle REQUEST and RESPONSE messages
+        if message_type in [MessageType.REQUEST, MessageType.RESPONSE]:
+            recipient_node = data.get("to")
+            recipient = self.get_player_from_node(recipient_node)
+            recipient_name = str(recipient.name)
+            if not recipient_name:
+                return  # No target specified, skip update
+
+            # Check if player switched communication partner (only if they're talking to a completely different player)
+            last_partner = self._last_communication_partners.get(sender_name)
+            if last_partner and last_partner != recipient_name:
+                # Player switched to a completely different partner - reset all cycles for the sender
+                self.communication_tracker.reset_all_for_player(sender_name)
+
+            # Update last communication partner
+            self._last_communication_partners[sender_name] = recipient_name
+
+            # Increment cycle count for this communication pair
+            self.communication_tracker.increment_cycle_count(sender_name, recipient_name)
+
+            # Check if cycle threshold is reached
+            cycle_threshold = comm_rules_config.get("cycle_threshold", 4)
+            current_cycle_count = self.communication_tracker.get_cycle_count(sender_name, recipient_name)
+
+            if current_cycle_count >= cycle_threshold:
+                # Cycle threshold reached - block players with EXECUTE privilege from this communication pair
+                players_in_cycle = [player, recipient]
+
+                for player_to_check in players_in_cycle:
+                    if player_to_check.message_permissions:
+                        player_permissions = player_to_check.message_permissions
+                        if player_permissions and player_permissions.can_send(MessageType.EXECUTE):
+                            # This player has EXECUTE privilege - block them from communicating with their cycle partner
+                            other_player = recipient_name if player_to_check.name == sender_name else sender_name
+                            self.communication_tracker.block_communication(player_to_check.name, other_player)
+
     def _advance_game(self, player: RoleBasedPlayer, parsed_response: str):
         """Advance the game state based on the player's response.
         Processes the response to determine node transitions and handle messages.
@@ -864,6 +989,9 @@ class ComputerGame(NetworkDialogueGameMaster):
         data = json.loads(parsed_response)
         message_type = MessageType[data["type"]]
         content = data["content"]
+
+        # Step 1.5: Validate communication rules (NEW)
+        self._validate_communication_rules(data, message_type, player)
 
         # Step 2: Apply topology-specific processing (NEW LAYER)
         processed_data = self._apply_topology_processing(data, message_type, player)
@@ -959,6 +1087,9 @@ class ComputerGame(NetworkDialogueGameMaster):
         if current_round in self.round_stats and player_id in self.round_stats[current_round]["players"]:
             self.round_stats[current_round]["players"][player_id]["violated_streak"] = 0
 
+        # Update communication rules state after successful processing
+        self._update_communication_rules(processed_data, message_type, player)
+
     def _apply_topology_processing(self, data: Dict, message_type: MessageType, player: RoleBasedPlayer) -> Dict:
         """
         Apply topology-specific processing to determine next node/agent.
@@ -1049,9 +1180,6 @@ class ComputerGame(NetworkDialogueGameMaster):
         self.message_state.update(error=user_friendly_error)
         formatted_context = self.player_context_formatter.create_context_for(self.message_state, self._current_player)
         self._set_context_for(self._current_player, formatted_context)
-
-        print(self.message_state.preview())
-        print(formatted_context)
 
         self._handle_player_violation()
 
@@ -1154,6 +1282,13 @@ class ComputerGame(NetworkDialogueGameMaster):
         # Message type errors
         elif "unknown message type" in reason:
             return "The message type you specified is not recognized"
+
+        # Communication rule violations
+        elif "cycle-breaking rule violation" in reason:
+            # Extract target player from error message for more specific feedback
+            target_match = re.search(r"to (\w+)", reason)
+            target_player = target_match.group(1) if target_match else "this player"
+            return f"You are blocked from sending REQUEST/RESPONSE messages to {target_player}. Use EXECUTE first to break the communication cycle."
 
         # Content processing errors (from parsers)
         elif "forbidden function" in reason:

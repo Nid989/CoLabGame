@@ -2,7 +2,6 @@
 Blackboard topology implementation with shared memory and round-robin turn-taking.
 """
 
-import random
 import logging
 import os
 import yaml
@@ -21,7 +20,6 @@ class BlackboardTopology(BaseTopology):
         # Initialize with minimal config, will be populated by load_game_instance_config
         self.config = TopologyConfig(
             topology_type=TopologyType.BLACKBOARD,
-            anchor_selection="random",  # Random node selection
             transition_strategy="round_robin",  # Round-robin after blackboard updates
             message_permissions={},  # Will be populated dynamically
         )
@@ -38,18 +36,14 @@ class BlackboardTopology(BaseTopology):
         # Validate the mapped participants
         self.validate_participants(participant_assignments)
 
-        # Create node assignments with role indices and domains
-        node_assignments = self._create_node_assignments(participant_assignments)
+        # Create node assignments with lookup index for efficient anchor finding
+        node_assignments, role_domain_lookup = self._create_node_assignments_with_lookup(participant_assignments)
 
         # Generate graph structure algorithmically
         nodes, edges, node_sequence = self._generate_blackboard_structure(node_assignments)
 
-        # Random anchor selection from all participants
-        all_participant_nodes = []
-        for role_nodes in node_assignments.values():
-            all_participant_nodes.extend([node["node_id"] for node in role_nodes])
-
-        anchor_node = random.choice(all_participant_nodes) if all_participant_nodes else None
+        # Use centralized, config-driven anchor logic
+        anchor_node = self.generate_anchor_node(node_assignments, role_domain_lookup)
 
         return {
             "nodes": nodes,
@@ -62,7 +56,21 @@ class BlackboardTopology(BaseTopology):
 
     def _create_node_assignments(self, participant_assignments: Dict) -> Dict:
         """Create node assignments with role indices and domains."""
+        node_assignments, _ = self._create_node_assignments_with_lookup(participant_assignments)
+        return node_assignments
+
+    def _create_node_assignments_with_lookup(self, participant_assignments: Dict) -> Tuple[Dict, Dict]:
+        """Create node assignments and build lookup index for efficient anchor finding.
+
+        Args:
+            participant_assignments: Dictionary with participant configuration
+
+        Returns:
+            Tuple[Dict, Dict]: (node_assignments, role_domain_lookup)
+        """
         node_assignments = {}
+        # Build (role, domain) -> node_id lookup for O(1) anchor finding
+        role_domain_lookup = {}
         role_index = 0
 
         for role_name, assignment in participant_assignments.items():
@@ -73,6 +81,9 @@ class BlackboardTopology(BaseTopology):
             for i in range(count):
                 node_id = f"{role_name}_{i + 1}" if count > 1 else role_name
                 domain = domains[i] if i < len(domains) else (domains[0] if domains else f"general_{role_name}")
+
+                # Add to lookup index
+                role_domain_lookup[(role_name, domain)] = node_id
 
                 role_nodes.append(
                     {
@@ -86,7 +97,7 @@ class BlackboardTopology(BaseTopology):
             node_assignments[role_name] = role_nodes
             role_index += 1
 
-        return node_assignments
+        return node_assignments, role_domain_lookup
 
     def _generate_blackboard_structure(self, node_assignments: Dict) -> Tuple[List, List, List]:
         """Generate blackboard topology structure algorithmically."""

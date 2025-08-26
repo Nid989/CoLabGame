@@ -8,7 +8,7 @@ You have a maximum of **{{ max_rounds }}** rounds to complete the task. A single
 {% endif %}
 
 ---
-## 1. Inputs: Observations
+## 1. Observations
 
 For each step, you will receive inputs to inform your next actions.
 {% if observation_type == 'screenshot_a11y_tree' %}
@@ -27,7 +27,7 @@ You will receive observations from the environment to guide your actions.
 {% endif %}
 
 --- 
-## 2. Actions: Communication Protocol
+## 2. Communication Protocol
 All communications must be a single JSON object within a `json` code block. Reasoning and planning should be included as text outside this block.
 
 ### JSON Schema

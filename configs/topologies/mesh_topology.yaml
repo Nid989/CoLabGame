@@ -33,7 +33,7 @@ role_definitions:
     message_permissions:
       send: ["EXECUTE", "REQUEST", "RESPONSE", "STATUS"]
       receive: ["REQUEST", "RESPONSE"]
-    allowed_components: ["round_info", "observation", "request", "response"]
+    allowed_components: ["round_info", "observation", "request", "response", "error"]
     receives_goal: true
     handler_type: "environment"
     
@@ -41,7 +41,7 @@ role_definitions:
     message_permissions:
       send: ["EXECUTE", "REQUEST", "RESPONSE", "STATUS"]
       receive: ["REQUEST", "RESPONSE"]
-    allowed_components: ["round_info", "observation", "request", "response"]
+    allowed_components: ["round_info", "observation", "request", "response", "error"]
     receives_goal: true
     handler_type: "standard"
 
@@ -129,6 +129,12 @@ category_participant_assignments:
         participant_wo_execute:
           count: 2
           domains: ["planner", "reviewer"]
+
+# Global anchor configuration (used as default)
+anchor_selection_mode: "fixed"
+default_anchor_node_config:
+  role: "participant_wo_execute"
+  domain: "planner"
 
 # Validation rules
 validation_rules:

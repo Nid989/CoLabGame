@@ -62,6 +62,137 @@ class MessageType(Enum):
         return [mt.name for mt in message_types]
 
 
+class CommunicationRuleTracker:
+    """Tracks communication cycles between players to prevent deadlocks."""
+
+    def __init__(self):
+        """Initialize the communication rule tracker."""
+        self.cycle_counts = {}  # {(player_a, player_b): message_count}
+        self.blocked_communications = {}  # {player_name: blocked_target_player} - specific blocks
+        self.rule_violations = {}  # {player_id: violation_count}
+
+    def get_cycle_count(self, player_a: str, player_b: str) -> int:
+        """Get cycle count between two players (bidirectional).
+
+        Args:
+            player_a: First player name
+            player_b: Second player name
+
+        Returns:
+            int: Number of messages in the cycle between the players
+        """
+        # Sort names to ensure consistent key regardless of order
+        key = tuple(sorted([player_a, player_b]))
+        return self.cycle_counts.get(key, 0)
+
+    def increment_cycle_count(self, player_a: str, player_b: str):
+        """Increment cycle count between two players.
+
+        Args:
+            player_a: First player name
+            player_b: Second player name
+        """
+        key = tuple(sorted([player_a, player_b]))
+        self.cycle_counts[key] = self.cycle_counts.get(key, 0) + 1
+
+    def reset_cycle_count(self, player_a: str, player_b: str):
+        """Reset cycle count between two players.
+
+        Args:
+            player_a: First player name
+            player_b: Second player name
+        """
+        print(f"Resetting cycle count between {player_a} and {player_b}")
+        key = tuple(sorted([player_a, player_b]))
+        if key in self.cycle_counts:
+            del self.cycle_counts[key]
+
+    def is_communication_blocked(self, sender: str, target: str) -> bool:
+        """Check if sender is blocked from REQUEST/RESPONSE to specific target.
+
+        Args:
+            sender: Name of the sending player
+            target: Name of the target player
+
+        Returns:
+            bool: True if blocked from communicating with target, False otherwise
+        """
+        print("Checking if communication is blocked between", sender, "and", target)
+        print("Blocked communications", self.blocked_communications)
+        return self.blocked_communications.get(sender) == target
+
+    def block_communication(self, sender: str, target: str):
+        """Block sender from REQUEST/RESPONSE messages to specific target.
+
+        Args:
+            sender: Name of the player to block
+            target: Name of the target player they're blocked from communicating with
+        """
+        print(f"Blocking communication between {sender} and {target}")
+        self.blocked_communications[sender] = target
+
+    def unblock_communication(self, sender: str, target: str):
+        """Unblock sender from REQUEST/RESPONSE messages to specific target.
+
+        Args:
+            sender: Name of the player to unblock
+            target: Name of the target player (for verification)
+        """
+        print(f"Unblocking communication between {sender} and {target}")
+        if self.blocked_communications.get(sender) == target:
+            del self.blocked_communications[sender]
+
+    def unblock_player_completely(self, player: str):
+        """Unblock player from all REQUEST/RESPONSE communications.
+
+        Args:
+            player: Name of the player to completely unblock
+        """
+        if player in self.blocked_communications:
+            del self.blocked_communications[player]
+
+    def reset_all_for_player(self, player: str):
+        """Reset all tracking for a player when they switch communication partners.
+
+        Args:
+            player: Name of the player
+        """
+        # Remove from blocked communications
+        self.unblock_player_completely(player)
+
+        # Remove all cycle counts involving this player
+        keys_to_remove = []
+        for key in self.cycle_counts.keys():
+            if player in key:
+                keys_to_remove.append(key)
+
+        for key in keys_to_remove:
+            del self.cycle_counts[key]
+
+    def increment_violation_count(self, player: str) -> int:
+        """Increment violation count for a player.
+
+        Args:
+            player: Name of the player
+
+        Returns:
+            int: New violation count for the player
+        """
+        self.rule_violations[player] = self.rule_violations.get(player, 0) + 1
+        return self.rule_violations[player]
+
+    def get_violation_count(self, player: str) -> int:
+        """Get violation count for a player.
+
+        Args:
+            player: Name of the player
+
+        Returns:
+            int: Current violation count for the player
+        """
+        return self.rule_violations.get(player, 0)
+
+
 @dataclass
 class MessagePermissions:
     """Configuration for message type permissions for a role."""
