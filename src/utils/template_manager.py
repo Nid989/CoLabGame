@@ -160,15 +160,9 @@ class PromptTemplateManager:
             "additionalProperties": False,
         }
 
-        # Make 'to' conditionally required
+        # Make 'to' conditionally required using allOf + if/then
         if requires_to:
-            schema["anyOf"] = [
-                {"properties": {"type": {"enum": [mt.name for mt in requires_to]}}, "required": ["type", "from", "to", "content"]},
-                {
-                    "properties": {"type": {"enum": [mt.name for mt in permissions.send if mt not in requires_to]}},
-                    "required": ["type", "from", "content"],
-                },
-            ]
+            schema["allOf"] = [{"if": {"properties": {"type": {"enum": [mt.name for mt in requires_to]}}}, "then": {"required": ["to"]}}]
 
         return schema
 
@@ -182,6 +176,7 @@ class PromptTemplateManager:
         topology_type: Optional[TopologyType] = None,
         graph_config: Optional[Dict] = None,
         max_rounds: Optional[int] = None,
+        game_config: Optional[Dict] = None,
     ) -> str:
         """Generate a dynamic prompt based on role configuration.
 
@@ -194,6 +189,7 @@ class PromptTemplateManager:
             topology_type: The topology type enum (e.g., TopologyType.BLACKBOARD, TopologyType.STAR)
             graph_config: Graph configuration dictionary
             max_rounds: Optional maximum number of rounds for task completion
+            game_config: Game configuration dictionary containing sliding_window_size and other settings
 
         Returns:
             Generated prompt string
@@ -208,7 +204,7 @@ class PromptTemplateManager:
             template = self._get_base_template(role_config)
             # For base template, we need to add the JSON schema to the context
             context = self._prepare_template_context(
-                role_config, observation_type, participants, node_id, goal, graph_config=graph_config, max_rounds=max_rounds
+                role_config, observation_type, participants, node_id, goal, graph_config=graph_config, max_rounds=max_rounds, game_config=game_config
             )
             return template.render(**context)
 
@@ -216,11 +212,18 @@ class PromptTemplateManager:
         # For blackboard topology executor, do not include goal in context
         if template_name == "blackboard_topology_executor_prompt.j2":
             context = self._prepare_template_context(
-                role_config, observation_type, participants, node_id, goal=None, graph_config=graph_config, max_rounds=max_rounds
+                role_config,
+                observation_type,
+                participants,
+                node_id,
+                goal=None,
+                graph_config=graph_config,
+                max_rounds=max_rounds,
+                game_config=game_config,
             )
         else:
             context = self._prepare_template_context(
-                role_config, observation_type, participants, node_id, goal, graph_config=graph_config, max_rounds=max_rounds
+                role_config, observation_type, participants, node_id, goal, graph_config=graph_config, max_rounds=max_rounds, game_config=game_config
             )
 
         # Render the template
@@ -300,8 +303,23 @@ Proceed with your assigned responsibilities.
         goal: Optional[str] = None,
         graph_config: Optional[Dict] = None,
         max_rounds: Optional[int] = None,
+        game_config: Optional[Dict] = None,
     ) -> Dict:
-        """Prepare context variables for template rendering."""
+        """Prepare context variables for template rendering.
+
+        Args:
+            role_config: Configuration for the role
+            observation_type: The type of observation for environment-specific prompts
+            participants: Multi-agent participant configuration for dynamic context
+            node_id: The specific node ID for context
+            goal: Optional goal string to be included in the prompt
+            graph_config: Graph configuration dictionary
+            max_rounds: Optional maximum number of rounds for task completion
+            game_config: Game configuration dictionary containing sliding_window_size and other settings
+
+        Returns:
+            Dictionary of context variables for template rendering
+        """
         permissions = role_config.message_permissions
         send_types = permissions.get_send_types_str()
         receive_types = permissions.get_receive_types_str()
@@ -345,6 +363,8 @@ Proceed with your assigned responsibilities.
             "json_schema": self._generate_json_schema(permissions, node_id or role_config.name, participants, graph_config),
             "goal": goal,
             "max_rounds": max_rounds,
+            "sliding_window_size": game_config.get("sliding_window_size") if game_config else None,
+            "anchor_node": graph_config.get("anchor_node") if graph_config else None,
         }
 
         # Add dynamic multi-agent context if participants provided
@@ -434,12 +454,15 @@ Proceed with your assigned responsibilities.
                         if node_id and domain_name:
                             # Resolve domain to get team description for executor domains
                             domain_info = domain_manager.resolve_domain(domain_name, context="team")
+                            # Get handler_type from role definitions
+                            handler_type = "environment" if role_type == "spoke_w_execute" else "standard"
                             executor_domains.append(
                                 {
                                     "node_id": node_id,
                                     "domain_name": domain_info["name"],
                                     "domain_description": domain_info["description"],
                                     "has_description": domain_info["has_description"],
+                                    "handler_type": handler_type,
                                 }
                             )
 
@@ -458,12 +481,20 @@ Proceed with your assigned responsibilities.
             # Convert domain list to node_id/domain pairs with descriptions
             for i, domain_name in enumerate(spoke_domains):
                 domain_info = domain_manager.resolve_domain(domain_name, context="team")
+                # Determine handler_type based on which spoke type this domain belongs to
+                handler_type = "environment"  # Default to environment for spoke_w_execute
+                # Check if this domain belongs to spoke_wo_execute by looking at participant config
+                for role_type in ["spoke_wo_execute"]:
+                    if role_type in participants and domain_name in participants[role_type].get("domains", []):
+                        handler_type = "standard"
+                        break
                 executor_domains.append(
                     {
                         "node_id": f"spoke_{i + 1}",  # Generic fallback names
                         "domain_name": domain_info["name"],
                         "domain_description": domain_info["description"],
                         "has_description": domain_info["has_description"],
+                        "handler_type": handler_type,
                     }
                 )
 
@@ -588,12 +619,15 @@ Proceed with your assigned responsibilities.
                         domain_name = node_info.get("domain")
                         if participant_id and domain_name:
                             domain_info = domain_manager.resolve_domain(domain_name, context="team")
+                            # Determine handler_type based on participant type
+                            handler_type = "environment" if role_type == "participant_w_execute" else "standard"
                             peer_domains.append(
                                 {
                                     "participant_id": participant_id,
                                     "domain_name": domain_info["name"],
                                     "domain_description": domain_info["description"],
                                     "has_description": domain_info["has_description"],
+                                    "handler_type": handler_type,
                                 }
                             )
 
@@ -629,12 +663,15 @@ Proceed with your assigned responsibilities.
                             else:
                                 participant_id = f"{participant_type}_{i + 1}"
 
+                            # Determine handler_type based on participant type
+                            handler_type = "environment" if participant_type == "participant_w_execute" else "standard"
                             peer_domains.append(
                                 {
                                     "participant_id": participant_id,
                                     "domain_name": domain_info["name"],
                                     "domain_description": domain_info["description"],
                                     "has_description": domain_info["has_description"],
+                                    "handler_type": handler_type,
                                 }
                             )
 
@@ -653,6 +690,7 @@ Proceed with your assigned responsibilities.
                 "own_domain": own_domain,  # Now includes description
                 "include_other_executors": total_participants > 1,
                 "total_executors": total_participants,
+                "total_participants": total_participants,
                 "include_peer_domains": len(peer_domains) > 1,
                 "peer_domains": peer_domains,  # Now includes descriptions
             }
@@ -732,13 +770,7 @@ Proceed with your assigned responsibilities.
         if requires_to:
             schema["properties"]["to"] = {"type": "string", "description": "Target role identifier (required for REQUEST and RESPONSE messages)"}
 
-            # Make 'to' conditionally required
-            schema["anyOf"] = [
-                {"properties": {"type": {"enum": [mt.name for mt in requires_to]}}, "required": ["type", "from", "to", "content"]},
-                {
-                    "properties": {"type": {"enum": [mt.name for mt in permissions.send if mt not in requires_to]}},
-                    "required": ["type", "from", "content"],
-                },
-            ]
+            # Make 'to' conditionally required using allOf + if/then
+            schema["allOf"] = [{"if": {"properties": {"type": {"enum": [mt.name for mt in requires_to]}}}, "then": {"required": ["to"]}}]
 
         return schema

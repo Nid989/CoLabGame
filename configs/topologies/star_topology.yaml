@@ -7,25 +7,25 @@ topology_type: "star"
 domain_definitions:
   planner:
     self_description: "Your primary function is to decompose a high-level goal into simple, atomic subtasks. You define **what** must be done and assign tasks to the appropriate spoke. Never specify **how** a task should be executed. Monitor progress and ensure the final outcome aligns with the goal."
-    team_description: "breaks down goals into atomic subtasks and coordinates task assignments"
+    team_description: "Breaks down goals into atomic subtasks and coordinates task assignments."
   critic:
     self_description: "You are an expert at critically evaluating work and strategies. You spot errors, redundancies, or gaps, and advise on precise corrections or improvements."
-    team_description: "evaluates work quality and provides improvement recommendations"
+    team_description: "Evaluates work quality and provides improvement recommendations."
   office_productivity_specialist:
     self_description: "You are an expert in LibreOffice Writer, Calc, and Impress. You create, edit, and format professional documents, spreadsheets, and presentations with precision."
-    team_description: "handles document creation and office productivity tasks using LibreOffice applications"
+    team_description: "Handles document creation and office productivity tasks using LibreOffice applications."
   software_development_specialist:
     self_description: "You are an expert in coding, debugging, and executing programs. You ensure software is correct, efficient, and meets all requirements."
-    team_description: "develops, debugs, and executes software programs and code"
+    team_description: "Develops, debugs, and executes software programs and code."
   digital_media_specialist:
     self_description: "You are an expert in GIMP and digital media editing. You edit, resize, and enhance images to produce high-quality visuals that meet exact specifications."
-    team_description: "creates and edits digital media content using GIMP and image editing tools"
+    team_description: "Creates and edits digital media content using GIMP and image editing tools."
   web_research_specialist:
     self_description: "You are an expert in online research. You quickly find, extract, and organize accurate information from the web."
-    team_description: "conducts web research and gathers accurate information from online sources"
+    team_description: "Conducts web research and gathers accurate information from online sources."
   os_operation_specialist:
     self_description: "You are an expert in file and system management. You organize folders, set permissions, handle archives, and execute essential OS commands."
-    team_description: "manages file systems, permissions, and essential operating system operations"
+    team_description: "Manages file systems, permissions, and essential operating system operations."
 
 # Role definitions for star topology
 role_definitions:
@@ -41,15 +41,15 @@ role_definitions:
     message_permissions:
       send: ["EXECUTE", "REQUEST", "RESPONSE"]
       receive: ["REQUEST", "RESPONSE"]
-    allowed_components: ["round_info", "observation", "request", "response", "error"]
+    allowed_components: ["observation", "request", "response", "error"]
     receives_goal: false
     handler_type: "environment"
     
   spoke_wo_execute:
     message_permissions:
-      send: ["EXECUTE", "REQUEST", "RESPONSE"]
+      send: ["REQUEST", "RESPONSE"]
       receive: ["REQUEST", "RESPONSE"]
-    allowed_components: ["round_info", "observation", "request", "response", "error"]
+    allowed_components: ["request", "response", "error"]
     receives_goal: false
     handler_type: "standard"
 

@@ -348,6 +348,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                         topology_type_enum,
                         graph_config,
                         self.game_config.get("max_rounds"),
+                        self.game_config,
                     )
 
                 # Create player with message permissions

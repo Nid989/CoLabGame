@@ -24,7 +24,7 @@ domain_definitions:
     self_description: "You are an expert in online research. You quickly find, extract, and organize accurate information from the web."
     team_description: "conducts web research and gathers accurate information from online sources"
   os_operation_specialist:
-    self_description: "You are an expert in file and system management. You organize folders, set permissions, handle archives, and execute essential OS commands."
+    self_description: "You are an expert in file and system management. Your responsibilities include organizing folders, setting permissions, handling archives, and executing essential OS commands"
     team_description: "manages file systems, permissions, and essential operating system operations"
 
 # Role definitions for mesh topology
@@ -39,9 +39,9 @@ role_definitions:
     
   participant_wo_execute:
     message_permissions:
-      send: ["EXECUTE", "REQUEST", "RESPONSE", "STATUS"]
+      send: ["REQUEST", "RESPONSE", "STATUS"]
       receive: ["REQUEST", "RESPONSE"]
-    allowed_components: ["round_info", "observation", "request", "response", "error"]
+    allowed_components: ["round_info", "request", "response", "error"]
     receives_goal: true
     handler_type: "standard"
 
