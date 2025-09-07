@@ -102,7 +102,6 @@ class CommunicationRuleTracker:
             player_a: First player name
             player_b: Second player name
         """
-        print(f"Resetting cycle count between {player_a} and {player_b}")
         key = tuple(sorted([player_a, player_b]))
         if key in self.cycle_counts:
             del self.cycle_counts[key]
@@ -117,8 +116,6 @@ class CommunicationRuleTracker:
         Returns:
             bool: True if blocked from communicating with target, False otherwise
         """
-        print("Checking if communication is blocked between", sender, "and", target)
-        print("Blocked communications", self.blocked_communications)
         return self.blocked_communications.get(sender) == target
 
     def block_communication(self, sender: str, target: str):
@@ -128,7 +125,6 @@ class CommunicationRuleTracker:
             sender: Name of the player to block
             target: Name of the target player they're blocked from communicating with
         """
-        print(f"Blocking communication between {sender} and {target}")
         self.blocked_communications[sender] = target
 
     def unblock_communication(self, sender: str, target: str):
@@ -138,7 +134,6 @@ class CommunicationRuleTracker:
             sender: Name of the player to unblock
             target: Name of the target player (for verification)
         """
-        print(f"Unblocking communication between {sender} and {target}")
         if self.blocked_communications.get(sender) == target:
             del self.blocked_communications[sender]
 

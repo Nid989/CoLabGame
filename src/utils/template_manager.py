@@ -617,7 +617,7 @@ Proceed with your assigned responsibilities.
                     for node_info in node_assignments[role_type]:
                         participant_id = node_info.get("node_id")
                         domain_name = node_info.get("domain")
-                        if participant_id and domain_name:
+                        if participant_id and domain_name and participant_id != node_id:
                             domain_info = domain_manager.resolve_domain(domain_name, context="team")
                             # Determine handler_type based on participant type
                             handler_type = "environment" if role_type == "participant_w_execute" else "standard"
@@ -663,17 +663,19 @@ Proceed with your assigned responsibilities.
                             else:
                                 participant_id = f"{participant_type}_{i + 1}"
 
-                            # Determine handler_type based on participant type
-                            handler_type = "environment" if participant_type == "participant_w_execute" else "standard"
-                            peer_domains.append(
-                                {
-                                    "participant_id": participant_id,
-                                    "domain_name": domain_info["name"],
-                                    "domain_description": domain_info["description"],
-                                    "has_description": domain_info["has_description"],
-                                    "handler_type": handler_type,
-                                }
-                            )
+                            # Skip adding the current agent to peer domains
+                            if participant_id != node_id:
+                                # Determine handler_type based on participant type
+                                handler_type = "environment" if participant_type == "participant_w_execute" else "standard"
+                                peer_domains.append(
+                                    {
+                                        "participant_id": participant_id,
+                                        "domain_name": domain_info["name"],
+                                        "domain_description": domain_info["description"],
+                                        "has_description": domain_info["has_description"],
+                                        "handler_type": handler_type,
+                                    }
+                                )
 
             # Resolve own domain if found
             if found_domain_name:

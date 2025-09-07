@@ -302,7 +302,6 @@ class ComputerGame(NetworkDialogueGameMaster):
             ValueError: If player model is not available for role index
             KeyError: If condition type is invalid
         """
-        print("running")
         try:
             from src.message import RoleConfig
             from src.utils.template_manager import PromptTemplateManager
@@ -367,6 +366,7 @@ class ComputerGame(NetworkDialogueGameMaster):
                     node_id=node_id,
                 )
 
+                # DEBUG: save prompt to file
                 import uuid
 
                 prompt_hash = uuid.uuid4().hex
@@ -1181,6 +1181,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         self.message_state.update(error=user_friendly_error)
         formatted_context = self.player_context_formatter.create_context_for(self.message_state, self._current_player)
         self._set_context_for(self._current_player, formatted_context)
+        self.message_state.reset(preserve=["observation", "blackboard"])
 
         self._handle_player_violation()
 
@@ -1256,6 +1257,7 @@ class ComputerGame(NetworkDialogueGameMaster):
         self.message_state.update(error=user_friendly_error)
         formatted_context = self.player_context_formatter.create_context_for(self.message_state, self._current_player)
         self._set_context_for(self._current_player, formatted_context)
+        self.message_state.reset(preserve=["observation", "blackboard"])
 
         self._handle_player_violation()
 
