@@ -52,3 +52,7 @@ plots/*
 
 pyproject_old.toml
 analysis_archive.zip
+
+# UV package manager files
+uv.lock
+requirements_uv.txt
