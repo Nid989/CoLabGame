@@ -109,6 +109,7 @@ class NetworkDialogueGameMaster(DialogueGameMaster):
             player_models: Player models to use for one or two players.
         """
         super().__init__(name, path, experiment, player_models)
+        self.game_name = name
         self.graph = nx.MultiDiGraph()
         self.graph.add_node("START", type=NodeType.START)
         self.graph.add_node("END", type=NodeType.END)

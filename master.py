@@ -12,14 +12,14 @@ from dataclasses import dataclass
 from clemcore import backends
 from clemcore.clemgame import (
     GameMaster,
+    GameSpec,
     GameBenchmark,
     GameScorer,
-    GameSpec,
-    metrics,
     ParseError,
     GameError,
     RuleViolationError,
 )
+from clemcore.clemgame import metrics
 from src.master import NetworkDialogueGameMaster, EdgeCondition
 from src.environment import Environment, EnvironmentFactory
 from src.player import RoleBasedPlayer
@@ -351,13 +351,13 @@ class ComputerGame(NetworkDialogueGameMaster):
                     )
 
                 # Create player with message permissions
+                # Note: sliding_window_size removed as it's not supported in clemcore 3.3.5
                 player = RoleBasedPlayer(
                     self.player_models[0],
                     role=node_id,  # Use node_id as the role identifier
                     handler_type=role_config.handler_type,
                     allowed_components=role_config.allowed_components,
                     message_permissions=role_config.message_permissions,
-                    sliding_window_size=self.game_config.get("sliding_window_size"),
                 )
 
                 self.add_player_to_graph(

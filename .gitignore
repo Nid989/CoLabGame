@@ -49,3 +49,5 @@ plots/*
 /analysis/cost_analysis_legacy.py
 /results_new/
 /results_all/
+
+pyproject_old.toml
