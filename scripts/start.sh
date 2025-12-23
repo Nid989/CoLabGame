@@ -18,10 +18,16 @@ MAX_TOKENS="400"
 # Experiment configurations - Add/modify experiments here
 # Format: "experiment_name"
 EXPERIMENTS=(
-    "single_agent-gimp_osworld-screenshot_a11y_tree"
-    # Add more experiments here as needed
-    # "single_agent-firefox_osworld-screenshot_a11y_tree"
-    # "multi_agent-star-chrome_osworld-screenshot_a11y_tree"
+    "multi_agent-blackboard-graphic_document-screenshot_a11y_tree-l3"
+    "multi_agent-mesh-data_processing-screenshot_a11y_tree-l1"
+    "multi_agent-mesh-data_processing-screenshot_a11y_tree-l2"
+    "multi_agent-mesh-data_processing-screenshot_a11y_tree-l3"
+    "multi_agent-mesh-graphic_document-screenshot_a11y_tree-l1"
+    "multi_agent-mesh-graphic_document-screenshot_a11y_tree-l2"
+    "multi_agent-mesh-graphic_document-screenshot_a11y_tree-l3"
+    "multi_agent-mesh-research_brief-screenshot_a11y_tree-l1"
+    "multi_agent-mesh-research_brief-screenshot_a11y_tree-l2"
+    "multi_agent-mesh-research_brief-screenshot_a11y_tree-l3"
 )
 
 # =============================================================================

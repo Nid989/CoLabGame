@@ -44,3 +44,8 @@ outputs/
 
 /scripts/logs/
 TEMP_PROMPTS/
+plots/*
+/analysis/plots/*
+/analysis/cost_analysis_legacy.py
+/results_new/
+/results_all/

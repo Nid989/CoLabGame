@@ -478,5 +478,45 @@
                 "video": false
             }
         }
+    },
+    {
+        "model_name": "gpt-5.1-2025-11-13",
+        "model_id": "gpt-5.1-2025-11-13",
+        "backend": "openai",
+        "release_date": "2025-11-13",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "ar",
+            "bn",
+            "zh",
+            "fr",
+            "de",
+            "hi",
+            "en",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "pt",
+            "es",
+            "sw",
+            "yo"
+        ],
+        "context_size": "200k",
+        "license": {
+            "name": "OpenAI",
+            "url": "https://openai.com/policies/row-terms-of-use/"
+        },
+        "model_config": {
+            "reasoning_model": true,
+            "reasoning_effort": "low",
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            }
+        }
     }
 ]

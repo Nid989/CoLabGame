@@ -53,6 +53,18 @@ task_generation:
           output_dir: "outputs"
           session_name: "shared-research_brief-level1-2x"  
       
+      shared-integrated_workflow-level1-2x:
+        sampling:
+          - category: "integrated_workflow"
+            levels: [1]
+            task_types: ["basic_info_gathering"]
+            instances_per_task: 2
+            
+        output:
+          upload_s3: true
+          output_dir: "outputs"
+          session_name: "shared-integrated_workflow-level1-2x"  
+
       # collective level1 2x
       shared-level1-2x:
         sampling:
@@ -512,6 +524,20 @@ task_generation:
       multi_agent-mesh-research_brief-screenshot_a11y_tree-l3:
         use_shared: "shared-research_brief-level3-2x"
 
+      # ALL topologies
+      # category: "integrated_workflow"
+      single_agent-integrated_workflow-screenshot_a11y_tree-l1:
+        use_shared: "shared-integrated_workflow-level1-2x"
+
+      multi_agent-star-integrated_workflow-screenshot_a11y_tree-l1:
+        use_shared: "shared-integrated_workflow-level1-2x"
+
+      multi_agent-mesh-integrated_workflow-screenshot_a11y_tree-l1:
+        use_shared: "shared-integrated_workflow-level1-2x"
+
+      multi_agent-blackboard-integrated_workflow-screenshot_a11y_tree-l1:
+        use_shared: "shared-integrated_workflow-level1-2x"
+
       # OSWorld Experiments
       # chrome
       single_agent-chrome_osworld-screenshot_a11y_tree:
@@ -968,6 +994,29 @@ experiments:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
+
+  # ALL topologies
+  # category: "integrated_workflow"
+  # screenshot_a11y_tree
+  single_agent-integrated_workflow-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "single"
+
+  multi_agent-star-integrated_workflow-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "star"
+  
+  multi_agent-mesh-integrated_workflow-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "mesh"
+
+  multi_agent-blackboard-integrated_workflow-screenshot_a11y_tree-l1:
+    environment_type: "osworld"
+    observation_type: "screenshot_a11y_tree"
+    topology_type: "blackboard"
 
   # OSWorld
   # chrome

@@ -6,9 +6,9 @@ topology_type: "blackboard"
 # Domain definitions with dual descriptions
 domain_definitions:
   planner:
-    self_description: "You are an expert in breaking down goals into simple, atomic subtasks. You define **what** needs to be done and assign tasks to the most suitable participants, but never specify **how** to do it. You monitor progress and ensure the final output meets all requirements."
-    team_description: "breaks down goals into atomic subtasks and coordinates task assignments"
-  reviewer:
+    self_description: "Your primary function is to decompose a high-level goal into simple, atomic subtasks. You define **what** must be done and assign tasks to the appropriate spoke. Never specify **how** a task should be executed. Monitor progress and ensure the final outcome aligns with the goal."
+    team_description: "Breaks down goals into atomic subtasks and coordinates task assignments."
+  critic:
     self_description: "You are an expert at critically evaluating work and strategies. You spot errors, redundancies, or gaps, and advise on precise corrections or improvements."
     team_description: "evaluates work quality and provides improvement recommendations"
   office_productivity_specialist:
@@ -52,7 +52,7 @@ default_participant_assignments:
     domains: ["software_development_specialist", "os_operation_specialist"]
   participant_wo_execute:
     count: 2
-    domains: ["planner", "reviewer"]
+    domains: ["planner", "critic"]
 
 # Category-specific participant assignments
 category_participant_assignments:
@@ -62,7 +62,7 @@ category_participant_assignments:
       domains: ["software_development_specialist", "os_operation_specialist"]
     participant_wo_execute:
       count: 2
-      domains: ["planner", "reviewer"]
+      domains: ["planner", "critic"]
   
   data_processing:
     participant_w_execute:
@@ -70,7 +70,7 @@ category_participant_assignments:
       domains: ["office_productivity_specialist", "os_operation_specialist"]
     participant_wo_execute:
       count: 2
-      domains: ["planner", "reviewer"]
+      domains: ["planner", "critic"]
         
   graphic_document:
     participant_w_execute:
@@ -78,7 +78,7 @@ category_participant_assignments:
       domains: ["digital_media_specialist", "office_productivity_specialist", "os_operation_specialist"]
     participant_wo_execute:
       count: 2
-      domains: ["planner", "reviewer"]
+      domains: ["planner", "critic"]
       
   research_brief:
     participant_w_execute:
@@ -86,8 +86,16 @@ category_participant_assignments:
       domains: ["web_research_specialist", "office_productivity_specialist", "os_operation_specialist"]
     participant_wo_execute:
       count: 2
-      domains: ["planner", "reviewer"]
-      
+      domains: ["planner", "critic"]
+
+  integrated_workflow:
+    participant_w_execute:
+      count: 4
+      domains: ["web_research_specialist", "digital_media_specialist", "office_productivity_specialist", "os_operation_specialist"]
+    participant_wo_execute:
+      count: 2
+      domains: ["planner", "critic"]
+
   osworld:
     task_types:
       chrome:
@@ -96,7 +104,7 @@ category_participant_assignments:
           domains: ["web_research_specialist", "os_operation_specialist"]
         participant_wo_execute:
           count: 2
-          domains: ["planner", "reviewer"]
+          domains: ["planner", "critic"]
           
       libreoffice_writer:
         participant_w_execute:
@@ -104,7 +112,7 @@ category_participant_assignments:
           domains: ["office_productivity_specialist", "os_operation_specialist"]
         participant_wo_execute:
           count: 2
-          domains: ["planner", "reviewer"]
+          domains: ["planner", "critic"]
 
       gimp:
         participant_w_execute:
@@ -112,7 +120,7 @@ category_participant_assignments:
           domains: ["digital_media_specialist", "os_operation_specialist"]
         participant_wo_execute:
           count: 2
-          domains: ["planner", "reviewer"]
+          domains: ["planner", "critic"]
 
       os:
         participant_w_execute:
@@ -120,7 +128,7 @@ category_participant_assignments:
           domains: ["os_operation_specialist"]
         participant_wo_execute:
           count: 2
-          domains: ["planner", "reviewer"]
+          domains: ["planner", "critic"]
 
       default:
         participant_w_execute:
@@ -128,7 +136,7 @@ category_participant_assignments:
           domains: ["software_development_specialist", "os_operation_specialist"]
         participant_wo_execute:
           count: 2
-          domains: ["planner", "reviewer"]
+          domains: ["planner", "critic"]
 
 # Global anchor configuration (used as default)
 anchor_selection_mode: "fixed"

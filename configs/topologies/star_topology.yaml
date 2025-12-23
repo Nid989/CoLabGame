@@ -110,6 +110,17 @@ category_participant_assignments:
     spoke_wo_execute:
       count: 1
       domains: ["critic"]
+
+  integrated_workflow:
+    hub:
+      count: 1
+      domains: ["planner"]
+    spoke_w_execute:
+      count: 4
+      domains: ["web_research_specialist", "digital_media_specialist", "office_productivity_specialist", "os_operation_specialist"]
+    spoke_wo_execute:
+      count: 1
+      domains: ["critic"]
       
   osworld:
     task_types:

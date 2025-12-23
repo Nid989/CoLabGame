@@ -132,7 +132,7 @@
                 "graph": {}
             },
             "config": {
-                "headless": true,
+                "headless": false,
                 "observation_type": "a11y_tree",
                 "action_space": "pyautogui",
                 "screen_width": 1920,
@@ -141,7 +141,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -289,7 +289,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -437,7 +437,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -625,7 +625,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -813,7 +813,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -1001,7 +1001,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -1205,7 +1205,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -1409,7 +1409,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -1613,7 +1613,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -1873,7 +1873,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -2133,7 +2133,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -2393,7 +2393,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -2571,7 +2571,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -2759,7 +2759,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -3027,7 +3027,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -3287,7 +3287,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -3529,7 +3529,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -3765,7 +3765,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -4061,7 +4061,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -4363,7 +4363,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -4511,10 +4511,10 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": 3,
+                "sliding_window_size": null,
                 "topology_type": "star"
             }
         },
@@ -4699,10 +4699,10 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": 3,
+                "sliding_window_size": null,
                 "topology_type": "star"
             }
         },
@@ -4903,10 +4903,10 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": 3,
+                "sliding_window_size": null,
                 "topology_type": "star"
             }
         },
@@ -5163,10 +5163,10 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": 3,
+                "sliding_window_size": null,
                 "topology_type": "star"
             }
         },
@@ -5341,7 +5341,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -5529,7 +5529,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -5797,10 +5797,10 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": 3,
+                "sliding_window_size": null,
                 "topology_type": "star"
             }
         },
@@ -6057,7 +6057,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -6299,7 +6299,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -6535,7 +6535,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -6831,7 +6831,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -7133,7 +7133,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -7281,7 +7281,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -7469,7 +7469,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -7673,7 +7673,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -7933,7 +7933,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -8111,7 +8111,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -8299,7 +8299,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -8567,7 +8567,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -8827,7 +8827,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -9069,7 +9069,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -9305,7 +9305,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -9601,7 +9601,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -9903,7 +9903,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -10051,7 +10051,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -10239,7 +10239,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -10443,7 +10443,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -10703,7 +10703,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -10881,7 +10881,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -11069,7 +11069,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -11199,127 +11199,6 @@
                     },
                     "category": "graphic_document",
                     "task_type": "image_resize_insertion"
-                },
-                {
-                    "game_id": "96dac6b8-1544-4422-af09-fcc120b26ee3",
-                    "task_config": {
-                        "id": "96dac6b8-1544-4422-af09-fcc120b26ee3",
-                        "snapshot": "vscode",
-                        "instruction": "Create a document containing a properly sized image by processing 'design_strat_advertising-creative_source.png' to 600×400 pixels using GIMP, saving it as 'design_strat_advertising-creative_source_resized.png', then incorporating this resized image into 'design_strat_visual-content-plan.docx' using LibreOffice Writer. All required files are available on the Desktop. Ensure the document is saved with the resized image properly inserted.",
-                        "source": "",
-                        "config": [
-                            {
-                                "type": "download",
-                                "parameters": {
-                                    "files": [
-                                        {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250821_175014/96dac6b8-1544-4422-af09-fcc120b26ee3/source_image.png",
-                                            "path": "/home/user/Desktop/design_strat_advertising-creative_source.png"
-                                        },
-                                        {
-                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250821_175014/96dac6b8-1544-4422-af09-fcc120b26ee3/document_template.docx",
-                                            "path": "/home/user/Desktop/design_strat_visual-content-plan.docx"
-                                        }
-                                    ]
-                                }
-                            },
-                            {
-                                "type": "launch",
-                                "parameters": {
-                                    "command": [
-                                        "gimp",
-                                        "/home/user/Desktop/design_strat_advertising-creative_source.png"
-                                    ]
-                                }
-                            },
-                            {
-                                "type": "launch",
-                                "parameters": {
-                                    "command": [
-                                        "libreoffice",
-                                        "--writer",
-                                        "/home/user/Desktop/design_strat_visual-content-plan.docx"
-                                    ]
-                                }
-                            },
-                            {
-                                "type": "sleep",
-                                "parameters": {
-                                    "seconds": 10
-                                }
-                            }
-                        ],
-                        "trajectory": "trajectories/",
-                        "related_apps": [
-                            "vscode"
-                        ],
-                        "evaluator": {
-                            "postconfig": [
-                                {
-                                    "type": "activate_window",
-                                    "parameters": {
-                                        "window_name": "LibreOffice Writer",
-                                        "strict": false
-                                    }
-                                },
-                                {
-                                    "type": "execute",
-                                    "parameters": {
-                                        "command": [
-                                            "python3",
-                                            "-c",
-                                            "import pyautogui; pyautogui.hotkey('ctrl', 's');"
-                                        ]
-                                    }
-                                },
-                                {
-                                    "type": "sleep",
-                                    "parameters": {
-                                        "seconds": 1
-                                    }
-                                }
-                            ],
-                            "func": [
-                                "check_image_size",
-                                "compare_docx_images"
-                            ],
-                            "expected": [
-                                {
-                                    "type": "rule",
-                                    "rules": {
-                                        "height": 400,
-                                        "width": 600
-                                    }
-                                },
-                                {
-                                    "type": "cloud_file",
-                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250821_175014/96dac6b8-1544-4422-af09-fcc120b26ee3/expected_document.docx",
-                                    "dest": "expected_design_strat_visual-content-plan.docx"
-                                }
-                            ],
-                            "result": [
-                                {
-                                    "type": "vm_file",
-                                    "path": "/home/user/Desktop/design_strat_advertising-creative_source_resized.png",
-                                    "dest": "result_design_strat_advertising-creative_source_resized.png"
-                                },
-                                {
-                                    "type": "vm_file",
-                                    "path": "/home/user/Desktop/design_strat_visual-content-plan.docx",
-                                    "dest": "result_design_strat_visual-content-plan.docx"
-                                }
-                            ],
-                            "options": [
-                                {},
-                                {
-                                    "debug": true
-                                }
-                            ],
-                            "conj": "and"
-                        }
-                    },
-                    "category": "graphic_document",
-                    "task_type": "image_resize_insertion"
                 }
             ],
             "environment_type": "osworld",
@@ -11337,7 +11216,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -11597,7 +11476,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -11839,7 +11718,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -12075,7 +11954,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -12371,7 +12250,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -12673,7 +12552,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -13120,7 +12999,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -13567,10 +13446,10 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": 3,
+                "sliding_window_size": 5,
                 "topology_type": "star"
             }
         },
@@ -14014,7 +13893,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -14461,7 +14340,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -14588,6 +14467,220 @@
                     },
                     "category": "osworld",
                     "task_type": "gimp"
+                },
+                {
+                    "game_id": "e2dd0213-26db-4349-abe5-d5667bfd725c",
+                    "task_config": {
+                        "id": "e2dd0213-26db-4349-abe5-d5667bfd725c",
+                        "snapshot": "gimp",
+                        "instruction": "Can you assist me in shifting the text box to the left? I keep accidentally selecting the image layer beneath it.",
+                        "source": "https://superuser.com/questions/839650/how-to-move-an-inserted-text-box-in-gimp",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://drive.google.com/uc?export=download&id=1KMHuScgF8Eq9OPR40SCntxO3Q1DUmbKV",
+                                            "path": "/home/user/Desktop/orange_background.xcf"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "gimp",
+                                        "/home/user/Desktop/orange_background.xcf"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "gimp"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python3",
+                                            "-c",
+                                            "import pyautogui; pyautogui.hotkey([\"shift\", \"ctrl\", \"e\"]);"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 0.5
+                                    }
+                                },
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python3",
+                                            "-c",
+                                            "import pyautogui; pyautogui.write(\"leftside_textbox\");pyautogui.press([\"enter\"]);"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 2
+                                    }
+                                },
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python3",
+                                            "-c",
+                                            "import pyautogui; pyautogui.press([\"enter\"]);"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 5
+                                    }
+                                }
+                            ],
+                            "func": "check_textbox_on_leftside",
+                            "result": {
+                                "type": "vm_file",
+                                "path": "/home/user/Desktop/leftside_textbox.png",
+                                "dest": "leftside_textbox.png"
+                            }
+                        }
+                    },
+                    "category": "osworld",
+                    "task_type": "gimp"
+                },
+                {
+                    "game_id": "fbb548ca-c2a6-4601-9204-e39a2efc507b",
+                    "task_config": {
+                        "id": "fbb548ca-c2a6-4601-9204-e39a2efc507b",
+                        "snapshot": "gimp",
+                        "instruction": "Blue is my favorite color, so could you help me change the color theme of GIMP to \"Blue\"?",
+                        "source": "",
+                        "config": [],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "gimp"
+                        ],
+                        "evaluator": {
+                            "func": "infeasible"
+                        }
+                    },
+                    "category": "osworld",
+                    "task_type": "gimp"
+                },
+                {
+                    "game_id": "7a4deb26-d57d-4ea9-9a73-630f66a7b568",
+                    "task_config": {
+                        "id": "7a4deb26-d57d-4ea9-9a73-630f66a7b568",
+                        "snapshot": "gimp",
+                        "instruction": "Could you tone down the brightness of my photo?",
+                        "source": "https://www.quora.com/How-do-I-edit-a-photo-in-GIMP",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://drive.usercontent.google.com/download?id=1SIvX9Wimyw6i2UvnoLTNDHIObvDLAsIM&export=download&authuser=0&confirm=t&uuid=a48447ab-13a2-421f-9662-6ffff8f6f6d5&at=APZUnTVRxofs822XxgEv33WwYCkb:1705046264363",
+                                            "path": "/home/user/Desktop/woman_sitting_by_the_tree.png"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "gimp",
+                                        "/home/user/Desktop/woman_sitting_by_the_tree.png"
+                                    ]
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "gimp"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python3",
+                                            "-c",
+                                            "import pyautogui; pyautogui.hotkey([\"shift\", \"ctrl\", \"e\"]);"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 0.5
+                                    }
+                                },
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python3",
+                                            "-c",
+                                            "import pyautogui; pyautogui.write(\"edited_darker\");pyautogui.press([\"enter\"]);"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 2
+                                    }
+                                },
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python3",
+                                            "-c",
+                                            "import pyautogui; pyautogui.press([\"enter\"]);"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 5
+                                    }
+                                }
+                            ],
+                            "func": "check_brightness_decrease_and_structure_sim",
+                            "expected": {
+                                "type": "vm_file",
+                                "path": "/home/user/Desktop/woman_sitting_by_the_tree.png",
+                                "dest": "woman_sitting_by_the_tree.png"
+                            },
+                            "result": {
+                                "type": "vm_file",
+                                "path": "/home/user/Desktop/edited_darker.png",
+                                "dest": "edited_darker.png"
+                            }
+                        }
+                    },
+                    "category": "osworld",
+                    "task_type": "gimp"
                 }
             ],
             "environment_type": "osworld",
@@ -14605,7 +14698,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -14963,10 +15056,10 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": 3,
+                "sliding_window_size": 5,
                 "topology_type": "star"
             }
         },
@@ -15321,7 +15414,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -15679,7 +15772,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -16068,10 +16161,10 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": 3,
+                "sliding_window_size": 5,
                 "topology_type": "single"
             }
         },
@@ -16457,10 +16550,10 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": 3,
+                "sliding_window_size": 5,
                 "topology_type": "star"
             }
         },
@@ -16846,7 +16939,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -17235,7 +17328,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -17621,10 +17714,10 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": 3,
+                "sliding_window_size": 5,
                 "topology_type": "single"
             }
         },
@@ -18007,10 +18100,10 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
-                "sliding_window_size": 3,
+                "sliding_window_size": 5,
                 "topology_type": "star"
             }
         },
@@ -18393,7 +18486,7 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
-                "max_transitions_per_round": 20,
+                "max_transitions_per_round": 15,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
                 "sliding_window_size": 3,
@@ -18779,6 +18872,1718 @@
                 "sleep_after_execution": 0,
                 "max_retries": 2,
                 "max_rounds": 10,
+                "max_transitions_per_round": 15,
+                "player_consecutive_violation_limit": 3,
+                "player_total_violation_limit": 5,
+                "sliding_window_size": 3,
+                "topology_type": "blackboard"
+            }
+        },
+        {
+            "name": "single_agent-integrated_workflow-screenshot_a11y_tree-l1",
+            "game_instances": [
+                {
+                    "game_id": "feb291a9-154c-4e5a-a389-7fab13106e9f",
+                    "task_config": {
+                        "id": "feb291a9-154c-4e5a-a389-7fab13106e9f",
+                        "snapshot": "vscode",
+                        "instruction": "Complete a investigative story for Tech Pulse Media that combines research findings with processed imagery. Extract the key finding text from the research page (accessible in Chromium or via http://localhost:8080/feature_sector_analysis_7574.html). Process 'feature_visual_7574.png' to 1920x1080 pixels for landing_page_image. Create a interview transcript containing both the extracted key finding text and the processed image. Save the document as 'sector_analysis_article_275.docx' and the processed image as 'feature_processed_825.png', both on the Desktop.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/feature_sector_analysis_7574.html",
+                                            "path": "/tmp/feature_sector_analysis_7574.html"
+                                        },
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/feature_visual_7574.png",
+                                            "path": "/home/user/Desktop/feature_visual_7574.png"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python3",
+                                        "-c",
+                                        "import subprocess, os; log=open('/tmp/http_server.log','a'); p=subprocess.Popen(['python3','-m','http.server','8080','--directory','/tmp'], stdout=log, stderr=log, preexec_fn=os.setsid); open('/tmp/http_server.pid','w').write(str(p.pid)); print('Server started on port 8080')"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "google-chrome",
+                                        "--new-window",
+                                        "http://localhost:8080/feature_sector_analysis_7574.html"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "libreoffice",
+                                        "--writer"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "gimp",
+                                        "/home/user/Desktop/feature_visual_7574.png"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 3
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "/bin/bash",
+                                        "-lc",
+                                        "wmctrl -k on"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 10
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "activate_window",
+                                    "parameters": {
+                                        "window_name": "LibreOffice Writer",
+                                        "strict": false
+                                    }
+                                },
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python3",
+                                            "-c",
+                                            "import pyautogui; pyautogui.hotkey('ctrl', 's')"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 2
+                                    }
+                                }
+                            ],
+                            "func": [
+                                "compare_docx_images",
+                                "compare_answer",
+                                "check_image_size",
+                                "evaluate_document_against_spec"
+                            ],
+                            "result": [
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/sector_analysis_article_275.docx",
+                                    "dest": "result_document.docx"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "answer": "Exists"
+                                    }
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/feature_processed_7574.png",
+                                    "dest": "result_image.png"
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/sector_analysis_article_275.docx",
+                                    "dest": "eval_document.docx"
+                                }
+                            ],
+                            "expected": [
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/expected_document.docx",
+                                    "dest": "expected_document.docx"
+                                },
+                                {
+                                    "type": "vm_command_line",
+                                    "command": "test -f /home/user/Desktop/feature_processed_7574.png && echo 'Exists' || echo 'Missing'"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "width": 1920,
+                                        "height": 1080
+                                    }
+                                },
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/sector_analysis_article_275_spec.json",
+                                    "dest": "expected_spec.json"
+                                }
+                            ],
+                            "options": [
+                                {
+                                    "debug": true
+                                },
+                                {},
+                                {},
+                                {
+                                    "debug": true,
+                                    "threshold": 0.75
+                                }
+                            ],
+                            "conj": "and"
+                        }
+                    },
+                    "category": "integrated_workflow",
+                    "task_type": "basic_info_gathering"
+                },
+                {
+                    "game_id": "45c0699c-140a-436c-af30-016325a821bc",
+                    "task_config": {
+                        "id": "45c0699c-140a-436c-af30-016325a821bc",
+                        "snapshot": "vscode",
+                        "instruction": "Complete a clinical study for Medical Technology Research that combines research findings with processed imagery. Extract the key finding text from the research page (accessible in Chromium or via http://localhost:8080/clinical_health_analytics_6580.html). Process 'clinical_visual_6580.png' to 1024x768 pixels for document_illustration. Create a medical summary containing both the extracted key finding text and the processed image. Save the document as 'health_analytics_report_100.docx' and the processed image as 'clinical_processed_291.png', both on the Desktop.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/clinical_health_analytics_6580.html",
+                                            "path": "/tmp/clinical_health_analytics_6580.html"
+                                        },
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/clinical_visual_6580.png",
+                                            "path": "/home/user/Desktop/clinical_visual_6580.png"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python3",
+                                        "-c",
+                                        "import subprocess, os; log=open('/tmp/http_server.log','a'); p=subprocess.Popen(['python3','-m','http.server','8080','--directory','/tmp'], stdout=log, stderr=log, preexec_fn=os.setsid); open('/tmp/http_server.pid','w').write(str(p.pid)); print('Server started on port 8080')"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "google-chrome",
+                                        "--new-window",
+                                        "http://localhost:8080/clinical_health_analytics_6580.html"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "libreoffice",
+                                        "--writer"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "gimp",
+                                        "/home/user/Desktop/clinical_visual_6580.png"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 3
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "/bin/bash",
+                                        "-lc",
+                                        "wmctrl -k on"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 10
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "activate_window",
+                                    "parameters": {
+                                        "window_name": "LibreOffice Writer",
+                                        "strict": false
+                                    }
+                                },
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python3",
+                                            "-c",
+                                            "import pyautogui; pyautogui.hotkey('ctrl', 's')"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 2
+                                    }
+                                }
+                            ],
+                            "func": [
+                                "compare_docx_images",
+                                "compare_answer",
+                                "check_image_size",
+                                "evaluate_document_against_spec"
+                            ],
+                            "result": [
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/health_analytics_report_100.docx",
+                                    "dest": "result_document.docx"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "answer": "Exists"
+                                    }
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/clinical_processed_6580.png",
+                                    "dest": "result_image.png"
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/health_analytics_report_100.docx",
+                                    "dest": "eval_document.docx"
+                                }
+                            ],
+                            "expected": [
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/expected_document.docx",
+                                    "dest": "expected_document.docx"
+                                },
+                                {
+                                    "type": "vm_command_line",
+                                    "command": "test -f /home/user/Desktop/clinical_processed_6580.png && echo 'Exists' || echo 'Missing'"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "width": 1024,
+                                        "height": 768
+                                    }
+                                },
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/health_analytics_report_100_spec.json",
+                                    "dest": "expected_spec.json"
+                                }
+                            ],
+                            "options": [
+                                {
+                                    "debug": true
+                                },
+                                {},
+                                {},
+                                {
+                                    "debug": true,
+                                    "threshold": 0.75
+                                }
+                            ],
+                            "conj": "and"
+                        }
+                    },
+                    "category": "integrated_workflow",
+                    "task_type": "basic_info_gathering"
+                }
+            ],
+            "environment_type": "osworld",
+            "templates": {
+                "roles": [],
+                "graph": {}
+            },
+            "config": {
+                "headless": true,
+                "observation_type": "screenshot_a11y_tree",
+                "action_space": "pyautogui",
+                "screen_width": 1920,
+                "screen_height": 1080,
+                "path_to_vm": "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx",
+                "sleep_after_execution": 0,
+                "max_retries": 2,
+                "max_rounds": 15,
+                "max_transitions_per_round": 20,
+                "player_consecutive_violation_limit": 3,
+                "player_total_violation_limit": 5,
+                "sliding_window_size": 3,
+                "topology_type": "single"
+            }
+        },
+        {
+            "name": "multi_agent-star-integrated_workflow-screenshot_a11y_tree-l1",
+            "game_instances": [
+                {
+                    "game_id": "feb291a9-154c-4e5a-a389-7fab13106e9f",
+                    "task_config": {
+                        "id": "feb291a9-154c-4e5a-a389-7fab13106e9f",
+                        "snapshot": "vscode",
+                        "instruction": "Complete a investigative story for Tech Pulse Media that combines research findings with processed imagery. Extract the key finding text from the research page (accessible in Chromium or via http://localhost:8080/feature_sector_analysis_7574.html). Process 'feature_visual_7574.png' to 1920x1080 pixels for landing_page_image. Create a interview transcript containing both the extracted key finding text and the processed image. Save the document as 'sector_analysis_article_275.docx' and the processed image as 'feature_processed_825.png', both on the Desktop.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/feature_sector_analysis_7574.html",
+                                            "path": "/tmp/feature_sector_analysis_7574.html"
+                                        },
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/feature_visual_7574.png",
+                                            "path": "/home/user/Desktop/feature_visual_7574.png"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python3",
+                                        "-c",
+                                        "import subprocess, os; log=open('/tmp/http_server.log','a'); p=subprocess.Popen(['python3','-m','http.server','8080','--directory','/tmp'], stdout=log, stderr=log, preexec_fn=os.setsid); open('/tmp/http_server.pid','w').write(str(p.pid)); print('Server started on port 8080')"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "google-chrome",
+                                        "--new-window",
+                                        "http://localhost:8080/feature_sector_analysis_7574.html"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "libreoffice",
+                                        "--writer"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "gimp",
+                                        "/home/user/Desktop/feature_visual_7574.png"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 3
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "/bin/bash",
+                                        "-lc",
+                                        "wmctrl -k on"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 10
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "activate_window",
+                                    "parameters": {
+                                        "window_name": "LibreOffice Writer",
+                                        "strict": false
+                                    }
+                                },
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python3",
+                                            "-c",
+                                            "import pyautogui; pyautogui.hotkey('ctrl', 's')"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 2
+                                    }
+                                }
+                            ],
+                            "func": [
+                                "compare_docx_images",
+                                "compare_answer",
+                                "check_image_size",
+                                "evaluate_document_against_spec"
+                            ],
+                            "result": [
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/sector_analysis_article_275.docx",
+                                    "dest": "result_document.docx"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "answer": "Exists"
+                                    }
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/feature_processed_7574.png",
+                                    "dest": "result_image.png"
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/sector_analysis_article_275.docx",
+                                    "dest": "eval_document.docx"
+                                }
+                            ],
+                            "expected": [
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/expected_document.docx",
+                                    "dest": "expected_document.docx"
+                                },
+                                {
+                                    "type": "vm_command_line",
+                                    "command": "test -f /home/user/Desktop/feature_processed_7574.png && echo 'Exists' || echo 'Missing'"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "width": 1920,
+                                        "height": 1080
+                                    }
+                                },
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/sector_analysis_article_275_spec.json",
+                                    "dest": "expected_spec.json"
+                                }
+                            ],
+                            "options": [
+                                {
+                                    "debug": true
+                                },
+                                {},
+                                {},
+                                {
+                                    "debug": true,
+                                    "threshold": 0.75
+                                }
+                            ],
+                            "conj": "and"
+                        }
+                    },
+                    "category": "integrated_workflow",
+                    "task_type": "basic_info_gathering"
+                },
+                {
+                    "game_id": "45c0699c-140a-436c-af30-016325a821bc",
+                    "task_config": {
+                        "id": "45c0699c-140a-436c-af30-016325a821bc",
+                        "snapshot": "vscode",
+                        "instruction": "Complete a clinical study for Medical Technology Research that combines research findings with processed imagery. Extract the key finding text from the research page (accessible in Chromium or via http://localhost:8080/clinical_health_analytics_6580.html). Process 'clinical_visual_6580.png' to 1024x768 pixels for document_illustration. Create a medical summary containing both the extracted key finding text and the processed image. Save the document as 'health_analytics_report_100.docx' and the processed image as 'clinical_processed_291.png', both on the Desktop.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/clinical_health_analytics_6580.html",
+                                            "path": "/tmp/clinical_health_analytics_6580.html"
+                                        },
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/clinical_visual_6580.png",
+                                            "path": "/home/user/Desktop/clinical_visual_6580.png"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python3",
+                                        "-c",
+                                        "import subprocess, os; log=open('/tmp/http_server.log','a'); p=subprocess.Popen(['python3','-m','http.server','8080','--directory','/tmp'], stdout=log, stderr=log, preexec_fn=os.setsid); open('/tmp/http_server.pid','w').write(str(p.pid)); print('Server started on port 8080')"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "google-chrome",
+                                        "--new-window",
+                                        "http://localhost:8080/clinical_health_analytics_6580.html"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "libreoffice",
+                                        "--writer"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "gimp",
+                                        "/home/user/Desktop/clinical_visual_6580.png"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 3
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "/bin/bash",
+                                        "-lc",
+                                        "wmctrl -k on"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 10
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "activate_window",
+                                    "parameters": {
+                                        "window_name": "LibreOffice Writer",
+                                        "strict": false
+                                    }
+                                },
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python3",
+                                            "-c",
+                                            "import pyautogui; pyautogui.hotkey('ctrl', 's')"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 2
+                                    }
+                                }
+                            ],
+                            "func": [
+                                "compare_docx_images",
+                                "compare_answer",
+                                "check_image_size",
+                                "evaluate_document_against_spec"
+                            ],
+                            "result": [
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/health_analytics_report_100.docx",
+                                    "dest": "result_document.docx"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "answer": "Exists"
+                                    }
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/clinical_processed_6580.png",
+                                    "dest": "result_image.png"
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/health_analytics_report_100.docx",
+                                    "dest": "eval_document.docx"
+                                }
+                            ],
+                            "expected": [
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/expected_document.docx",
+                                    "dest": "expected_document.docx"
+                                },
+                                {
+                                    "type": "vm_command_line",
+                                    "command": "test -f /home/user/Desktop/clinical_processed_6580.png && echo 'Exists' || echo 'Missing'"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "width": 1024,
+                                        "height": 768
+                                    }
+                                },
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/health_analytics_report_100_spec.json",
+                                    "dest": "expected_spec.json"
+                                }
+                            ],
+                            "options": [
+                                {
+                                    "debug": true
+                                },
+                                {},
+                                {},
+                                {
+                                    "debug": true,
+                                    "threshold": 0.75
+                                }
+                            ],
+                            "conj": "and"
+                        }
+                    },
+                    "category": "integrated_workflow",
+                    "task_type": "basic_info_gathering"
+                }
+            ],
+            "environment_type": "osworld",
+            "templates": {
+                "roles": [],
+                "graph": {}
+            },
+            "config": {
+                "headless": true,
+                "observation_type": "screenshot_a11y_tree",
+                "action_space": "pyautogui",
+                "screen_width": 1920,
+                "screen_height": 1080,
+                "path_to_vm": "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx",
+                "sleep_after_execution": 0,
+                "max_retries": 2,
+                "max_rounds": 15,
+                "max_transitions_per_round": 20,
+                "player_consecutive_violation_limit": 3,
+                "player_total_violation_limit": 5,
+                "sliding_window_size": null,
+                "topology_type": "star"
+            }
+        },
+        {
+            "name": "multi_agent-mesh-integrated_workflow-screenshot_a11y_tree-l1",
+            "game_instances": [
+                {
+                    "game_id": "feb291a9-154c-4e5a-a389-7fab13106e9f",
+                    "task_config": {
+                        "id": "feb291a9-154c-4e5a-a389-7fab13106e9f",
+                        "snapshot": "vscode",
+                        "instruction": "Complete a investigative story for Tech Pulse Media that combines research findings with processed imagery. Extract the key finding text from the research page (accessible in Chromium or via http://localhost:8080/feature_sector_analysis_7574.html). Process 'feature_visual_7574.png' to 1920x1080 pixels for landing_page_image. Create a interview transcript containing both the extracted key finding text and the processed image. Save the document as 'sector_analysis_article_275.docx' and the processed image as 'feature_processed_825.png', both on the Desktop.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/feature_sector_analysis_7574.html",
+                                            "path": "/tmp/feature_sector_analysis_7574.html"
+                                        },
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/feature_visual_7574.png",
+                                            "path": "/home/user/Desktop/feature_visual_7574.png"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python3",
+                                        "-c",
+                                        "import subprocess, os; log=open('/tmp/http_server.log','a'); p=subprocess.Popen(['python3','-m','http.server','8080','--directory','/tmp'], stdout=log, stderr=log, preexec_fn=os.setsid); open('/tmp/http_server.pid','w').write(str(p.pid)); print('Server started on port 8080')"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "google-chrome",
+                                        "--new-window",
+                                        "http://localhost:8080/feature_sector_analysis_7574.html"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "libreoffice",
+                                        "--writer"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "gimp",
+                                        "/home/user/Desktop/feature_visual_7574.png"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 3
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "/bin/bash",
+                                        "-lc",
+                                        "wmctrl -k on"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 10
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "activate_window",
+                                    "parameters": {
+                                        "window_name": "LibreOffice Writer",
+                                        "strict": false
+                                    }
+                                },
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python3",
+                                            "-c",
+                                            "import pyautogui; pyautogui.hotkey('ctrl', 's')"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 2
+                                    }
+                                }
+                            ],
+                            "func": [
+                                "compare_docx_images",
+                                "compare_answer",
+                                "check_image_size",
+                                "evaluate_document_against_spec"
+                            ],
+                            "result": [
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/sector_analysis_article_275.docx",
+                                    "dest": "result_document.docx"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "answer": "Exists"
+                                    }
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/feature_processed_7574.png",
+                                    "dest": "result_image.png"
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/sector_analysis_article_275.docx",
+                                    "dest": "eval_document.docx"
+                                }
+                            ],
+                            "expected": [
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/expected_document.docx",
+                                    "dest": "expected_document.docx"
+                                },
+                                {
+                                    "type": "vm_command_line",
+                                    "command": "test -f /home/user/Desktop/feature_processed_7574.png && echo 'Exists' || echo 'Missing'"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "width": 1920,
+                                        "height": 1080
+                                    }
+                                },
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/sector_analysis_article_275_spec.json",
+                                    "dest": "expected_spec.json"
+                                }
+                            ],
+                            "options": [
+                                {
+                                    "debug": true
+                                },
+                                {},
+                                {},
+                                {
+                                    "debug": true,
+                                    "threshold": 0.75
+                                }
+                            ],
+                            "conj": "and"
+                        }
+                    },
+                    "category": "integrated_workflow",
+                    "task_type": "basic_info_gathering"
+                },
+                {
+                    "game_id": "45c0699c-140a-436c-af30-016325a821bc",
+                    "task_config": {
+                        "id": "45c0699c-140a-436c-af30-016325a821bc",
+                        "snapshot": "vscode",
+                        "instruction": "Complete a clinical study for Medical Technology Research that combines research findings with processed imagery. Extract the key finding text from the research page (accessible in Chromium or via http://localhost:8080/clinical_health_analytics_6580.html). Process 'clinical_visual_6580.png' to 1024x768 pixels for document_illustration. Create a medical summary containing both the extracted key finding text and the processed image. Save the document as 'health_analytics_report_100.docx' and the processed image as 'clinical_processed_291.png', both on the Desktop.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/clinical_health_analytics_6580.html",
+                                            "path": "/tmp/clinical_health_analytics_6580.html"
+                                        },
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/clinical_visual_6580.png",
+                                            "path": "/home/user/Desktop/clinical_visual_6580.png"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python3",
+                                        "-c",
+                                        "import subprocess, os; log=open('/tmp/http_server.log','a'); p=subprocess.Popen(['python3','-m','http.server','8080','--directory','/tmp'], stdout=log, stderr=log, preexec_fn=os.setsid); open('/tmp/http_server.pid','w').write(str(p.pid)); print('Server started on port 8080')"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "google-chrome",
+                                        "--new-window",
+                                        "http://localhost:8080/clinical_health_analytics_6580.html"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "libreoffice",
+                                        "--writer"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "gimp",
+                                        "/home/user/Desktop/clinical_visual_6580.png"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 3
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "/bin/bash",
+                                        "-lc",
+                                        "wmctrl -k on"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 10
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "activate_window",
+                                    "parameters": {
+                                        "window_name": "LibreOffice Writer",
+                                        "strict": false
+                                    }
+                                },
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python3",
+                                            "-c",
+                                            "import pyautogui; pyautogui.hotkey('ctrl', 's')"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 2
+                                    }
+                                }
+                            ],
+                            "func": [
+                                "compare_docx_images",
+                                "compare_answer",
+                                "check_image_size",
+                                "evaluate_document_against_spec"
+                            ],
+                            "result": [
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/health_analytics_report_100.docx",
+                                    "dest": "result_document.docx"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "answer": "Exists"
+                                    }
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/clinical_processed_6580.png",
+                                    "dest": "result_image.png"
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/health_analytics_report_100.docx",
+                                    "dest": "eval_document.docx"
+                                }
+                            ],
+                            "expected": [
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/expected_document.docx",
+                                    "dest": "expected_document.docx"
+                                },
+                                {
+                                    "type": "vm_command_line",
+                                    "command": "test -f /home/user/Desktop/clinical_processed_6580.png && echo 'Exists' || echo 'Missing'"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "width": 1024,
+                                        "height": 768
+                                    }
+                                },
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/health_analytics_report_100_spec.json",
+                                    "dest": "expected_spec.json"
+                                }
+                            ],
+                            "options": [
+                                {
+                                    "debug": true
+                                },
+                                {},
+                                {},
+                                {
+                                    "debug": true,
+                                    "threshold": 0.75
+                                }
+                            ],
+                            "conj": "and"
+                        }
+                    },
+                    "category": "integrated_workflow",
+                    "task_type": "basic_info_gathering"
+                }
+            ],
+            "environment_type": "osworld",
+            "templates": {
+                "roles": [],
+                "graph": {}
+            },
+            "config": {
+                "headless": true,
+                "observation_type": "screenshot_a11y_tree",
+                "action_space": "pyautogui",
+                "screen_width": 1920,
+                "screen_height": 1080,
+                "path_to_vm": "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx",
+                "sleep_after_execution": 0,
+                "max_retries": 2,
+                "max_rounds": 15,
+                "max_transitions_per_round": 20,
+                "player_consecutive_violation_limit": 3,
+                "player_total_violation_limit": 5,
+                "sliding_window_size": 3,
+                "topology_type": "mesh"
+            }
+        },
+        {
+            "name": "multi_agent-blackboard-integrated_workflow-screenshot_a11y_tree-l1",
+            "game_instances": [
+                {
+                    "game_id": "feb291a9-154c-4e5a-a389-7fab13106e9f",
+                    "task_config": {
+                        "id": "feb291a9-154c-4e5a-a389-7fab13106e9f",
+                        "snapshot": "vscode",
+                        "instruction": "Complete a investigative story for Tech Pulse Media that combines research findings with processed imagery. Extract the key finding text from the research page (accessible in Chromium or via http://localhost:8080/feature_sector_analysis_7574.html). Process 'feature_visual_7574.png' to 1920x1080 pixels for landing_page_image. Create a interview transcript containing both the extracted key finding text and the processed image. Save the document as 'sector_analysis_article_275.docx' and the processed image as 'feature_processed_825.png', both on the Desktop.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/feature_sector_analysis_7574.html",
+                                            "path": "/tmp/feature_sector_analysis_7574.html"
+                                        },
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/feature_visual_7574.png",
+                                            "path": "/home/user/Desktop/feature_visual_7574.png"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python3",
+                                        "-c",
+                                        "import subprocess, os; log=open('/tmp/http_server.log','a'); p=subprocess.Popen(['python3','-m','http.server','8080','--directory','/tmp'], stdout=log, stderr=log, preexec_fn=os.setsid); open('/tmp/http_server.pid','w').write(str(p.pid)); print('Server started on port 8080')"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "google-chrome",
+                                        "--new-window",
+                                        "http://localhost:8080/feature_sector_analysis_7574.html"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "libreoffice",
+                                        "--writer"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "gimp",
+                                        "/home/user/Desktop/feature_visual_7574.png"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 3
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "/bin/bash",
+                                        "-lc",
+                                        "wmctrl -k on"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 10
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "activate_window",
+                                    "parameters": {
+                                        "window_name": "LibreOffice Writer",
+                                        "strict": false
+                                    }
+                                },
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python3",
+                                            "-c",
+                                            "import pyautogui; pyautogui.hotkey('ctrl', 's')"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 2
+                                    }
+                                }
+                            ],
+                            "func": [
+                                "compare_docx_images",
+                                "compare_answer",
+                                "check_image_size",
+                                "evaluate_document_against_spec"
+                            ],
+                            "result": [
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/sector_analysis_article_275.docx",
+                                    "dest": "result_document.docx"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "answer": "Exists"
+                                    }
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/feature_processed_7574.png",
+                                    "dest": "result_image.png"
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/sector_analysis_article_275.docx",
+                                    "dest": "eval_document.docx"
+                                }
+                            ],
+                            "expected": [
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/expected_document.docx",
+                                    "dest": "expected_document.docx"
+                                },
+                                {
+                                    "type": "vm_command_line",
+                                    "command": "test -f /home/user/Desktop/feature_processed_7574.png && echo 'Exists' || echo 'Missing'"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "width": 1920,
+                                        "height": 1080
+                                    }
+                                },
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001952/feb291a9-154c-4e5a-a389-7fab13106e9f/sector_analysis_article_275_spec.json",
+                                    "dest": "expected_spec.json"
+                                }
+                            ],
+                            "options": [
+                                {
+                                    "debug": true
+                                },
+                                {},
+                                {},
+                                {
+                                    "debug": true,
+                                    "threshold": 0.75
+                                }
+                            ],
+                            "conj": "and"
+                        }
+                    },
+                    "category": "integrated_workflow",
+                    "task_type": "basic_info_gathering"
+                },
+                {
+                    "game_id": "45c0699c-140a-436c-af30-016325a821bc",
+                    "task_config": {
+                        "id": "45c0699c-140a-436c-af30-016325a821bc",
+                        "snapshot": "vscode",
+                        "instruction": "Complete a clinical study for Medical Technology Research that combines research findings with processed imagery. Extract the key finding text from the research page (accessible in Chromium or via http://localhost:8080/clinical_health_analytics_6580.html). Process 'clinical_visual_6580.png' to 1024x768 pixels for document_illustration. Create a medical summary containing both the extracted key finding text and the processed image. Save the document as 'health_analytics_report_100.docx' and the processed image as 'clinical_processed_291.png', both on the Desktop.",
+                        "source": "",
+                        "config": [
+                            {
+                                "type": "download",
+                                "parameters": {
+                                    "files": [
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/clinical_health_analytics_6580.html",
+                                            "path": "/tmp/clinical_health_analytics_6580.html"
+                                        },
+                                        {
+                                            "url": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/clinical_visual_6580.png",
+                                            "path": "/home/user/Desktop/clinical_visual_6580.png"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "python3",
+                                        "-c",
+                                        "import subprocess, os; log=open('/tmp/http_server.log','a'); p=subprocess.Popen(['python3','-m','http.server','8080','--directory','/tmp'], stdout=log, stderr=log, preexec_fn=os.setsid); open('/tmp/http_server.pid','w').write(str(p.pid)); print('Server started on port 8080')"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "google-chrome",
+                                        "--new-window",
+                                        "http://localhost:8080/clinical_health_analytics_6580.html"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "libreoffice",
+                                        "--writer"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 2
+                                }
+                            },
+                            {
+                                "type": "launch",
+                                "parameters": {
+                                    "command": [
+                                        "gimp",
+                                        "/home/user/Desktop/clinical_visual_6580.png"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 3
+                                }
+                            },
+                            {
+                                "type": "execute",
+                                "parameters": {
+                                    "command": [
+                                        "/bin/bash",
+                                        "-lc",
+                                        "wmctrl -k on"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "sleep",
+                                "parameters": {
+                                    "seconds": 10
+                                }
+                            }
+                        ],
+                        "trajectory": "trajectories/",
+                        "related_apps": [
+                            "vscode"
+                        ],
+                        "evaluator": {
+                            "postconfig": [
+                                {
+                                    "type": "activate_window",
+                                    "parameters": {
+                                        "window_name": "LibreOffice Writer",
+                                        "strict": false
+                                    }
+                                },
+                                {
+                                    "type": "execute",
+                                    "parameters": {
+                                        "command": [
+                                            "python3",
+                                            "-c",
+                                            "import pyautogui; pyautogui.hotkey('ctrl', 's')"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "sleep",
+                                    "parameters": {
+                                        "seconds": 2
+                                    }
+                                }
+                            ],
+                            "func": [
+                                "compare_docx_images",
+                                "compare_answer",
+                                "check_image_size",
+                                "evaluate_document_against_spec"
+                            ],
+                            "result": [
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/health_analytics_report_100.docx",
+                                    "dest": "result_document.docx"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "answer": "Exists"
+                                    }
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/clinical_processed_6580.png",
+                                    "dest": "result_image.png"
+                                },
+                                {
+                                    "type": "vm_file",
+                                    "path": "/home/user/Desktop/health_analytics_report_100.docx",
+                                    "dest": "eval_document.docx"
+                                }
+                            ],
+                            "expected": [
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/expected_document.docx",
+                                    "dest": "expected_document.docx"
+                                },
+                                {
+                                    "type": "vm_command_line",
+                                    "command": "test -f /home/user/Desktop/clinical_processed_6580.png && echo 'Exists' || echo 'Missing'"
+                                },
+                                {
+                                    "type": "rule",
+                                    "rules": {
+                                        "width": 1024,
+                                        "height": 768
+                                    }
+                                },
+                                {
+                                    "type": "cloud_file",
+                                    "path": "https://thesis-bhavsar.s3.eu-central-1.amazonaws.com/task_configs_20250908_001953/45c0699c-140a-436c-af30-016325a821bc/health_analytics_report_100_spec.json",
+                                    "dest": "expected_spec.json"
+                                }
+                            ],
+                            "options": [
+                                {
+                                    "debug": true
+                                },
+                                {},
+                                {},
+                                {
+                                    "debug": true,
+                                    "threshold": 0.75
+                                }
+                            ],
+                            "conj": "and"
+                        }
+                    },
+                    "category": "integrated_workflow",
+                    "task_type": "basic_info_gathering"
+                }
+            ],
+            "environment_type": "osworld",
+            "templates": {
+                "roles": [],
+                "graph": {}
+            },
+            "config": {
+                "headless": true,
+                "observation_type": "screenshot_a11y_tree",
+                "action_space": "pyautogui",
+                "screen_width": 1920,
+                "screen_height": 1080,
+                "path_to_vm": "/Users/nidhirbhavsar/Desktop/WORK/OSWorld/vmware_vm_data/Ubuntu0/Ubuntu0.vmx",
+                "sleep_after_execution": 0,
+                "max_retries": 2,
+                "max_rounds": 15,
                 "max_transitions_per_round": 20,
                 "player_consecutive_violation_limit": 3,
                 "player_total_violation_limit": 5,
