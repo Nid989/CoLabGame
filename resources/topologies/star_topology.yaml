@@ -67,7 +67,7 @@ default_participant_assignments:
 
 # Category-specific participant assignments
 category_participant_assignments:
-  code_ops:
+  debugging_and_refactoring:
     hub:
       count: 1
       domains: ["planner"]
@@ -78,7 +78,7 @@ category_participant_assignments:
       count: 1
       domains: ["critic"]
   
-  data_processing:
+  tabular_data_reporting:
     hub:
       count: 1
       domains: ["planner"]
@@ -89,7 +89,7 @@ category_participant_assignments:
       count: 1
       domains: ["critic"]
       
-  graphic_document:
+  image_processing:
     hub:
       count: 1
       domains: ["planner"]
@@ -100,7 +100,7 @@ category_participant_assignments:
       count: 1
       domains: ["critic"]
       
-  research_brief:
+  research_synthesis:
     hub:
       count: 1
       domains: ["planner"]
@@ -111,7 +111,7 @@ category_participant_assignments:
       count: 1
       domains: ["critic"]
 
-  integrated_workflow:
+  workflow_orchestration:
     hub:
       count: 1
       domains: ["planner"]

@@ -1,5 +1,4 @@
 import os
-import sys
 import yaml
 from datetime import datetime
 from pathlib import Path
@@ -43,10 +42,6 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
         # Set default S3 bucket name if not provided
         if not os.getenv("S3_BUCKET_NAME"):
             os.environ["S3_BUCKET_NAME"] = "thesis-bhavsar"
-
-        task_generator_path = os.getenv("TASK_GENERATOR_PROJECT_PATH")
-        if task_generator_path and task_generator_path not in sys.path:
-            sys.path.append(task_generator_path)
 
         with open("unified_config.yaml", "r") as f:
             self.unified_config = yaml.safe_load(f)
@@ -248,7 +243,7 @@ class ComputerGameInstanceGenerator(GameInstanceGenerator):
         Generate tasks using the TaskSamplingInterface from a given configuration.
         The 'run_name' is used to create a unique output directory.
         """
-        from core.task_sampling import TaskSamplingInterface
+        from src.tasks.core.task_sampling import TaskSamplingInterface
 
         try:
             # Deep copy config to avoid modifying the original dict during the run

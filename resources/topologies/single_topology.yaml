@@ -27,22 +27,22 @@ default_participant_assignments:
 
 # Category-specific participant assignments
 category_participant_assignments:
-  code_ops:
+  debugging_and_refactoring:
     participant_w_execute:
       count: 1
       domains: ["universal_specialist"]
   
-  data_processing:
+  tabular_data_reporting:
     participant_w_execute:
       count: 1
       domains: ["universal_specialist"]
       
-  graphic_document:
+  image_processing:
     participant_w_execute:
       count: 1
       domains: ["universal_specialist"]
       
-  research_brief:
+  research_synthesis:
     participant_w_execute:
       count: 1
       domains: ["universal_specialist"]

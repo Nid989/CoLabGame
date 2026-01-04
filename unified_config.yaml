@@ -5,9 +5,9 @@
 task_generation:
   experiments:
     shared:
-      shared-code_ops-level1-2x:
+      shared-debugging_and_refactoring-level1-2x:
         sampling:
-          - category: "code_ops"
+          - category: "debugging_and_refactoring"
             levels: [1]
             task_types: ["basic_python_syntax_fix"]
             instances_per_task: 2
@@ -15,11 +15,11 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared-code_ops-level1-2x"  
+          session_name: "shared-debugging_and_refactoring-level1-2x"  
 
-      shared-data_processing-level1-2x:
+      shared-tabular_data_reporting-level1-2x:
         sampling:
-          - category: "data_processing"
+          - category: "tabular_data_reporting"
             levels: [1]
             task_types: ["simple_data_transfer"]
             instances_per_task: 2
@@ -27,11 +27,11 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared-data_processing-level1-2x"  
+          session_name: "shared-tabular_data_reporting-level1-2x"  
 
-      shared-graphic_document-level1-2x:
+      shared-image_processing-level1-2x:
         sampling:
-          - category: "graphic_document"
+          - category: "image_processing"
             levels: [1]
             task_types: ["basic_image_insertion"]
             instances_per_task: 2
@@ -39,11 +39,11 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared-graphic_document-level1-2x"  
+          session_name: "shared-image_processing-level1-2x"  
 
-      shared-research_brief-level1-2x:
+      shared-research_synthesis-level1-2x:
         sampling:
-          - category: "research_brief"
+          - category: "research_synthesis"
             levels: [1]
             task_types: ["basic_web_extraction"]
             instances_per_task: 2
@@ -51,11 +51,11 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared-research_brief-level1-2x"  
+          session_name: "shared-research_synthesis-level1-2x"  
       
-      shared-integrated_workflow-level1-2x:
+      shared-workflow_orchestration-level1-2x:
         sampling:
-          - category: "integrated_workflow"
+          - category: "workflow_orchestration"
             levels: [1]
             task_types: ["basic_info_gathering"]
             instances_per_task: 2
@@ -63,27 +63,27 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared-integrated_workflow-level1-2x"  
+          session_name: "shared-workflow_orchestration-level1-2x"  
 
       # collective level1 2x
       shared-level1-2x:
         sampling:
-          - category: "code_ops"
+          - category: "debugging_and_refactoring"
             levels: [1]
             task_types: ["basic_python_syntax_fix"]
             instances_per_task: 2
 
-          - category: "data_processing"
+          - category: "tabular_data_reporting"
             levels: [1]
             task_types: ["simple_data_transfer"]
             instances_per_task: 2
 
-          - category: "graphic_document"
+          - category: "image_processing"
             levels: [1]
             task_types: ["basic_image_insertion"]
             instances_per_task: 2
 
-          - category: "research_brief"
+          - category: "research_synthesis"
             levels: [1]
             task_types: ["basic_web_extraction"]
             instances_per_task: 2
@@ -93,9 +93,9 @@ task_generation:
           output_dir: "outputs"
           session_name: "shared-level1-2x"  
       
-      shared-code_ops-level2-2x:
+      shared-debugging_and_refactoring-level2-2x:
         sampling:
-          - category: "code_ops"
+          - category: "debugging_and_refactoring"
             levels: [2]
             task_types: ["simple_logic_completion"]
             instances_per_task: 2
@@ -103,11 +103,11 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared-code_ops-level2-2x"  
+          session_name: "shared-debugging_and_refactoring-level2-2x"  
           
-      shared-data_processing-level2-2x:
+      shared-tabular_data_reporting-level2-2x:
         sampling:
-          - category: "data_processing"
+          - category: "tabular_data_reporting"
             levels: [2]
             task_types: ["basic_data_aggregation"]
             instances_per_task: 2
@@ -115,11 +115,11 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared-data_processing-level2-2x"  
+          session_name: "shared-tabular_data_reporting-level2-2x"  
           
-      shared-graphic_document-level2-2x:
+      shared-image_processing-level2-2x:
         sampling:
-          - category: "graphic_document"
+          - category: "image_processing"
             levels: [2]
             task_types: ["image_resize_insertion"]
             instances_per_task: 2
@@ -127,11 +127,11 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared-graphic_document-level2-2x"  
+          session_name: "shared-image_processing-level2-2x"  
           
-      shared-research_brief-level2-2x:
+      shared-research_synthesis-level2-2x:
         sampling:
-          - category: "research_brief"
+          - category: "research_synthesis"
             levels: [2]
             task_types: ["multi_point_summary"]
             instances_per_task: 2 
@@ -139,27 +139,27 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared-research_brief-level2-2x"  
+          session_name: "shared-research_synthesis-level2-2x"  
 
       # collective level2 2x
       shared-level2-2x:
         sampling:
-          - category: "code_ops"
+          - category: "debugging_and_refactoring"
             levels: [2]
             task_types: ["simple_logic_completion"]
             instances_per_task: 2
 
-          - category: "data_processing"
+          - category: "tabular_data_reporting"
             levels: [2]
             task_types: ["basic_data_aggregation"]
             instances_per_task: 2
 
-          - category: "graphic_document"
+          - category: "image_processing"
             levels: [2]
             task_types: ["image_resize_insertion"]
             instances_per_task: 2
 
-          - category: "research_brief"
+          - category: "research_synthesis"
             levels: [2]
             task_types: ["multi_point_summary"]
             instances_per_task: 2
@@ -169,9 +169,9 @@ task_generation:
           output_dir: "outputs"
           session_name: "shared-level2-2x"
 
-      shared-code_ops-level3-2x:
+      shared-debugging_and_refactoring-level3-2x:
         sampling:
-          - category: "code_ops"
+          - category: "debugging_and_refactoring"
             levels: [3]
             task_types: ["multi_file_config_update"]
             instances_per_task: 2
@@ -179,11 +179,11 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared-code_ops-level3-2x"  
+          session_name: "shared-debugging_and_refactoring-level3-2x"  
           
-      shared-data_processing-level3-2x:
+      shared-tabular_data_reporting-level3-2x:
         sampling:
-          - category: "data_processing"
+          - category: "tabular_data_reporting"
             levels: [3]
             task_types: ["simple_calculation_output"]
             instances_per_task: 2
@@ -191,11 +191,11 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared-data_processing-level3-2x"  
+          session_name: "shared-tabular_data_reporting-level3-2x"  
           
-      shared-graphic_document-level3-2x:
+      shared-image_processing-level3-2x:
         sampling:
-          - category: "graphic_document"
+          - category: "image_processing"
             levels: [3]
             task_types: ["image_modify_caption"]
             instances_per_task: 2
@@ -203,11 +203,11 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared-graphic_document-level3-2x"  
+          session_name: "shared-image_processing-level3-2x"  
           
-      shared-research_brief-level3-2x:
+      shared-research_synthesis-level3-2x:
         sampling:
-          - category: "research_brief"
+          - category: "research_synthesis"
             levels: [3]
             task_types: ["file_download_integration"]
             instances_per_task: 2
@@ -215,27 +215,27 @@ task_generation:
         output:
           upload_s3: true
           output_dir: "outputs"
-          session_name: "shared-research_brief-level3-2x"  
+          session_name: "shared-research_synthesis-level3-2x"  
 
       # collective level3 2x
       shared-level3-4x:
         sampling:
-          - category: "code_ops"
+          - category: "debugging_and_refactoring"
             levels: [3]
             task_types: ["multi_file_config_update"]
             instances_per_task: 2
 
-          - category: "data_processing"
+          - category: "tabular_data_reporting"
             levels: [3]
             task_types: ["simple_calculation_output"]
             instances_per_task: 2
 
-          - category: "graphic_document"
+          - category: "image_processing"
             levels: [3]
             task_types: ["image_modify_caption"]
             instances_per_task: 2
 
-          - category: "research_brief"
+          - category: "research_synthesis"
             levels: [3]
             task_types: ["file_download_integration"]
             instances_per_task: 2
@@ -293,250 +293,250 @@ task_generation:
     individual:
       # Single Agent Experiments
       # Level 1
-      # category: "code_ops"
-      single_agent-code_ops-a11y_tree-l1:
-        use_shared: "shared-code_ops-level1-2x"
+      # category: "debugging_and_refactoring"
+      single_agent-debugging_and_refactoring-a11y_tree-l1:
+        use_shared: "shared-debugging_and_refactoring-level1-2x"
 
-      single_agent-code_ops-screenshot-l1:
-        use_shared: "shared-code_ops-level1-2x"
+      single_agent-debugging_and_refactoring-screenshot-l1:
+        use_shared: "shared-debugging_and_refactoring-level1-2x"
 
-      single_agent-code_ops-screenshot_a11y_tree-l1:
-        use_shared: "shared-code_ops-level1-2x"
+      single_agent-debugging_and_refactoring-screenshot_a11y_tree-l1:
+        use_shared: "shared-debugging_and_refactoring-level1-2x"
       
-      # category: "data_processing"
-      single_agent-data_processing-a11y_tree-l1:
-        use_shared: "shared-data_processing-level1-2x"
+      # category: "tabular_data_reporting"
+      single_agent-tabular_data_reporting-a11y_tree-l1:
+        use_shared: "shared-tabular_data_reporting-level1-2x"
 
-      single_agent-data_processing-screenshot-l1:
-        use_shared: "shared-data_processing-level1-2x"
+      single_agent-tabular_data_reporting-screenshot-l1:
+        use_shared: "shared-tabular_data_reporting-level1-2x"
 
-      single_agent-data_processing-screenshot_a11y_tree-l1:
-        use_shared: "shared-data_processing-level1-2x"
+      single_agent-tabular_data_reporting-screenshot_a11y_tree-l1:
+        use_shared: "shared-tabular_data_reporting-level1-2x"
 
-      # category: "graphic_document"
-      single_agent-graphic_document-a11y_tree-l1:
-        use_shared: "shared-graphic_document-level1-2x"
+      # category: "image_processing"
+      single_agent-image_processing-a11y_tree-l1:
+        use_shared: "shared-image_processing-level1-2x"
 
-      single_agent-graphic_document-screenshot-l1:
-        use_shared: "shared-graphic_document-level1-2x"
+      single_agent-image_processing-screenshot-l1:
+        use_shared: "shared-image_processing-level1-2x"
 
-      single_agent-graphic_document-screenshot_a11y_tree-l1:
-        use_shared: "shared-graphic_document-level1-2x"
+      single_agent-image_processing-screenshot_a11y_tree-l1:
+        use_shared: "shared-image_processing-level1-2x"
 
-      # category: "research_brief"
-      single_agent-research_brief-a11y_tree-l1:
-        use_shared: "shared-research_brief-level1-2x"
+      # category: "research_synthesis"
+      single_agent-research_synthesis-a11y_tree-l1:
+        use_shared: "shared-research_synthesis-level1-2x"
 
-      single_agent-research_brief-screenshot-l1:
-        use_shared: "shared-research_brief-level1-2x"
+      single_agent-research_synthesis-screenshot-l1:
+        use_shared: "shared-research_synthesis-level1-2x"
 
-      single_agent-research_brief-screenshot_a11y_tree-l1:
-        use_shared: "shared-research_brief-level1-2x"
+      single_agent-research_synthesis-screenshot_a11y_tree-l1:
+        use_shared: "shared-research_synthesis-level1-2x"
 
       # Level 2
-      # category: "code_ops"
-      single_agent-code_ops-screenshot_a11y_tree-l2:
-        use_shared: "shared-code_ops-level2-2x"
+      # category: "debugging_and_refactoring"
+      single_agent-debugging_and_refactoring-screenshot_a11y_tree-l2:
+        use_shared: "shared-debugging_and_refactoring-level2-2x"
 
-      # category: "data_processing"
-      single_agent-data_processing-screenshot_a11y_tree-l2:
-        use_shared: "shared-data_processing-level2-2x"
+      # category: "tabular_data_reporting"
+      single_agent-tabular_data_reporting-screenshot_a11y_tree-l2:
+        use_shared: "shared-tabular_data_reporting-level2-2x"
 
-      # category: "graphic_document"
-      single_agent-graphic_document-screenshot_a11y_tree-l2:
-        use_shared: "shared-graphic_document-level2-2x"
+      # category: "image_processing"
+      single_agent-image_processing-screenshot_a11y_tree-l2:
+        use_shared: "shared-image_processing-level2-2x"
 
-      # category: "research_brief"
-      single_agent-research_brief-screenshot_a11y_tree-l2:
-        use_shared: "shared-research_brief-level2-2x"
+      # category: "research_synthesis"
+      single_agent-research_synthesis-screenshot_a11y_tree-l2:
+        use_shared: "shared-research_synthesis-level2-2x"
       
       # Level 3
-      # category: "code_ops"
-      single_agent-code_ops-screenshot_a11y_tree-l3:
-        use_shared: "shared-code_ops-level3-2x"
+      # category: "debugging_and_refactoring"
+      single_agent-debugging_and_refactoring-screenshot_a11y_tree-l3:
+        use_shared: "shared-debugging_and_refactoring-level3-2x"
 
-      # category: "data_processing"
-      single_agent-data_processing-screenshot_a11y_tree-l3:
-        use_shared: "shared-data_processing-level3-2x"
+      # category: "tabular_data_reporting"
+      single_agent-tabular_data_reporting-screenshot_a11y_tree-l3:
+        use_shared: "shared-tabular_data_reporting-level3-2x"
 
-      # category: "graphic_document"
-      single_agent-graphic_document-screenshot_a11y_tree-l3:
-        use_shared: "shared-graphic_document-level3-2x"
+      # category: "image_processing"
+      single_agent-image_processing-screenshot_a11y_tree-l3:
+        use_shared: "shared-image_processing-level3-2x"
 
-      # category: "research_brief"
-      single_agent-research_brief-screenshot_a11y_tree-l3:
-        use_shared: "shared-research_brief-level3-2x"
+      # category: "research_synthesis"
+      single_agent-research_synthesis-screenshot_a11y_tree-l3:
+        use_shared: "shared-research_synthesis-level3-2x"
 
       # Multi-Agent Experiments
       # STAR Topology
       # Level 1
-      # category: "code_ops"
-      multi_agent-star-code_ops-screenshot_a11y_tree-l1:
-        use_shared: "shared-code_ops-level1-2x"
+      # category: "debugging_and_refactoring"
+      multi_agent-star-debugging_and_refactoring-screenshot_a11y_tree-l1:
+        use_shared: "shared-debugging_and_refactoring-level1-2x"
 
-      # category: "data_processing"
-      multi_agent-star-data_processing-screenshot_a11y_tree-l1:
-        use_shared: "shared-data_processing-level1-2x"
+      # category: "tabular_data_reporting"
+      multi_agent-star-tabular_data_reporting-screenshot_a11y_tree-l1:
+        use_shared: "shared-tabular_data_reporting-level1-2x"
 
-      # category: "graphic_document"
-      multi_agent-star-graphic_document-screenshot_a11y_tree-l1:
-        use_shared: "shared-graphic_document-level1-2x"
+      # category: "image_processing"
+      multi_agent-star-image_processing-screenshot_a11y_tree-l1:
+        use_shared: "shared-image_processing-level1-2x"
 
-      # category: "research_brief"
-      multi_agent-star-research_brief-screenshot_a11y_tree-l1:
-        use_shared: "shared-research_brief-level1-2x"
+      # category: "research_synthesis"
+      multi_agent-star-research_synthesis-screenshot_a11y_tree-l1:
+        use_shared: "shared-research_synthesis-level1-2x"
 
       # Level 2
-      # category: "code_ops"
-      multi_agent-star-code_ops-screenshot_a11y_tree-l2:
-        use_shared: "shared-code_ops-level2-2x"
+      # category: "debugging_and_refactoring"
+      multi_agent-star-debugging_and_refactoring-screenshot_a11y_tree-l2:
+        use_shared: "shared-debugging_and_refactoring-level2-2x"
 
-      # category: "data_processing"
-      multi_agent-star-data_processing-screenshot_a11y_tree-l2:
-        use_shared: "shared-data_processing-level2-2x"
+      # category: "tabular_data_reporting"
+      multi_agent-star-tabular_data_reporting-screenshot_a11y_tree-l2:
+        use_shared: "shared-tabular_data_reporting-level2-2x"
 
-      # category: "graphic_document"
-      multi_agent-star-graphic_document-screenshot_a11y_tree-l2:
-        use_shared: "shared-graphic_document-level2-2x"
+      # category: "image_processing"
+      multi_agent-star-image_processing-screenshot_a11y_tree-l2:
+        use_shared: "shared-image_processing-level2-2x"
 
-      # category: "research_brief"
-      multi_agent-star-research_brief-screenshot_a11y_tree-l2:
-        use_shared: "shared-research_brief-level2-2x"
+      # category: "research_synthesis"
+      multi_agent-star-research_synthesis-screenshot_a11y_tree-l2:
+        use_shared: "shared-research_synthesis-level2-2x"
 
       # Level 3
-      # category: "code_ops"
-      multi_agent-star-code_ops-screenshot_a11y_tree-l3:
-        use_shared: "shared-code_ops-level3-2x"
+      # category: "debugging_and_refactoring"
+      multi_agent-star-debugging_and_refactoring-screenshot_a11y_tree-l3:
+        use_shared: "shared-debugging_and_refactoring-level3-2x"
 
-      # category: "data_processing"
-      multi_agent-star-data_processing-screenshot_a11y_tree-l3:
-        use_shared: "shared-data_processing-level3-2x"
+      # category: "tabular_data_reporting"
+      multi_agent-star-tabular_data_reporting-screenshot_a11y_tree-l3:
+        use_shared: "shared-tabular_data_reporting-level3-2x"
 
-      # category: "graphic_document"
-      multi_agent-star-graphic_document-screenshot_a11y_tree-l3:
-        use_shared: "shared-graphic_document-level3-2x"
+      # category: "image_processing"
+      multi_agent-star-image_processing-screenshot_a11y_tree-l3:
+        use_shared: "shared-image_processing-level3-2x"
 
-      # category: "research_brief"
-      multi_agent-star-research_brief-screenshot_a11y_tree-l3:
-        use_shared: "shared-research_brief-level3-2x"
+      # category: "research_synthesis"
+      multi_agent-star-research_synthesis-screenshot_a11y_tree-l3:
+        use_shared: "shared-research_synthesis-level3-2x"
 
       # BLACKBOARD Topology
       # Level 1
-      # category: "code_ops"
-      multi_agent-blackboard-code_ops-screenshot_a11y_tree-l1:
-        use_shared: "shared-code_ops-level1-2x"
+      # category: "debugging_and_refactoring"
+      multi_agent-blackboard-debugging_and_refactoring-screenshot_a11y_tree-l1:
+        use_shared: "shared-debugging_and_refactoring-level1-2x"
 
-      # category: "data_processing"
-      multi_agent-blackboard-data_processing-screenshot_a11y_tree-l1:
-        use_shared: "shared-data_processing-level1-2x"
+      # category: "tabular_data_reporting"
+      multi_agent-blackboard-tabular_data_reporting-screenshot_a11y_tree-l1:
+        use_shared: "shared-tabular_data_reporting-level1-2x"
 
-      # category: "graphic_document"
-      multi_agent-blackboard-graphic_document-screenshot_a11y_tree-l1:
-        use_shared: "shared-graphic_document-level1-2x"
+      # category: "image_processing"
+      multi_agent-blackboard-image_processing-screenshot_a11y_tree-l1:
+        use_shared: "shared-image_processing-level1-2x"
 
-      # category: "research_brief"
-      multi_agent-blackboard-research_brief-screenshot_a11y_tree-l1:
-        use_shared: "shared-research_brief-level1-2x"
+      # category: "research_synthesis"
+      multi_agent-blackboard-research_synthesis-screenshot_a11y_tree-l1:
+        use_shared: "shared-research_synthesis-level1-2x"
 
       # Level 2
-      # category: "code_ops"
-      multi_agent-blackboard-code_ops-screenshot_a11y_tree-l2:
-        use_shared: "shared-code_ops-level2-2x"
+      # category: "debugging_and_refactoring"
+      multi_agent-blackboard-debugging_and_refactoring-screenshot_a11y_tree-l2:
+        use_shared: "shared-debugging_and_refactoring-level2-2x"
 
-      # category: "data_processing"
-      multi_agent-blackboard-data_processing-screenshot_a11y_tree-l2:
-        use_shared: "shared-data_processing-level2-2x"
+      # category: "tabular_data_reporting"
+      multi_agent-blackboard-tabular_data_reporting-screenshot_a11y_tree-l2:
+        use_shared: "shared-tabular_data_reporting-level2-2x"
 
-      # category: "graphic_document"
-      multi_agent-blackboard-graphic_document-screenshot_a11y_tree-l2:
-        use_shared: "shared-graphic_document-level2-2x"
+      # category: "image_processing"
+      multi_agent-blackboard-image_processing-screenshot_a11y_tree-l2:
+        use_shared: "shared-image_processing-level2-2x"
 
-      # category: "research_brief"
-      multi_agent-blackboard-research_brief-screenshot_a11y_tree-l2:
-        use_shared: "shared-research_brief-level2-2x"
+      # category: "research_synthesis"
+      multi_agent-blackboard-research_synthesis-screenshot_a11y_tree-l2:
+        use_shared: "shared-research_synthesis-level2-2x"
       
       # Level 3
-      # category: "code_ops"
-      multi_agent-blackboard-code_ops-screenshot_a11y_tree-l3:
-        use_shared: "shared-code_ops-level3-2x"
+      # category: "debugging_and_refactoring"
+      multi_agent-blackboard-debugging_and_refactoring-screenshot_a11y_tree-l3:
+        use_shared: "shared-debugging_and_refactoring-level3-2x"
 
-      # category: "data_processing"
-      multi_agent-blackboard-data_processing-screenshot_a11y_tree-l3:
-        use_shared: "shared-data_processing-level3-2x"  
+      # category: "tabular_data_reporting"
+      multi_agent-blackboard-tabular_data_reporting-screenshot_a11y_tree-l3:
+        use_shared: "shared-tabular_data_reporting-level3-2x"  
 
-      # category: "graphic_document"
-      multi_agent-blackboard-graphic_document-screenshot_a11y_tree-l3:
-        use_shared: "shared-graphic_document-level3-2x"
+      # category: "image_processing"
+      multi_agent-blackboard-image_processing-screenshot_a11y_tree-l3:
+        use_shared: "shared-image_processing-level3-2x"
 
-      # category: "research_brief"
-      multi_agent-blackboard-research_brief-screenshot_a11y_tree-l3:
-        use_shared: "shared-research_brief-level3-2x"
+      # category: "research_synthesis"
+      multi_agent-blackboard-research_synthesis-screenshot_a11y_tree-l3:
+        use_shared: "shared-research_synthesis-level3-2x"
 
       # MESH Topology
       # Level 1
-      # category: "code_ops"
-      multi_agent-mesh-code_ops-screenshot_a11y_tree-l1:
-        use_shared: "shared-code_ops-level1-2x"
+      # category: "debugging_and_refactoring"
+      multi_agent-mesh-debugging_and_refactoring-screenshot_a11y_tree-l1:
+        use_shared: "shared-debugging_and_refactoring-level1-2x"
 
-      # category: "data_processing"
-      multi_agent-mesh-data_processing-screenshot_a11y_tree-l1:
-        use_shared: "shared-data_processing-level1-2x"
+      # category: "tabular_data_reporting"
+      multi_agent-mesh-tabular_data_reporting-screenshot_a11y_tree-l1:
+        use_shared: "shared-tabular_data_reporting-level1-2x"
 
-      # category: "graphic_document"
-      multi_agent-mesh-graphic_document-screenshot_a11y_tree-l1:
-        use_shared: "shared-graphic_document-level1-2x"
+      # category: "image_processing"
+      multi_agent-mesh-image_processing-screenshot_a11y_tree-l1:
+        use_shared: "shared-image_processing-level1-2x"
 
-      # category: "research_brief"
-      multi_agent-mesh-research_brief-screenshot_a11y_tree-l1:
-        use_shared: "shared-research_brief-level1-2x"
+      # category: "research_synthesis"
+      multi_agent-mesh-research_synthesis-screenshot_a11y_tree-l1:
+        use_shared: "shared-research_synthesis-level1-2x"
 
       # Level 2
-      # category: "code_ops"
-      multi_agent-mesh-code_ops-screenshot_a11y_tree-l2:
-        use_shared: "shared-code_ops-level2-2x"
+      # category: "debugging_and_refactoring"
+      multi_agent-mesh-debugging_and_refactoring-screenshot_a11y_tree-l2:
+        use_shared: "shared-debugging_and_refactoring-level2-2x"
 
-      # category: "data_processing"
-      multi_agent-mesh-data_processing-screenshot_a11y_tree-l2:
-        use_shared: "shared-data_processing-level2-2x"
+      # category: "tabular_data_reporting"
+      multi_agent-mesh-tabular_data_reporting-screenshot_a11y_tree-l2:
+        use_shared: "shared-tabular_data_reporting-level2-2x"
 
-      # category: "graphic_document"
-      multi_agent-mesh-graphic_document-screenshot_a11y_tree-l2:
-        use_shared: "shared-graphic_document-level2-2x"
+      # category: "image_processing"
+      multi_agent-mesh-image_processing-screenshot_a11y_tree-l2:
+        use_shared: "shared-image_processing-level2-2x"
 
-      # category: "research_brief"
-      multi_agent-mesh-research_brief-screenshot_a11y_tree-l2:
-        use_shared: "shared-research_brief-level2-2x"
+      # category: "research_synthesis"
+      multi_agent-mesh-research_synthesis-screenshot_a11y_tree-l2:
+        use_shared: "shared-research_synthesis-level2-2x"
 
       # Level 3
-      # category: "code_ops"
-      multi_agent-mesh-code_ops-screenshot_a11y_tree-l3:
-        use_shared: "shared-code_ops-level3-2x"
+      # category: "debugging_and_refactoring"
+      multi_agent-mesh-debugging_and_refactoring-screenshot_a11y_tree-l3:
+        use_shared: "shared-debugging_and_refactoring-level3-2x"
 
-      # category: "data_processing"
-      multi_agent-mesh-data_processing-screenshot_a11y_tree-l3:
-        use_shared: "shared-data_processing-level3-2x"
+      # category: "tabular_data_reporting"
+      multi_agent-mesh-tabular_data_reporting-screenshot_a11y_tree-l3:
+        use_shared: "shared-tabular_data_reporting-level3-2x"
 
-      # category: "graphic_document"
-      multi_agent-mesh-graphic_document-screenshot_a11y_tree-l3:
-        use_shared: "shared-graphic_document-level3-2x"
+      # category: "image_processing"
+      multi_agent-mesh-image_processing-screenshot_a11y_tree-l3:
+        use_shared: "shared-image_processing-level3-2x"
 
-      # category: "research_brief"
-      multi_agent-mesh-research_brief-screenshot_a11y_tree-l3:
-        use_shared: "shared-research_brief-level3-2x"
+      # category: "research_synthesis"
+      multi_agent-mesh-research_synthesis-screenshot_a11y_tree-l3:
+        use_shared: "shared-research_synthesis-level3-2x"
 
       # ALL topologies
-      # category: "integrated_workflow"
-      single_agent-integrated_workflow-screenshot_a11y_tree-l1:
-        use_shared: "shared-integrated_workflow-level1-2x"
+      # category: "workflow_orchestration"
+      single_agent-workflow_orchestration-screenshot_a11y_tree-l1:
+        use_shared: "shared-workflow_orchestration-level1-2x"
 
-      multi_agent-star-integrated_workflow-screenshot_a11y_tree-l1:
-        use_shared: "shared-integrated_workflow-level1-2x"
+      multi_agent-star-workflow_orchestration-screenshot_a11y_tree-l1:
+        use_shared: "shared-workflow_orchestration-level1-2x"
 
-      multi_agent-mesh-integrated_workflow-screenshot_a11y_tree-l1:
-        use_shared: "shared-integrated_workflow-level1-2x"
+      multi_agent-mesh-workflow_orchestration-screenshot_a11y_tree-l1:
+        use_shared: "shared-workflow_orchestration-level1-2x"
 
-      multi_agent-blackboard-integrated_workflow-screenshot_a11y_tree-l1:
-        use_shared: "shared-integrated_workflow-level1-2x"
+      multi_agent-blackboard-workflow_orchestration-screenshot_a11y_tree-l1:
+        use_shared: "shared-workflow_orchestration-level1-2x"
 
       # OSWorld Experiments
       # chrome
@@ -596,136 +596,136 @@ experiments:
 
   # Single Agent Experiments 
   # Level 1
-  # code_ops
+  # debugging_and_refactoring
   # a11y_tree
-  single_agent-code_ops-a11y_tree-l1:
+  single_agent-debugging_and_refactoring-a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "a11y_tree"
     topology_type: "single"
   
   # screenshot
-  single_agent-code_ops-screenshot-l1:
+  single_agent-debugging_and_refactoring-screenshot-l1:
     environment_type: "osworld"
     observation_type: "screenshot"
     topology_type: "single"
 
   # screenshot_a11y_tree
-  single_agent-code_ops-screenshot_a11y_tree-l1:
+  single_agent-debugging_and_refactoring-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
   
-  # data_processing
+  # tabular_data_reporting
   # a11y_tree
-  single_agent-data_processing-a11y_tree-l1:
+  single_agent-tabular_data_reporting-a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "a11y_tree"
     topology_type: "single"
 
   # screenshot
-  single_agent-data_processing-screenshot-l1:
+  single_agent-tabular_data_reporting-screenshot-l1:
     environment_type: "osworld"
     observation_type: "screenshot"
     topology_type: "single"
 
   # screenshot_a11y_tree
-  single_agent-data_processing-screenshot_a11y_tree-l1:
+  single_agent-tabular_data_reporting-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
 
-  # graphic_document
+  # image_processing
   # a11y_tree
-  single_agent-graphic_document-a11y_tree-l1:
+  single_agent-image_processing-a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "a11y_tree"
     topology_type: "single"
 
   # screenshot
-  single_agent-graphic_document-screenshot-l1:
+  single_agent-image_processing-screenshot-l1:
     environment_type: "osworld"
     observation_type: "screenshot"
     topology_type: "single"
 
   # screenshot_a11y_tree
-  single_agent-graphic_document-screenshot_a11y_tree-l1:
+  single_agent-image_processing-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
 
-  # research_brief
+  # research_synthesis
   # a11y_tree
-  single_agent-research_brief-a11y_tree-l1:
+  single_agent-research_synthesis-a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "a11y_tree"
     topology_type: "single"
   
   # screenshot
-  single_agent-research_brief-screenshot-l1:
+  single_agent-research_synthesis-screenshot-l1:
     environment_type: "osworld"
     observation_type: "screenshot"
     topology_type: "single"
 
   # screenshot_a11y_tree
-  single_agent-research_brief-screenshot_a11y_tree-l1:
+  single_agent-research_synthesis-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
 
   # Level 2
-  # code_ops
+  # debugging_and_refactoring
   # screenshot_a11y_tree
-  single_agent-code_ops-screenshot_a11y_tree-l2:
+  single_agent-debugging_and_refactoring-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
   
-  # data_processing
+  # tabular_data_reporting
   # screenshot_a11y_tree
-  single_agent-data_processing-screenshot_a11y_tree-l2:
+  single_agent-tabular_data_reporting-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
   
-  # graphic_document
+  # image_processing
   # screenshot_a11y_tree
-  single_agent-graphic_document-screenshot_a11y_tree-l2:
+  single_agent-image_processing-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
   
-  # research_brief
+  # research_synthesis
   # screenshot_a11y_tree
-  single_agent-research_brief-screenshot_a11y_tree-l2:
+  single_agent-research_synthesis-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
   
   # Level 3 
-  # code_ops
+  # debugging_and_refactoring
   # screenshot_a11y_tree
-  single_agent-code_ops-screenshot_a11y_tree-l3:
+  single_agent-debugging_and_refactoring-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
   
-  # data_processing
+  # tabular_data_reporting
   # screenshot_a11y_tree
-  single_agent-data_processing-screenshot_a11y_tree-l3:
+  single_agent-tabular_data_reporting-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
   
-  # graphic_document
+  # image_processing
   # screenshot_a11y_tree
-  single_agent-graphic_document-screenshot_a11y_tree-l3:
+  single_agent-image_processing-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
   
-  # research_brief
+  # research_synthesis
   # screenshot_a11y_tree
-  single_agent-research_brief-screenshot_a11y_tree-l3:
+  single_agent-research_synthesis-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
@@ -733,287 +733,287 @@ experiments:
   # Multi-Agent Experiments 
   # Star Topology
   # Level 1
-  # code_ops
+  # debugging_and_refactoring
   # screenshot_a11y_tree
-  multi_agent-star-code_ops-screenshot_a11y_tree-l1:
+  multi_agent-star-debugging_and_refactoring-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
 
-  # data_processing
+  # tabular_data_reporting
   # screenshot_a11y_tree
-  multi_agent-star-data_processing-screenshot_a11y_tree-l1:
+  multi_agent-star-tabular_data_reporting-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
   
-  # graphic_document
+  # image_processing
   # screenshot_a11y_tree
-  multi_agent-star-graphic_document-screenshot_a11y_tree-l1:
+  multi_agent-star-image_processing-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
   
-  # research_brief
+  # research_synthesis
   # screenshot_a11y_tree
-  multi_agent-star-research_brief-screenshot_a11y_tree-l1:
+  multi_agent-star-research_synthesis-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
 
   # Level 2 
-  # code_ops
+  # debugging_and_refactoring
   # screenshot_a11y_tree    
-  multi_agent-star-code_ops-screenshot_a11y_tree-l2:
+  multi_agent-star-debugging_and_refactoring-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
   
-  # data_processing
+  # tabular_data_reporting
   # screenshot_a11y_tree
-  multi_agent-star-data_processing-screenshot_a11y_tree-l2:
+  multi_agent-star-tabular_data_reporting-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
     
-  # graphic_document
+  # image_processing
   # screenshot_a11y_tree
-  multi_agent-star-graphic_document-screenshot_a11y_tree-l2:
+  multi_agent-star-image_processing-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
     
-  # research_brief
+  # research_synthesis
   # screenshot_a11y_tree
-  multi_agent-star-research_brief-screenshot_a11y_tree-l2:
+  multi_agent-star-research_synthesis-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
 
   # Level 3
-  # code_ops
+  # debugging_and_refactoring
   # screenshot_a11y_tree    
-  multi_agent-star-code_ops-screenshot_a11y_tree-l3:
+  multi_agent-star-debugging_and_refactoring-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
 
-  # data_processing
+  # tabular_data_reporting
   # screenshot_a11y_tree
-  multi_agent-star-data_processing-screenshot_a11y_tree-l3:
+  multi_agent-star-tabular_data_reporting-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
     
-  # graphic_document
+  # image_processing
   # screenshot_a11y_tree
-  multi_agent-star-graphic_document-screenshot_a11y_tree-l3:
+  multi_agent-star-image_processing-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
   
-  # research_brief
+  # research_synthesis
   # screenshot_a11y_tree
-  multi_agent-star-research_brief-screenshot_a11y_tree-l3:
+  multi_agent-star-research_synthesis-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
 
   # Blackboard Topology
   # Level 1
-  # code_ops
+  # debugging_and_refactoring
   # screenshot_a11y_tree
-  multi_agent-blackboard-code_ops-screenshot_a11y_tree-l1:
+  multi_agent-blackboard-debugging_and_refactoring-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
 
-  # data_processing
+  # tabular_data_reporting
   # screenshot_a11y_tree
-  multi_agent-blackboard-data_processing-screenshot_a11y_tree-l1:
+  multi_agent-blackboard-tabular_data_reporting-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
 
-  # graphic_document
+  # image_processing
   # screenshot_a11y_tree
-  multi_agent-blackboard-graphic_document-screenshot_a11y_tree-l1:
+  multi_agent-blackboard-image_processing-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
 
-  # research_brief
+  # research_synthesis
   # screenshot_a11y_tree
-  multi_agent-blackboard-research_brief-screenshot_a11y_tree-l1:
+  multi_agent-blackboard-research_synthesis-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
 
   # Level 2
-  # code_ops
+  # debugging_and_refactoring
   # screenshot_a11y_tree
-  multi_agent-blackboard-code_ops-screenshot_a11y_tree-l2:
+  multi_agent-blackboard-debugging_and_refactoring-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
 
-  # data_processing
+  # tabular_data_reporting
   # screenshot_a11y_tree
-  multi_agent-blackboard-data_processing-screenshot_a11y_tree-l2:
+  multi_agent-blackboard-tabular_data_reporting-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
 
-  # graphic_document
+  # image_processing
   # screenshot_a11y_tree
-  multi_agent-blackboard-graphic_document-screenshot_a11y_tree-l2:
+  multi_agent-blackboard-image_processing-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
 
-  # research_brief
+  # research_synthesis
   # screenshot_a11y_tree
-  multi_agent-blackboard-research_brief-screenshot_a11y_tree-l2:
+  multi_agent-blackboard-research_synthesis-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
 
   # Level 3
-  # code_ops
+  # debugging_and_refactoring
   # screenshot_a11y_tree
-  multi_agent-blackboard-code_ops-screenshot_a11y_tree-l3:
+  multi_agent-blackboard-debugging_and_refactoring-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
   
-  # data_processing
+  # tabular_data_reporting
   # screenshot_a11y_tree
-  multi_agent-blackboard-data_processing-screenshot_a11y_tree-l3:
+  multi_agent-blackboard-tabular_data_reporting-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
     
-  # graphic_document
+  # image_processing
   # screenshot_a11y_tree
-  multi_agent-blackboard-graphic_document-screenshot_a11y_tree-l3:
+  multi_agent-blackboard-image_processing-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
 
-  # research_brief
+  # research_synthesis
   # screenshot_a11y_tree
-  multi_agent-blackboard-research_brief-screenshot_a11y_tree-l3:
+  multi_agent-blackboard-research_synthesis-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"
 
   # Mesh Topology
   # Level 1
-  # code_ops
+  # debugging_and_refactoring
   # screenshot_a11y_tree
-  multi_agent-mesh-code_ops-screenshot_a11y_tree-l1:
+  multi_agent-mesh-debugging_and_refactoring-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
 
-  # data_processing
+  # tabular_data_reporting
   # screenshot_a11y_tree
-  multi_agent-mesh-data_processing-screenshot_a11y_tree-l1:
+  multi_agent-mesh-tabular_data_reporting-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
 
-  # graphic_document
+  # image_processing
   # screenshot_a11y_tree
-  multi_agent-mesh-graphic_document-screenshot_a11y_tree-l1:
+  multi_agent-mesh-image_processing-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
 
-  # research_brief
+  # research_synthesis
   # screenshot_a11y_tree
-  multi_agent-mesh-research_brief-screenshot_a11y_tree-l1:
+  multi_agent-mesh-research_synthesis-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
 
   # Level 2
-  # code_ops
+  # debugging_and_refactoring
   # screenshot_a11y_tree
-  multi_agent-mesh-code_ops-screenshot_a11y_tree-l2:
+  multi_agent-mesh-debugging_and_refactoring-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
   
-  # data_processing
+  # tabular_data_reporting
   # screenshot_a11y_tree
-  multi_agent-mesh-data_processing-screenshot_a11y_tree-l2:
+  multi_agent-mesh-tabular_data_reporting-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
     
-  # graphic_document
+  # image_processing
   # screenshot_a11y_tree
-  multi_agent-mesh-graphic_document-screenshot_a11y_tree-l2:
+  multi_agent-mesh-image_processing-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
     
-  # research_brief
+  # research_synthesis
   # screenshot_a11y_tree
-  multi_agent-mesh-research_brief-screenshot_a11y_tree-l2:
+  multi_agent-mesh-research_synthesis-screenshot_a11y_tree-l2:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
     
   # Level 3
-  # code_ops
+  # debugging_and_refactoring
   # screenshot_a11y_tree
-  multi_agent-mesh-code_ops-screenshot_a11y_tree-l3:
+  multi_agent-mesh-debugging_and_refactoring-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
   
-  # data_processing
+  # tabular_data_reporting
   # screenshot_a11y_tree
-  multi_agent-mesh-data_processing-screenshot_a11y_tree-l3:
+  multi_agent-mesh-tabular_data_reporting-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
     
-  # graphic_document
+  # image_processing
   # screenshot_a11y_tree
-  multi_agent-mesh-graphic_document-screenshot_a11y_tree-l3:
+  multi_agent-mesh-image_processing-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
     
-  # research_brief
+  # research_synthesis
   # screenshot_a11y_tree
-  multi_agent-mesh-research_brief-screenshot_a11y_tree-l3:
+  multi_agent-mesh-research_synthesis-screenshot_a11y_tree-l3:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
 
   # ALL topologies
-  # category: "integrated_workflow"
+  # category: "workflow_orchestration"
   # screenshot_a11y_tree
-  single_agent-integrated_workflow-screenshot_a11y_tree-l1:
+  single_agent-workflow_orchestration-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "single"
 
-  multi_agent-star-integrated_workflow-screenshot_a11y_tree-l1:
+  multi_agent-star-workflow_orchestration-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "star"
   
-  multi_agent-mesh-integrated_workflow-screenshot_a11y_tree-l1:
+  multi_agent-mesh-workflow_orchestration-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "mesh"
 
-  multi_agent-blackboard-integrated_workflow-screenshot_a11y_tree-l1:
+  multi_agent-blackboard-workflow_orchestration-screenshot_a11y_tree-l1:
     environment_type: "osworld"
     observation_type: "screenshot_a11y_tree"
     topology_type: "blackboard"

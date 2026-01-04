@@ -56,7 +56,7 @@ default_participant_assignments:
 
 # Category-specific participant assignments
 category_participant_assignments:
-  code_ops:
+  debugging_and_refactoring:
     participant_w_execute:
       count: 2
       domains: ["software_development_specialist", "os_operation_specialist"]
@@ -64,7 +64,7 @@ category_participant_assignments:
       count: 2
       domains: ["planner", "critic"]
   
-  data_processing:
+  tabular_data_reporting:
     participant_w_execute:
       count: 2
       domains: ["office_productivity_specialist", "os_operation_specialist"]
@@ -72,7 +72,7 @@ category_participant_assignments:
       count: 2
       domains: ["planner", "critic"]
         
-  graphic_document:
+  image_processing:
     participant_w_execute:
       count: 3
       domains: ["digital_media_specialist", "office_productivity_specialist", "os_operation_specialist"]
@@ -80,7 +80,7 @@ category_participant_assignments:
       count: 2
       domains: ["planner", "critic"]
       
-  research_brief:
+  research_synthesis:
     participant_w_execute:
       count: 3
       domains: ["web_research_specialist", "office_productivity_specialist", "os_operation_specialist"]
@@ -88,7 +88,7 @@ category_participant_assignments:
       count: 2
       domains: ["planner", "critic"]
 
-  integrated_workflow:
+  workflow_orchestration:
     participant_w_execute:
       count: 4
       domains: ["web_research_specialist", "digital_media_specialist", "office_productivity_specialist", "os_operation_specialist"]
