@@ -504,8 +504,8 @@ if __name__ == "__main__":
             print(f"  - {exp_name}")
 
         print("\nParticipant and domain configuration is now handled by topology configs:")
-        print("  - configs/topologies/star_topology.yaml")
-        print("  - configs/topologies/blackboard_topology.yaml")
-        print("  - configs/topologies/mesh_topology.yaml")
-        print("  - configs/topologies/single_topology.yaml")
+        print("  - resources/topologies/star_topology.yaml")
+        print("  - resources/topologies/blackboard_topology.yaml")
+        print("  - resources/topologies/mesh_topology.yaml")
+        print("  - resources/topologies/single_topology.yaml")
         print("\nEach topology config defines its own domains and default participant assignments.")

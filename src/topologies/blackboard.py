@@ -325,7 +325,7 @@ class BlackboardTopology(BaseTopology):
             if not self.topology_config:
                 # Try to load config temporarily for validation
                 topology_name = self.get_config().topology_type.value
-                config_path = f"configs/topologies/{topology_name}_topology.yaml"
+                config_path = f"resources/topologies/{topology_name}_topology.yaml"
                 if os.path.exists(config_path):
                     with open(config_path, "r") as f:
                         self.topology_config = yaml.safe_load(f)

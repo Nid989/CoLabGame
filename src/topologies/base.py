@@ -86,7 +86,7 @@ class BaseTopology(ABC):
 
         # Get topology type name for config file
         topology_name = self.get_config().topology_type.value
-        config_path = f"configs/topologies/{topology_name}_topology.yaml"
+        config_path = f"resources/topologies/{topology_name}_topology.yaml"
 
         # Load topology configuration from YAML file
         if os.path.exists(config_path):

@@ -42,7 +42,8 @@ outputs/
 # Backup prompt files 
 /resources/prompts/backups/
 
-/scripts/logs/
+/scripts/
+scripts/
 TEMP_PROMPTS/
 plots/*
 /analysis/plots/*
